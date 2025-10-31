@@ -12,6 +12,8 @@ class VolunteerApp extends StatefulWidget {
 }
 
 class _VolunteerAppState extends State<VolunteerApp> {
+  int currentPageIndex = 0;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -24,8 +26,33 @@ class _VolunteerAppState extends State<VolunteerApp> {
           title: Text('Volunteer App Home'),
           backgroundColor: Colors.green,
         ),
-        body: Center(
-          child: Text('Welcome to the Volunteer App!'),
+        body: <Widget>
+        [
+          Center(child: Text('Home Page')),
+          Center(child: Text('Events Page')),
+          Center(child: Text('Profile Page')),
+        ][currentPageIndex],
+        bottomNavigationBar: NavigationBar(destinations: 
+          [
+            NavigationDestination(
+              icon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            NavigationDestination(  
+              icon: Icon(Icons.event),
+              label: 'Events',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.person),
+              label: 'Profile',
+            ),
+          ],
+          selectedIndex: currentPageIndex,
+          onDestinationSelected: (int index) {
+            setState(() {
+              currentPageIndex = index;
+            });
+          },
         ),
       ),
     );
