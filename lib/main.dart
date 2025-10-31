@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:volunteer_app/screens/home.dart';
 
 void main() {
   runApp(const VolunteerApp());
@@ -28,7 +29,7 @@ class _VolunteerAppState extends State<VolunteerApp> {
         ),
         body: <Widget>
         [
-          Center(child: Text('Home Page')),
+          HomeScreen(),
           Center(child: Text('Events Page')),
           Center(child: Text('Profile Page')),
         ][currentPageIndex],
