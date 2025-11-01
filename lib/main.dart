@@ -1,9 +1,9 @@
-import 'package:volunteer_app/models/volunteer.dart';
-import 'package:volunteer_app/screens/wrapper.dart';
-import 'package:volunteer_app/services/authenticate.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:volunteer_app/models/volunteer.dart';
+import 'package:volunteer_app/screens/wrapper.dart';
+import 'package:volunteer_app/services/authenticate.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
