@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:volunteer_app/screens/main/home.dart';
 import 'package:volunteer_app/screens/main/events_page.dart';
+import 'package:volunteer_app/screens/main/chats.dart';
 import 'package:volunteer_app/screens/main/profile.dart';
 import 'package:volunteer_app/services/authenticate.dart';
 
@@ -36,6 +37,7 @@ class _MainPageState extends State<MainPage> {
       [
         HomeScreen(),
         EventsPage(),
+        ChatsScreen(),
         ProfilePage(),
       ][currentPageIndex],
       bottomNavigationBar: NavigationBar(destinations: 
@@ -47,6 +49,10 @@ class _MainPageState extends State<MainPage> {
           NavigationDestination(  
             icon: Icon(Icons.event),
             label: 'Събития',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.chat),
+            label: 'Чатове'
           ),
           NavigationDestination(
             icon: Icon(Icons.person),
