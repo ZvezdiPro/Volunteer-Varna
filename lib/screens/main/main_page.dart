@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:volunteer_app/screens/main/home.dart';
+import 'package:volunteer_app/screens/main/events_page.dart';
+import 'package:volunteer_app/screens/main/profile.dart';
 import 'package:volunteer_app/services/authenticate.dart';
 
 class MainPage extends StatefulWidget {
@@ -33,8 +35,8 @@ class _MainPageState extends State<MainPage> {
       body: <Widget>
       [
         HomeScreen(),
-        Center(child: Text('Страница с мероприятия')),
-        Center(child: Text('Страница на профила')),
+        EventsPage(),
+        ProfilePage(),
       ][currentPageIndex],
       bottomNavigationBar: NavigationBar(destinations: 
         [
