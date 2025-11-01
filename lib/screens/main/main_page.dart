@@ -20,6 +20,8 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     
     return Scaffold(
+
+      // Appbar at the top
       appBar: AppBar(
         title: Text('Основна страница'),
         backgroundColor: Colors.green,
@@ -33,6 +35,8 @@ class _MainPageState extends State<MainPage> {
             ),
           ],
       ),
+
+      // The four pages to navigate between
       body: <Widget>
       [
         HomeScreen(),
@@ -40,6 +44,8 @@ class _MainPageState extends State<MainPage> {
         ChatsScreen(),
         ProfilePage(),
       ][currentPageIndex],
+
+      // Navigation bar at the bottom
       bottomNavigationBar: NavigationBar(destinations: 
         [
           NavigationDestination(
