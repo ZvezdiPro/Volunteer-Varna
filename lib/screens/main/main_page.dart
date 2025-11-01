@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:volunteer_app/screens/main/home.dart';
+import 'package:volunteer_app/services/authenticate.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -9,6 +10,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  final AuthService _auth = AuthService();
   int currentPageIndex = 0;
 
   @override
@@ -18,7 +20,15 @@ class _MainPageState extends State<MainPage> {
       appBar: AppBar(
         title: Text('Volunteer App Home'),
         backgroundColor: Colors.green,
-        
+        actions: [
+            TextButton.icon(
+              icon: Icon(Icons.logout),
+              label: Text('logout'),
+              onPressed: () async {
+                await _auth.signOut();
+              },
+            ),
+          ],
       ),
       body: <Widget>
       [
