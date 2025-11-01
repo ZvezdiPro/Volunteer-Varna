@@ -18,12 +18,12 @@ class _MainPageState extends State<MainPage> {
     
     return Scaffold(
       appBar: AppBar(
-        title: Text('Volunteer App Home'),
+        title: Text('Основна страница'),
         backgroundColor: Colors.green,
         actions: [
             TextButton.icon(
               icon: Icon(Icons.logout),
-              label: Text('logout'),
+              label: Text('Излезте'),
               onPressed: () async {
                 await _auth.signOut();
               },
@@ -33,22 +33,22 @@ class _MainPageState extends State<MainPage> {
       body: <Widget>
       [
         HomeScreen(),
-        Center(child: Text('Events Page')),
-        Center(child: Text('Profile Page')),
+        Center(child: Text('Страница с мероприятия')),
+        Center(child: Text('Страница на профила')),
       ][currentPageIndex],
       bottomNavigationBar: NavigationBar(destinations: 
         [
           NavigationDestination(
             icon: Icon(Icons.home),
-            label: 'Home',
+            label: 'Начало',
           ),
           NavigationDestination(  
             icon: Icon(Icons.event),
-            label: 'Events',
+            label: 'Събития',
           ),
           NavigationDestination(
             icon: Icon(Icons.person),
-            label: 'Profile',
+            label: 'Профил',
           ),
         ],
         selectedIndex: currentPageIndex,
@@ -58,6 +58,6 @@ class _MainPageState extends State<MainPage> {
           });
         },
       ),
-    );        
+    );
   }
 }

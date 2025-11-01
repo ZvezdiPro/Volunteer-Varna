@@ -26,15 +26,15 @@ class _SignInState extends State<SignIn> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.brown[100],
+      backgroundColor: Colors.green[100],
       appBar: AppBar(
-        backgroundColor: Colors.brown[400],
+        backgroundColor: Colors.green[400],
         elevation: 0.0,
-        title: const Text('Sign In into the App'),
+        title: const Text('Влезте'),
         actions: <Widget>[
           TextButton.icon(
             icon: Icon(Icons.person),
-            label: Text('Register'),
+            label: Text('Регистрация'),
             onPressed: () {
               // Toggle to register view
               widget.toggleView();
@@ -50,8 +50,8 @@ class _SignInState extends State<SignIn> {
             children: <Widget>[
               SizedBox(height: 20.0),
               TextFormField(
-                decoration: textInputDecoration.copyWith(hintText: 'Email'),
-                validator: (val) => val!.isEmpty ? 'Enter an email' : null,
+                decoration: textInputDecoration.copyWith(hintText: 'Имейл'),
+                validator: (val) => val!.isEmpty ? 'Моля, въведете имейл' : null,
                 onChanged: (val) {
                   // Handle email input change
                   setState(() {
@@ -61,9 +61,9 @@ class _SignInState extends State<SignIn> {
               ),
               SizedBox(height: 20.0),
               TextFormField(
-                decoration: textInputDecoration.copyWith(hintText: 'Password'),
+                decoration: textInputDecoration.copyWith(hintText: 'Парола'),
                 obscureText: true,
-                validator: (val) => val!.length < 6 ? 'Enter a pass with 6+ chars' : null,
+                validator: (val) => val!.length < 6 ? 'Въведете парола с най-малко 6 знака' : null,
                 onChanged: (val) {
                   // Handle password input change
                   setState(() {
@@ -77,14 +77,14 @@ class _SignInState extends State<SignIn> {
                   backgroundColor: Colors.pink[400],
                   foregroundColor: Colors.white,
                 ),
-                child: Text('Sign In'),
+                child: Text('Влезте'),
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     setState(() => loading = true);
                     dynamic result = await _auth.signInWithEmailAndPassword(email, password);
                     if (result == null) {
                       setState(() {
-                        error = 'Could not sign in with those credentials';
+                        error = 'Настъпи грешка при влизането';
                         loading = false;
                       });
                     }
