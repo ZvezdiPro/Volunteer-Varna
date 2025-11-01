@@ -1,0 +1,1 @@
+// Needs to create a widget to display event information in a card format
