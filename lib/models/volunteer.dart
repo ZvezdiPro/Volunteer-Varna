@@ -1,3 +1,7 @@
-import 'package:flutter/material.dart';
+class VolunteerUser {
 
-// Needs to implement the Volunteer user model
+  final String uid;
+
+  VolunteerUser({required this.uid});
+
+}

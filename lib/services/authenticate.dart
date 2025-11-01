@@ -1,1 +1,53 @@
-// Needs to implement authentication using Firebase Auth
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:volunteer_app/models/volunteer.dart';
+// import 'package:volunteer_app/services/database.dart';
+
+class AuthService {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+// Create user object based on Firebase User (Contains dead code...)
+  VolunteerUser? _userFromFirebaseUser(User? user) {
+      return user != null ? VolunteerUser(uid: user.uid) : null;
+    }
+
+  Stream<VolunteerUser?> get user {
+    return _auth.authStateChanges().map(_userFromFirebaseUser);
+    // Same as .map((User? user) => _userFromFirebaseUser(user));
+    }
+
+  Future<VolunteerUser?> registerWithEmailAndPassword(String email, String password) async {
+  try {
+    UserCredential result = await _auth.createUserWithEmailAndPassword(
+        email: email, password: password);
+    User? user = result.user;
+    // Create a new document for the user with the uid
+    // await DatabaseService(uid: user!.uid).updateUserData('0', 'New User', 100);
+    return _userFromFirebaseUser(user);
+  } catch (e) {
+    print(e.toString());
+    return null;
+  }
+  }
+
+  // Sign in with email and password
+  Future<VolunteerUser?> signInWithEmailAndPassword(String email, String password) async {
+    try {
+      UserCredential result = await _auth.signInWithEmailAndPassword(
+          email: email, password: password);
+      return _userFromFirebaseUser(result.user);
+    } catch (e) {
+      print(e.toString());
+      return null;
+    }
+  }
+
+  // Sign out
+  Future<void> signOut() async {
+    try {
+      return await _auth.signOut();
+    } catch (e) {
+      print(e.toString());
+      return null;
+    }
+  } 
+}
