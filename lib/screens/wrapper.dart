@@ -1,6 +1,6 @@
 import 'package:volunteer_app/models/volunteer.dart';
 import 'package:volunteer_app/screens/authenticate/authenticate.dart';
-// import 'package:volunteer_app/screens/home.dart';
+import 'package:volunteer_app/screens/main/main_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -18,11 +18,7 @@ class Wrapper extends StatelessWidget {
       return Authenticate();
     }
     else {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text('Work in progress'),
-        ),
-      );
+      return MainPage();
     }
   }
 }
