@@ -1,8 +1,8 @@
-import 'package:volunteer_app/screens/home.dart';
 import 'package:volunteer_app/models/volunteer.dart';
 import 'package:volunteer_app/screens/wrapper.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:volunteer_app/services/authenticate.dart';
+// import 'package:volunteer_app/screens/home.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -24,45 +24,50 @@ class _VolunteerAppState extends State<VolunteerApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Volunteer App',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text('Volunteer App Home'),
-          backgroundColor: Colors.green,
+    return StreamProvider<VolunteerUser?>.value (
+      initialData: null,
+      value: AuthService().user,
+      child: MaterialApp(
+        title: 'Volunteer App',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
         ),
-        body: <Widget>
-        [
-          HomeScreen(),
-          Center(child: Text('Events Page')),
-          Center(child: Text('Profile Page')),
-        ][currentPageIndex],
-        bottomNavigationBar: NavigationBar(destinations: 
-          [
-            NavigationDestination(
-              icon: Icon(Icons.home),
-              label: 'Home',
-            ),
-            NavigationDestination(  
-              icon: Icon(Icons.event),
-              label: 'Events',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.person),
-              label: 'Profile',
-            ),
-          ],
-          selectedIndex: currentPageIndex,
-          onDestinationSelected: (int index) {
-            setState(() {
-              currentPageIndex = index;
-            });
-          },
-        ),
-      ),
+        home: Wrapper(),
+        // Scaffold(
+        //   appBar: AppBar(
+        //     title: Text('Volunteer App Home'),
+        //     backgroundColor: Colors.green,
+        //   ),
+        //   body: <Widget>
+        //   [
+        //     HomeScreen(),
+        //     Center(child: Text('Events Page')),
+        //     Center(child: Text('Profile Page')),
+        //   ][currentPageIndex],
+        //   bottomNavigationBar: NavigationBar(destinations: 
+        //     [
+        //       NavigationDestination(
+        //         icon: Icon(Icons.home),
+        //         label: 'Home',
+        //       ),
+        //       NavigationDestination(  
+        //         icon: Icon(Icons.event),
+        //         label: 'Events',
+        //       ),
+        //       NavigationDestination(
+        //         icon: Icon(Icons.person),
+        //         label: 'Profile',
+        //       ),
+        //     ],
+        //     selectedIndex: currentPageIndex,
+        //     onDestinationSelected: (int index) {
+        //       setState(() {
+        //         currentPageIndex = index;
+        //       });
+        //     },
+        //   ),
+        // ),
+      )
     );
   }
 }
