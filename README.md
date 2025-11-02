@@ -1,16 +1,9 @@
-# volunteer_app
+# Volunteer Varna
 
-A new Flutter project.
+Volunteer Varna is a mobile app built for Android which connects volunteers with campaigns and helps organizers find enthusiastic people to join their cause.
 
-## Getting Started
+Built in Flutter with Firebase as a backend.
 
-This project is a starting point for a Flutter application.
+Currently in development.
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Expected release date (beta): ~ April 2026

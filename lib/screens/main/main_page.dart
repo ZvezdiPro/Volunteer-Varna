@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:volunteer_app/screens/main/home.dart';
+import 'package:volunteer_app/screens/main/events_page.dart';
+import 'package:volunteer_app/screens/main/chats.dart';
+import 'package:volunteer_app/screens/main/profile.dart';
 import 'package:volunteer_app/services/authenticate.dart';
 
 class MainPage extends StatefulWidget {
@@ -17,38 +20,49 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     
     return Scaffold(
+
+      // Appbar at the top
       appBar: AppBar(
-        title: Text('Volunteer App Home'),
+        title: Text('Основна страница'),
         backgroundColor: Colors.green,
         actions: [
             TextButton.icon(
               icon: Icon(Icons.logout),
-              label: Text('logout'),
+              label: Text('Излезте'),
               onPressed: () async {
                 await _auth.signOut();
               },
             ),
           ],
       ),
+
+      // The four pages to navigate between
       body: <Widget>
       [
         HomeScreen(),
-        Center(child: Text('Events Page')),
-        Center(child: Text('Profile Page')),
+        EventsPage(),
+        ChatsScreen(),
+        ProfilePage(),
       ][currentPageIndex],
+
+      // Navigation bar at the bottom
       bottomNavigationBar: NavigationBar(destinations: 
         [
           NavigationDestination(
             icon: Icon(Icons.home),
-            label: 'Home',
+            label: 'Начало',
           ),
           NavigationDestination(  
             icon: Icon(Icons.event),
-            label: 'Events',
+            label: 'Събития',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.chat),
+            label: 'Чатове'
           ),
           NavigationDestination(
             icon: Icon(Icons.person),
-            label: 'Profile',
+            label: 'Профил',
           ),
         ],
         selectedIndex: currentPageIndex,
@@ -58,6 +72,6 @@ class _MainPageState extends State<MainPage> {
           });
         },
       ),
-    );        
+    );
   }
 }

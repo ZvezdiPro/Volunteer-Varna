@@ -29,8 +29,9 @@ class _VolunteerAppState extends State<VolunteerApp> {
       child: MaterialApp(
         title: 'Volunteer App',
         theme: ThemeData(
-          primarySwatch: Colors.blue,
+          primarySwatch: Colors.green,
         ),
+        // The wrapper widget decides which page to show based on authentication state
         home: Wrapper(),
       )
     );
