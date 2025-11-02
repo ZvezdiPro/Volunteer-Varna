@@ -25,15 +25,15 @@ class _RegisterState extends State<Register> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.brown[100],
+      backgroundColor: Colors.green[100],
       appBar: AppBar(
-        backgroundColor: Colors.brown[400],
+        backgroundColor: Colors.green[400],
         elevation: 0.0,
-        title: const Text('Register into the App'),
+        title: const Text('Регистрация'),
         actions: <Widget>[
           TextButton.icon(
             icon: Icon(Icons.person),
-            label: Text('Sign In'),
+            label: Text('Влезте'),
             onPressed: () {
               // Toggle to register view
               widget.toggleView();
@@ -49,8 +49,8 @@ class _RegisterState extends State<Register> {
             children: <Widget>[
               SizedBox(height: 20.0),
               TextFormField(
-                decoration: textInputDecoration.copyWith(hintText: 'Email'),
-                validator: (val) => val!.isEmpty ? 'Enter an email' : null,
+                decoration: textInputDecoration.copyWith(hintText: 'Имейл'),
+                validator: (val) => val!.isEmpty ? 'Моля въведете имейл' : null,
                 onChanged: (val) {
                   // Handle email input change
                   setState(() {
@@ -60,9 +60,9 @@ class _RegisterState extends State<Register> {
               ),
               SizedBox(height: 20.0),
               TextFormField(
-                decoration: textInputDecoration.copyWith(hintText: 'Password'),
+                decoration: textInputDecoration.copyWith(hintText: 'Парола'),
                 obscureText: true,
-                validator: (val) => val!.length < 6 ? 'Enter a pass with 6+ chars' : null,
+                validator: (val) => val!.length < 6 ? 'Въведете парола с най-малко 6 знака' : null,
                 onChanged: (val) {
                   // Handle password input change
                   setState(() {
@@ -76,7 +76,7 @@ class _RegisterState extends State<Register> {
                   backgroundColor: Colors.pink[400],
                   foregroundColor: Colors.white,
                 ),
-                child: Text('Register'),
+                child: Text('Регистрация'),
                 onPressed: () async {
                   // Handle sign-in button press
                   if (_formKey.currentState!.validate()) {
@@ -84,7 +84,7 @@ class _RegisterState extends State<Register> {
                     dynamic result = await _auth.registerWithEmailAndPassword(email, password);
                     if (result == null) {
                       setState(() {
-                        error = 'Please supply a valid email';
+                        error = 'Моля въведете валиден имейл адрес';
                         loading = false;
                       });
                     }
@@ -97,7 +97,6 @@ class _RegisterState extends State<Register> {
                 error,
                 style: TextStyle(color: Colors.red, fontSize: 14.0),
               ),
-
 
             ],
           )
