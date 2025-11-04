@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:volunteer_app/shared/colors.dart';
 
 const textInputDecoration = InputDecoration(
   fillColor: Colors.white,
@@ -11,7 +12,7 @@ const textInputDecoration = InputDecoration(
   ),
   focusedBorder: OutlineInputBorder(
     borderSide: BorderSide(
-      color: Colors.pink,
+      color: accentAmber,
       width: 2.0,
     ),
   ),

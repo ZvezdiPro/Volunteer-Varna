@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:volunteer_app/services/authenticate.dart';
 import 'package:volunteer_app/shared/constants.dart';
+import 'package:volunteer_app/shared/colors.dart';
 
 class Register extends StatefulWidget {
   // const Register({super.key});
@@ -27,7 +28,7 @@ class _RegisterState extends State<Register> {
     return Scaffold(
       backgroundColor: Colors.green[100],
       appBar: AppBar(
-        backgroundColor: Colors.green[400],
+        backgroundColor: greenPrimary,
         elevation: 0.0,
         title: const Text('Регистрация'),
         actions: <Widget>[
@@ -73,8 +74,8 @@ class _RegisterState extends State<Register> {
               SizedBox(height: 20.0),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.pink[400],
-                  foregroundColor: Colors.white,
+                  backgroundColor: accentAmber,
+                  foregroundColor: backgroundGrey,
                 ),
                 child: Text('Регистрация'),
                 onPressed: () async {

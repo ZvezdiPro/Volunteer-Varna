@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:volunteer_app/services/authenticate.dart';
+import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/shared/constants.dart';
 
 class SignIn extends StatefulWidget {
@@ -28,7 +29,7 @@ class _SignInState extends State<SignIn> {
     return Scaffold(
       backgroundColor: Colors.green[100],
       appBar: AppBar(
-        backgroundColor: Colors.green[400],
+        backgroundColor: greenPrimary,
         elevation: 0.0,
         title: const Text('Влезте'),
         actions: <Widget>[
@@ -74,7 +75,7 @@ class _SignInState extends State<SignIn> {
               SizedBox(height: 20.0),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.pink[400],
+                  backgroundColor: accentAmber,
                   foregroundColor: Colors.white,
                 ),
                 child: Text('Влезте'),
