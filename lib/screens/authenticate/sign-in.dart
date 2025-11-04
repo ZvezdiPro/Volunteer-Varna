@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:volunteer_app/services/authenticate.dart';
 import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/shared/constants.dart';
+import 'package:volunteer_app/shared/loading.dart';
 
 class SignIn extends StatefulWidget {
   // const SignIn({super.key});
@@ -26,7 +27,7 @@ class _SignInState extends State<SignIn> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return loading ? Loading() : Scaffold(
       backgroundColor: Colors.green[100],
       appBar: AppBar(
         backgroundColor: greenPrimary,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:volunteer_app/services/authenticate.dart';
 import 'package:volunteer_app/shared/constants.dart';
 import 'package:volunteer_app/shared/colors.dart';
+import 'package:volunteer_app/shared/loading.dart';
 
 class Register extends StatefulWidget {
   // const Register({super.key});
@@ -25,7 +26,7 @@ class _RegisterState extends State<Register> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return loading ? Loading() : Scaffold(
       backgroundColor: Colors.green[100],
       appBar: AppBar(
         backgroundColor: greenPrimary,
