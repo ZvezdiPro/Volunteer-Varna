@@ -17,3 +17,15 @@ const textInputDecoration = InputDecoration(
     ),
   ),
 );
+
+const titleStyle = TextStyle(
+  color: Colors.black,
+  fontSize: 28,
+  fontWeight: FontWeight.bold,
+  );
+
+const mainHeadingStyle = TextStyle(
+  color: greenPrimary,
+  fontSize: 28,
+  fontWeight: FontWeight.bold,
+  );
