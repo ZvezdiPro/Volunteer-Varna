@@ -30,23 +30,6 @@ class _SignInState extends State<SignIn> {
   Widget build(BuildContext context) {
     return loading ? Loading() : Scaffold(
       backgroundColor: backgroundGrey,
-      
-      // appBar: AppBar(
-      //   backgroundColor: Colors.grey[200],
-      //   elevation: 0.0,
-      //   // title: const Text('Volunteer Varna', style: titleStyle),
-      //   centerTitle: true,
-      //   actions: <Widget>[
-      //     TextButton.icon(
-      //       icon: Icon(Icons.person, color: Colors.green, size: 24),
-      //       label: Text(''),
-      //       onPressed: () {
-      //         // Toggle to register view
-      //         widget.toggleView();
-      //       },
-      //     )
-      //   ],
-      // ),
 
       body: SafeArea(
         child: SingleChildScrollView(
@@ -55,7 +38,6 @@ class _SignInState extends State<SignIn> {
             key: _formKey,
             child: Column(
               children: <Widget>[
-
                 SizedBox(height: 160.0),
                 Text('Добре дошли отново!', style: mainHeadingStyle),
                 SizedBox(height: 30.0),
@@ -170,7 +152,8 @@ class _SignInState extends State<SignIn> {
                   ),
                   ],
                 ),
-        
+
+                // Error message
                 SizedBox(height: 12.0),
                 Text(
                   error,

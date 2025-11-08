@@ -33,23 +33,6 @@ class _RegisterState extends State<Register> {
     return loading ? Loading() : Scaffold(
       backgroundColor: backgroundGrey,
       
-      // appBar: AppBar(
-      //   backgroundColor: greenPrimary,
-      //   elevation: 0.0,
-      //   title: const Text('Регистрация'),
-      //   centerTitle: true,
-      //   actions: <Widget>[
-      //     TextButton.icon(
-      //       icon: Icon(Icons.person),
-      //       label: Text('Влезте'),
-      //       onPressed: () {
-      //         // Toggle to register view
-      //         widget.toggleView();
-      //       },
-      //     )
-      //   ],
-      // ),
-      
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 50.0),
@@ -57,7 +40,6 @@ class _RegisterState extends State<Register> {
             key: _formKey,
             child: Column(
               children: <Widget>[
-
                 SizedBox(height: 160.0),
                 const Text('Регистрация', style: mainHeadingStyle),
                 SizedBox(height: 30.0),
@@ -184,6 +166,7 @@ class _RegisterState extends State<Register> {
                   ],
                 ),
 
+                // Error message
                 SizedBox(height: 12.0),
                 Text(
                   error,

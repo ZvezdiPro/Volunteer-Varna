@@ -33,6 +33,8 @@ class SocialButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return OutlinedButton(
       onPressed: onPressed,
+
+      // ButtonStyle
       style: OutlinedButton.styleFrom(
         backgroundColor: Colors.grey[100],
           foregroundColor: Colors.white,
@@ -42,9 +44,12 @@ class SocialButton extends StatelessWidget {
           ),
           padding: EdgeInsets.fromLTRB(12, 2, 12, 2),
       ),
+
+      // Contents
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
+          // Handles the Icon
           SizedBox(
           width: 24.0,
           child: Align(
@@ -53,6 +58,8 @@ class SocialButton extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8.0),
+
+          // Button text
           Text(
             label,
             style: const TextStyle(
