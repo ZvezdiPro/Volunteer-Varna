@@ -3,6 +3,7 @@ import 'package:volunteer_app/services/authenticate.dart';
 import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/shared/constants.dart';
 import 'package:volunteer_app/shared/loading.dart';
+import 'package:volunteer_app/widgets/social_button.dart';
 
 class SignIn extends StatefulWidget {
   // const SignIn({super.key});
@@ -124,19 +125,24 @@ class _SignInState extends State<SignIn> {
                 SizedBox(height: 12.0),
 
                 // Sign-in with Google or Facebook
-                // Need to add icons, style
+                // TODO - Add Logic
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    OutlinedButton(
-                      // Login with Google
-                      onPressed: () {},
-                      child: Text('Google'),
+                    SocialButton(
+                      label: 'Google',
+                      icon: const Icon(Icons.g_mobiledata, size: 30, color: blueSecondary),
+                      onPressed: () {
+                        // !!! TODO: Add Google Login Logic
+                      },
                     ),
-                    OutlinedButton(
-                      onPressed: () {},
-                      child: Text('Facebook')
-                    )
+                    SocialButton(
+                      label: 'Facebook',
+                      icon: const Icon(Icons.facebook, size: 24, color: blueSecondary),
+                      onPressed: () {
+                        // !!! TODO: Add Facebook Login Logic
+                      },
+                    ),
                   ],
                 ),
 
