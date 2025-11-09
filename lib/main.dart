@@ -27,6 +27,7 @@ class _VolunteerAppState extends State<VolunteerApp> {
       initialData: null,
       value: AuthService().user,
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Volunteer App',
         theme: ThemeData(
           primarySwatch: Colors.green,
