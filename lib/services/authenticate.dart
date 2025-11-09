@@ -5,9 +5,9 @@ import 'package:volunteer_app/models/volunteer.dart';
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-// Create user object based on Firebase User (Contains dead code...)
+  // Create user object based on Firebase User
   VolunteerUser? _userFromFirebaseUser(User? user) {
-      return user != null ? VolunteerUser(uid: user.uid) : null;
+      return user != null ? VolunteerUser.forAuth(uid: user.uid) : null;
     }
 
   Stream<VolunteerUser?> get user {
