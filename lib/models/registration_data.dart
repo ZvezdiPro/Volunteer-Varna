@@ -8,7 +8,7 @@ class RegistrationData {
   List<String> interests = [];
 
   // Optional fields
-  String bio = '';
+  String? bio = '';
   String avatarUrl = '';
   String? phoneNumber;   
   DateTime? dateOfBirth; 

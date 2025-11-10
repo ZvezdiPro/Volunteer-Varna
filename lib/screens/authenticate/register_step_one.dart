@@ -32,7 +32,7 @@ class _RegisterStepOneState extends State<RegisterStepOne> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-        padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 50.0),
+      padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 50.0),
         child: Form(
           key: _stepOneFormKey,
           child: Column(
@@ -112,46 +112,44 @@ class _RegisterStepOneState extends State<RegisterStepOne> {
               SizedBox(height: 20.0),
       
               // Move forward to next screen button
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: greenPrimary,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
-              ),
-              child: const Text('Напред към вход на лични данни'),
-              onPressed: () {
-                // If all validator fields return null (meaning everything is OK), go to the next step
-                if (_stepOneFormKey.currentState!.validate()) {
-                  widget.nextStep();
-                }
-              },
-            ),
-          
-            const SizedBox(height: 20.0),
-      
-            SizedBox(height: 20.0),
-    
-            // Switch to sign-in page
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('Имате регистрация?'),
-                GestureDetector(
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 4.0, right: 4.0), 
-                  child: const Text(
-                    'Влезте!',
-                    style: TextStyle(
-                      color: greenPrimary, 
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: greenPrimary,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
                 ),
-                onTap: () {
-                  widget.toggleView();
+                child: const Text('Напред към вход на лични данни'),
+                onPressed: () {
+                  // If all validator fields return null (meaning everything is OK), go to the next step
+                  if (_stepOneFormKey.currentState!.validate()) {
+                    widget.nextStep();
+                  }
                 },
               ),
+
+              SizedBox(height: 30.0),
+    
+              // Switch to sign-in page
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Имате регистрация?'),
+                  GestureDetector(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 4.0, right: 4.0), 
+                    child: const Text(
+                      'Влезте!',
+                      style: TextStyle(
+                        color: greenPrimary, 
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  onTap: () {
+                    widget.toggleView();
+                  },
+                ),
               ],
             ),
           ],

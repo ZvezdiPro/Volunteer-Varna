@@ -118,7 +118,7 @@ class _RegisterState extends State<Register> {
             },
             children: [
               RegisterStepOne(data: _data, nextStep: nextStep, toggleView: widget.toggleView),
-              RegisterStepTwo(),
+              RegisterStepTwo(data: _data, nextStep: nextStep, previousStep: previousStep),
               RegisterStepThree(),
             ],
           ),
