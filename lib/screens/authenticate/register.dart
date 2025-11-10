@@ -95,8 +95,6 @@ class _RegisterState extends State<Register> {
     // TODO: Update user data in the database (something like the line below:)
     // await _dbService.updateUserData(newUser);
 
-    // Switches to the Sign-In page
-    // TODO: Go to the Home screen
     widget.toggleView();
   }
 
@@ -119,7 +117,7 @@ class _RegisterState extends State<Register> {
             children: [
               RegisterStepOne(data: _data, nextStep: nextStep, toggleView: widget.toggleView),
               RegisterStepTwo(data: _data, nextStep: nextStep, previousStep: previousStep),
-              RegisterStepThree(),
+              RegisterStepThree(data: _data, nextStep: nextStep, previousStep: previousStep),
             ],
           ),
 
@@ -131,7 +129,7 @@ class _RegisterState extends State<Register> {
               count: 3,
               onDotClicked: (index) => pageController.animateToPage(
                 index,
-                duration: Duration(milliseconds: 500),
+                duration: Duration(milliseconds: 300),
                 curve: Curves.easeIn
               )
             )
