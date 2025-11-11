@@ -6,13 +6,13 @@ import 'package:volunteer_app/models/registration_data.dart';
 class RegisterStepOne extends StatefulWidget {
 
   final RegistrationData data;
-  final VoidCallback nextStep;
+  final GlobalKey<FormState> formKey;
   final Function toggleView;
 
   const RegisterStepOne({
     super.key, 
     required this.data, 
-    required this.nextStep,
+    required this.formKey,
     required this.toggleView,
   });
 
@@ -22,8 +22,6 @@ class RegisterStepOne extends StatefulWidget {
 
 class _RegisterStepOneState extends State<RegisterStepOne> {
 
-  final _stepOneFormKey = GlobalKey<FormState>();
-  
   String error = '';
   String repeatedPassword = '';
   bool _isPasswordVisible = false;
@@ -34,7 +32,7 @@ class _RegisterStepOneState extends State<RegisterStepOne> {
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 50.0),
         child: Form(
-          key: _stepOneFormKey,
+          key: widget.formKey,
           child: Column(
             children: <Widget>[
               SizedBox(height: 180.0),
@@ -109,24 +107,25 @@ class _RegisterStepOneState extends State<RegisterStepOne> {
                 },
               ),
       
-              SizedBox(height: 20.0),
+              // SizedBox(height: 20.0),
       
               // Move forward to next screen button
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: greenPrimary,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
-                ),
-                child: const Text('Напред към вход на лични данни'),
-                onPressed: () {
-                  // If all validator fields return null (meaning everything is OK), go to the next step
-                  if (_stepOneFormKey.currentState!.validate()) {
-                    widget.nextStep();
-                  }
-                },
-              ),
+              // Used in previous version where navigation was controlled by the screen instead of register.dart
+              // ElevatedButton(
+              //   style: ElevatedButton.styleFrom(
+              //     backgroundColor: greenPrimary,
+              //     foregroundColor: Colors.white,
+              //     minimumSize: const Size(double.infinity, 50),
+              //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+              //   ),
+              //   child: const Text('Напред към вход на лични данни'),
+              //   onPressed: () {
+              //     // If all validator fields return null (meaning everything is OK), go to the next step
+              //     if (_stepOneFormKey.currentState!.validate()) {
+              //       widget.nextStep();
+              //     }
+              //   },
+              // ),
 
               SizedBox(height: 30.0),
     

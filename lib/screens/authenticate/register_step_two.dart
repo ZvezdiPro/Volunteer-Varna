@@ -7,23 +7,19 @@ import 'package:volunteer_app/shared/constants.dart';
 class RegisterStepTwo extends StatefulWidget {
 
   final RegistrationData data;
-  final VoidCallback nextStep;
-  final VoidCallback previousStep;
+  final GlobalKey<FormState> formKey;
 
   const RegisterStepTwo({
     super.key, 
-    required this.data, 
-    required this.nextStep,
-    required this.previousStep
+    required this.data,
+    required this.formKey
   });
 
   @override
   State<RegisterStepTwo> createState() => _RegisterStepTwoState();
 }
 
-class _RegisterStepTwoState extends State<RegisterStepTwo> {
-  final _stepTwoFormKey = GlobalKey<FormState>();
-  
+class _RegisterStepTwoState extends State<RegisterStepTwo> {  
   @override
   Widget build(BuildContext context) {
 
@@ -35,7 +31,7 @@ class _RegisterStepTwoState extends State<RegisterStepTwo> {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 50.0),
       child: Form(
-        key: _stepTwoFormKey,
+        key: widget.formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
@@ -103,24 +99,25 @@ class _RegisterStepTwoState extends State<RegisterStepTwo> {
               onChanged: (val) => widget.data.bio = val.isEmpty ? null : val, 
             ),
             
-            SizedBox(height: 15.0),
+            SizedBox(height: 30.0),
 
             // Go to the third page button
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: greenPrimary,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(100, 30),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
-              ),
-              child: const Text('Напред към избор на интереси'),
-              onPressed: () {
-                // If all validator fields return null (meaning everything is OK), go to the next step
-                if (_stepTwoFormKey.currentState!.validate()) {
-                  widget.nextStep();
-                }
-              },
-            ),
+            // Used in previous version where navigation was controlled by the screen instead of register.dart
+            // ElevatedButton(
+            //   style: ElevatedButton.styleFrom(
+            //     backgroundColor: greenPrimary,
+            //     foregroundColor: Colors.white,
+            //     minimumSize: const Size(100, 30),
+            //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+            //   ),
+            //   child: const Text('Напред към избор на интереси'),
+            //   onPressed: () {
+            //     // If all validator fields return null (meaning everything is OK), go to the next step
+            //     if (_stepTwoFormKey.currentState!.validate()) {
+            //       widget.nextStep();
+            //     }
+            //   },
+            // ),
 
           ],
         )

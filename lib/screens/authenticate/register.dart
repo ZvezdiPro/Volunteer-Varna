@@ -27,9 +27,14 @@ class _RegisterState extends State<Register> {
   // TODO: Add database service instance here
   final RegistrationData _data = RegistrationData(); // To keep the user data before creating an object
 
+  // Pages keys for the forms on each page
+  final GlobalKey<FormState> _stepOneFormKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _stepTwoFormKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _stepThreeFormKey = GlobalKey<FormState>();
+
   // The PageController keeps track of which page the user is on
   PageController pageController = PageController();
-  
+
   bool loading = false;
   int _currentPage = 0;
   String _authError = '';
@@ -42,13 +47,36 @@ class _RegisterState extends State<Register> {
   // There are a total of three registration screens
   final int totalSteps = 3;
 
+  GlobalKey<FormState> _getCurrentFormKey() {
+    switch (_currentPage) {
+      case 0: return _stepOneFormKey;
+      case 1: return _stepTwoFormKey;
+      case 2: return _stepThreeFormKey;
+      default: return _stepOneFormKey;
+    }
+  }
+
   // Method to go to the next page
   void nextStep() {
-    if (_currentPage < totalSteps - 1) {
-      pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeIn);
-    } else {
-      // Финална стъпка
-      _submitRegistration();
+    final currentFormKey = _getCurrentFormKey();
+    if (currentFormKey.currentState!.validate()) {
+      // If not on the last page, go to the next
+      if (_currentPage < totalSteps - 1) {
+        pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeIn);
+      }
+      // If on the last page (interests), finish the registration
+      else {
+        if (_data.interests.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: Colors.green[400],
+              content: Text('Моля, изберете поне един интерес.', style: TextStyle(color: Colors.black))
+              ),
+          );
+          return;
+        }
+        _submitRegistration();
+      }
     }
   }
 
@@ -100,7 +128,7 @@ class _RegisterState extends State<Register> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return loading ? Loading() : Scaffold(
       backgroundColor: backgroundGrey,
       
       body: Stack(
@@ -108,30 +136,94 @@ class _RegisterState extends State<Register> {
           // The registration pages
           PageView(
             controller: pageController,
-            // The value of _currentPage changes whenever _currentPage changes
+            physics: const NeverScrollableScrollPhysics(),
+            // The value of _currentPage changes when a page is selected
             onPageChanged: (int index) {
               setState(() {
                 _currentPage = index;
               });
             },
             children: [
-              RegisterStepOne(data: _data, nextStep: nextStep, toggleView: widget.toggleView),
-              RegisterStepTwo(data: _data, nextStep: nextStep, previousStep: previousStep),
-              RegisterStepThree(data: _data, nextStep: nextStep, previousStep: previousStep),
+              RegisterStepOne(data: _data, formKey: _stepOneFormKey, toggleView: widget.toggleView),
+              RegisterStepTwo(data: _data, formKey: _stepTwoFormKey),
+              RegisterStepThree(data: _data, formKey: _stepThreeFormKey),
             ],
           ),
 
-          // The dot indicator of the progress
+          // Navigation
           Container(
             alignment: Alignment(0, 0.85),
-            child: SmoothPageIndicator(
-              controller: pageController,
-              count: 3,
-              onDotClicked: (index) => pageController.animateToPage(
-                index,
-                duration: Duration(milliseconds: 300),
-                curve: Curves.easeIn
-              )
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 50.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Go to the previous page
+                  SizedBox(
+                    width: 100,
+                    child: GestureDetector(
+                      onTap: previousStep,
+                      // The text will appear with an animation
+                      child: AnimatedOpacity(
+                        opacity: _currentPage > 0 ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 300),
+                        child: Text(
+                          'Назад',
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: _currentPage > 0 ? greenPrimary : Colors.transparent, // Скриваме текста
+                          ),
+                        ),
+                      )
+                    ),
+                  ),
+
+                  // Dot indicator              
+                  SmoothPageIndicator(
+                    controller: pageController,
+                    count: totalSteps,
+                    effect: JumpingDotEffect(
+                      dotHeight: 10,
+                      dotWidth: 10,
+                      activeDotColor: greenPrimary,
+                      dotColor: Colors.grey.shade400,
+                    ),
+                    onDotClicked: (index) {
+                      // If it's forward, make the validation
+                      if (index > _currentPage) {
+                        nextStep();
+                      }
+                      else {
+                        pageController.animateToPage(
+                          index,
+                          duration: Duration(milliseconds: 300),
+                          curve: Curves.easeIn
+                        );
+                      }
+                    }
+                  ),
+
+                  // Go to the next page
+                  SizedBox(
+                    width: 100,
+                    child: GestureDetector(
+                      onTap: nextStep,
+                      // If we're on the last step, show different text
+                      child: Text(
+                        _currentPage == totalSteps - 1 ? 'Край' : 'Напред',
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: greenPrimary,
+                        ),
+                      )
+                    ),
+                  ),
+                ],
+              ),
             )
           )
         ]

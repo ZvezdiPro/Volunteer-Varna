@@ -6,14 +6,12 @@ import 'package:volunteer_app/shared/constants.dart';
 class RegisterStepThree extends StatefulWidget {
 
   final RegistrationData data;
-  final VoidCallback nextStep;
-  final VoidCallback previousStep;
+  final GlobalKey<FormState> formKey;
 
   const RegisterStepThree({
     super.key, 
-    required this.data, 
-    required this.nextStep,
-    required this.previousStep,
+    required this.data,
+    required this.formKey
   });
 
   @override
@@ -21,7 +19,6 @@ class RegisterStepThree extends StatefulWidget {
 }
 
 class _RegisterStepThreeState extends State<RegisterStepThree> {
-  final _stepThreeFormKey = GlobalKey<FormState>();
   
   final List<String> availableInterests = [
     'Образование', 'Екология', 'Животни', 'Грижа за деца', 'Спорт', 'Здраве',
@@ -33,7 +30,7 @@ class _RegisterStepThreeState extends State<RegisterStepThree> {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 50.0),
       child: Form(
-        key: _stepThreeFormKey,
+        key: widget.formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
@@ -87,22 +84,23 @@ class _RegisterStepThreeState extends State<RegisterStepThree> {
             SizedBox(height: 20.0),
 
             // Finish registration!
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: greenPrimary,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(100, 30),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
-              ),
-              child: const Text('Завършване на регистрацията'),
-              onPressed: () {
-                // If all validator fields return null (meaning everything is OK), go to the next step
-                // Which in this case is submitting the registration
-                if (_stepThreeFormKey.currentState!.validate()) {
-                  widget.nextStep();
-                }
-              },
-            ),
+            // Used in previous version where navigation was controlled by the screen instead of register.dart
+            // ElevatedButton(
+            //   style: ElevatedButton.styleFrom(
+            //     backgroundColor: greenPrimary,
+            //     foregroundColor: Colors.white,
+            //     minimumSize: const Size(100, 30),
+            //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+            //   ),
+            //   child: const Text('Завършване на регистрацията'),
+            //   onPressed: () {
+            //     // If all validator fields return null (meaning everything is OK), go to the next step
+            //     // Which in this case is submitting the registration
+            //     if (_stepThreeFormKey.currentState!.validate()) {
+            //       widget.nextStep();
+            //     }
+            //   },
+            // ),
           ]
         )
       )
