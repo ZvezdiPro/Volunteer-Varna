@@ -117,26 +117,6 @@ class _RegisterStepOneState extends State<RegisterStepOne> {
                   });
                 },
               ),
-      
-              // SizedBox(height: 20.0),
-      
-              // Move forward to next screen button
-              // Used in previous version where navigation was controlled by the screen instead of register.dart
-              // ElevatedButton(
-              //   style: ElevatedButton.styleFrom(
-              //     backgroundColor: greenPrimary,
-              //     foregroundColor: Colors.white,
-              //     minimumSize: const Size(double.infinity, 50),
-              //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
-              //   ),
-              //   child: const Text('Напред към вход на лични данни'),
-              //   onPressed: () {
-              //     // If all validator fields return null (meaning everything is OK), go to the next step
-              //     if (_stepOneFormKey.currentState!.validate()) {
-              //       widget.nextStep();
-              //     }
-              //   },
-              // ),
 
               SizedBox(height: 30.0),
     

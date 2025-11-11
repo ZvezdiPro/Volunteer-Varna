@@ -1,23 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:volunteer_app/shared/colors.dart';
 
-// const ButtonStyle socialButtonStyle = ButtonStyle(
-//   side: WidgetStatePropertyAll(
-//     BorderSide(color: accentAmber, width: 1)
-//   ),
-//   minimumSize: WidgetStatePropertyAll(
-//     Size(double.infinity, 50)
-//   ),
-//   shape: WidgetStatePropertyAll(
-//     RoundedRectangleBorder(
-//       borderRadius: BorderRadius.all(Radius.circular(8.0)),
-//     )
-//   ),
-//   padding: WidgetStatePropertyAll(
-//     EdgeInsets.symmetric(vertical: 12.0)
-//   ),
-// );
-
 class SocialButton extends StatelessWidget {
   final String label;
   final Widget icon;
@@ -62,7 +45,7 @@ class SocialButton extends StatelessWidget {
           // Button text
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               color: greenPrimary,
               fontSize: 16,
               fontWeight: FontWeight.bold,

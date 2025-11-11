@@ -82,25 +82,6 @@ class _RegisterStepThreeState extends State<RegisterStepThree> {
             ),
 
             SizedBox(height: 20.0),
-
-            // Finish registration!
-            // Used in previous version where navigation was controlled by the screen instead of register.dart
-            // ElevatedButton(
-            //   style: ElevatedButton.styleFrom(
-            //     backgroundColor: greenPrimary,
-            //     foregroundColor: Colors.white,
-            //     minimumSize: const Size(100, 30),
-            //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
-            //   ),
-            //   child: const Text('Завършване на регистрацията'),
-            //   onPressed: () {
-            //     // If all validator fields return null (meaning everything is OK), go to the next step
-            //     // Which in this case is submitting the registration
-            //     if (_stepThreeFormKey.currentState!.validate()) {
-            //       widget.nextStep();
-            //     }
-            //   },
-            // ),
           ]
         )
       )

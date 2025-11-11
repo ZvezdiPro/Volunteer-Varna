@@ -100,25 +100,6 @@ class _RegisterStepTwoState extends State<RegisterStepTwo> {
             ),
             
             SizedBox(height: 30.0),
-
-            // Go to the third page button
-            // Used in previous version where navigation was controlled by the screen instead of register.dart
-            // ElevatedButton(
-            //   style: ElevatedButton.styleFrom(
-            //     backgroundColor: greenPrimary,
-            //     foregroundColor: Colors.white,
-            //     minimumSize: const Size(100, 30),
-            //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
-            //   ),
-            //   child: const Text('Напред към избор на интереси'),
-            //   onPressed: () {
-            //     // If all validator fields return null (meaning everything is OK), go to the next step
-            //     if (_stepTwoFormKey.currentState!.validate()) {
-            //       widget.nextStep();
-            //     }
-            //   },
-            // ),
-
           ],
         )
       )
