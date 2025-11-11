@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:volunteer_app/services/authenticate.dart';
-import 'package:volunteer_app/shared/constants.dart';
+// TODO: Import database service file
 import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/shared/loading.dart';
+import 'package:volunteer_app/models/volunteer.dart';
+import 'package:volunteer_app/models/registration_data.dart';
+
+import 'package:volunteer_app/screens/authenticate/register_step_one.dart';
+import 'package:volunteer_app/screens/authenticate/register_step_two.dart';
+import 'package:volunteer_app/screens/authenticate/register_step_three.dart';
 
 class Register extends StatefulWidget {
   // const Register({super.key});
@@ -15,169 +22,212 @@ class Register extends StatefulWidget {
 }
 
 class _RegisterState extends State<Register> {
-
+  
   final AuthService _auth = AuthService();
-  final _formKey = GlobalKey<FormState>();
+  // TODO: Add database service instance here
+  final RegistrationData _data = RegistrationData(); // To keep the user data before creating an object
+
+  // Pages keys for the forms on each page
+  final GlobalKey<FormState> _stepOneFormKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _stepTwoFormKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _stepThreeFormKey = GlobalKey<FormState>();
+
+  // The PageController keeps track of which page the user is on
+  PageController pageController = PageController();
+
   bool loading = false;
+  int _currentPage = 0;
+  String _authError = '';
 
-  String email = '';
-  String password = '';
-  String repeatedPassword = '';
-  String error = '';
+  @override
+  void initState() {
+    super.initState();
+  }
 
-  bool _isPasswordVisible = false;
-  bool _isRepeatedPasswordVisible = false;
+  // There are a total of three registration screens
+  final int totalSteps = 3;
+
+  GlobalKey<FormState> _getCurrentFormKey() {
+    switch (_currentPage) {
+      case 0: return _stepOneFormKey;
+      case 1: return _stepTwoFormKey;
+      case 2: return _stepThreeFormKey;
+      default: return _stepOneFormKey;
+    }
+  }
+
+  // Method to go to the next page
+  void nextStep() {
+    final currentFormKey = _getCurrentFormKey();
+    if (currentFormKey.currentState!.validate()) {
+      // If not on the last page, go to the next
+      if (_currentPage < totalSteps - 1) {
+        pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeIn);
+      }
+      // If on the last page (interests), finish the registration
+      else {
+        if (_data.interests.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: Colors.green[400],
+              content: Text('Моля, изберете поне един интерес.', style: TextStyle(color: Colors.black))
+              ),
+          );
+          return;
+        }
+        _submitRegistration();
+      }
+    }
+  }
+
+  // Method to go back to the previous page
+  void previousStep() {
+    if (_currentPage > 0) {
+      pageController.previousPage(duration: const Duration(milliseconds: 300), curve: Curves.easeIn);
+    }
+  }
+
+  // Submit registration method
+  Future<void> _submitRegistration() async {
+    setState(() {
+      loading = true;
+    });
+    
+    // Firebase Authentication
+    VolunteerUser? authUser = await _auth.registerWithEmailAndPassword(_data.email, _data.password);
+
+    if (authUser == null) {
+      setState(() {
+        _authError = 'Неуспешна регистрация! Проверете имейла и паролата.';
+        loading = false;
+      });
+      return; 
+    }
+
+    // Creating a new VolunteerUser
+    final VolunteerUser newUser = VolunteerUser(
+      uid: authUser.uid,
+      email: _data.email, 
+      firstName: _data.firstName, 
+      lastName: _data.lastName,
+      interests: _data.interests,
+      phoneNumber: _data.phoneNumber,
+      dateOfBirth: _data.dateOfBirth,
+      bio: _data.bio,
+      avatarUrl: _data.avatarUrl,
+      
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+
+    // TODO: Update user data in the database (something like the line below:)
+    // await _dbService.updateUserData(newUser);
+
+    widget.toggleView();
+  }
 
   @override
   Widget build(BuildContext context) {
     return loading ? Loading() : Scaffold(
       backgroundColor: backgroundGrey,
       
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 50.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: <Widget>[
-                SizedBox(height: 160.0),
-                const Text('Регистрация', style: mainHeadingStyle),
-                SizedBox(height: 30.0),
+      body: Stack(
+        children: [
+          // The registration pages
+          PageView(
+            controller: pageController,
+            physics: const NeverScrollableScrollPhysics(),
+            // The value of _currentPage changes when a page is selected
+            onPageChanged: (int index) {
+              setState(() {
+                _currentPage = index;
+              });
+            },
+            children: [
+              RegisterStepOne(data: _data, formKey: _stepOneFormKey, toggleView: widget.toggleView),
+              RegisterStepTwo(data: _data, formKey: _stepTwoFormKey),
+              RegisterStepThree(data: _data, formKey: _stepThreeFormKey),
+            ],
+          ),
 
-                // Email input
-                TextFormField(
-                  decoration: textInputDecoration.copyWith(hintText: 'Имейл'),
-                  validator: (val) => val!.isEmpty ? 'Моля въведете имейл' : null,
-                  onChanged: (val) {
-                    // Handle email input change
-                    setState(() {
-                      email = val;
-                    });
-                  },
-                ),
-
-                SizedBox(height: 20.0),
-
-                // Password input
-                TextFormField(
-                  decoration: textInputDecoration.copyWith(
-                    hintText: 'Парола',
-                    suffixIcon: IconButton(
-                      // The icon changes depending on whether the password is visible or not
-                      icon: Icon(
-                        _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                        color: greenPrimary
-                      ), 
-                      onPressed: () {
-                        setState(() {
-                          _isPasswordVisible = !_isPasswordVisible;
-                        });
-                      })
-                    ),
-                  obscureText: !_isPasswordVisible,
-                  validator: (val) => val!.length < 6 ? 'Въведете парола с най-малко 6 знака' : null,
-                  onChanged: (val) {
-                    // Handle password input change
-                    setState(() {
-                      password = val;
-                    });
-                  },
-                ),
-
-                SizedBox(height: 20.0),
-                
-                // Repeat password field
-                TextFormField(
-                  decoration: textInputDecoration.copyWith(
-                    hintText: 'Повторете паролата',
-                    suffixIcon: IconButton(
-                      // The icon changes depending on whether the password is visible or not
-                      icon: Icon(
-                        _isRepeatedPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                        color: greenPrimary
-                      ), 
-                      onPressed: () {
-                        setState(() {
-                          _isRepeatedPasswordVisible = !_isRepeatedPasswordVisible;
-                        });
-                      })
-                    ),
-                  obscureText: !_isRepeatedPasswordVisible,
-                  validator: (val) => val != password ? 'Паролите не съвпадат' : null,
-                  onChanged: (val) {
-                    // Handle password input change
-                    setState(() {
-                      repeatedPassword = val;
-                    });
-                  },
-                ),
-
-                SizedBox(height: 20.0),
-
-                // Registration button
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: greenPrimary,
-                    foregroundColor: Colors.white,
-                    minimumSize: Size(double.infinity, 36),
-                    shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20.0),
+          // Navigation
+          Container(
+            alignment: Alignment(0, 0.85),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 50.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Go to the previous page
+                  SizedBox(
+                    width: 100,
+                    child: GestureDetector(
+                      onTap: previousStep,
+                      // The text will appear with an animation
+                      child: AnimatedOpacity(
+                        opacity: _currentPage > 0 ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 300),
+                        child: Text(
+                          'Назад',
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: _currentPage > 0 ? greenPrimary : Colors.transparent, // Скриваме текста
+                          ),
+                        ),
+                      )
                     ),
                   ),
-                  child: Text('Регистрирайте се!'),
 
-                  // Logs the user in if correct, throws error message otherwise
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      setState(() => loading = true);
-                      dynamic result = await _auth.registerWithEmailAndPassword(email, password);
-                      if (result == null) {
-                        setState(() {
-                          error = 'Настъпи грешка при регистрацията!';
-                          loading = false;
-                        });
+                  // Dot indicator              
+                  SmoothPageIndicator(
+                    controller: pageController,
+                    count: totalSteps,
+                    effect: JumpingDotEffect(
+                      dotHeight: 10,
+                      dotWidth: 10,
+                      activeDotColor: greenPrimary,
+                      dotColor: Colors.grey.shade400,
+                    ),
+                    onDotClicked: (index) {
+                      // If it's forward, make the validation
+                      if (index > _currentPage) {
+                        nextStep();
+                      }
+                      else {
+                        pageController.animateToPage(
+                          index,
+                          duration: Duration(milliseconds: 300),
+                          curve: Curves.easeIn
+                        );
                       }
                     }
-                  },
-                ),
-
-                SizedBox(height: 20.0),
-
-                // Switch to sign-in page
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('Имате регистрация?'),
-                    GestureDetector(
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 4.0, right: 4.0), 
-                      child: const Text(
-                        'Влезте!',
-                        style: TextStyle(
-                          color: greenPrimary, 
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    onTap: () {
-                      widget.toggleView();
-                    },
                   ),
-                  ],
-                ),
 
-                // Error message
-                SizedBox(height: 12.0),
-                Text(
-                  error,
-                  style: TextStyle(color: Colors.red, fontSize: 14.0),
+                  // Go to the next page
+                  SizedBox(
+                    width: 100,
+                    child: GestureDetector(
+                      onTap: nextStep,
+                      // If we're on the last step, show different text
+                      child: Text(
+                        _currentPage == totalSteps - 1 ? 'Край' : 'Напред',
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: greenPrimary,
+                        ),
+                      )
+                    ),
+                  ),
+                ],
               ),
-
-            ],
+            )
           )
-        ),
-      ),
-    )
+        ]
+      )
     );
   }
 }
