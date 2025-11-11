@@ -41,8 +41,19 @@ class _RegisterStepOneState extends State<RegisterStepOne> {
       
               // Email input
               TextFormField(
+                keyboardType: TextInputType.emailAddress,
                 decoration: textInputDecoration.copyWith(hintText: 'Имейл'),
-                validator: (val) => val!.isEmpty ? 'Моля въведете имейл' : null,
+                validator: (val) { 
+                  if (val == null || val.isEmpty) {
+                    return 'Моля, въведете имейл';
+                  }
+                  // Email RegEx and validation
+                  final bool isValidEmail = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(val);
+                  if (!isValidEmail) {
+                    return 'Моля, въведете валиден имейл адрес';
+                  }
+                  return null;
+                },
                 onChanged: (val) {
                   // Handle email input change
                   setState(() {
