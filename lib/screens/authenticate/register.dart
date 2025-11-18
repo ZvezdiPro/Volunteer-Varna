@@ -130,6 +130,7 @@ class _RegisterState extends State<Register> {
   Widget build(BuildContext context) {
     return loading ? Loading() : Scaffold(
       backgroundColor: backgroundGrey,
+      resizeToAvoidBottomInset: false,
       
       body: Stack(
         children: [
@@ -173,7 +174,7 @@ class _RegisterState extends State<Register> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: _currentPage > 0 ? greenPrimary : Colors.transparent, // Скриваме текста
+                            color: _currentPage > 0 ? greenPrimary : Colors.transparent,
                           ),
                         ),
                       )

@@ -29,13 +29,13 @@ class _RegisterStepTwoState extends State<RegisterStepTwo> {
         : DateFormat('dd.MM.yyyy').format(widget.data.dateOfBirth!);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 50.0),
+      padding: EdgeInsets.only(left: 50.0, right: 50.0, top: 20.0, bottom: MediaQuery.of(context).viewInsets.bottom + 20),
       child: Form(
         key: widget.formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            SizedBox(height: 150.0),
+            SizedBox(height: 100.0),
             Text('Стъпка 2: Лични Данни', style: mainHeadingStyle),
             SizedBox(height: 20.0),
 
