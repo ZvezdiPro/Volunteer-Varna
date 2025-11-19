@@ -26,6 +26,19 @@ class _CreateCampaignState extends State<CreateCampaign> {
   int _currentPage = 0;
   final int totalSteps = 3;
 
+  final GlobalKey<FormState> _stepOneFormKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _stepTwoFormKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _stepThreeFormKey = GlobalKey<FormState>();
+
+  GlobalKey<FormState> _getCurrentFormKey() {
+    switch (_currentPage) {
+      case 0: return _stepOneFormKey;
+      case 1: return _stepTwoFormKey;
+      case 2: return _stepThreeFormKey;
+      default: return _stepOneFormKey;
+    }
+  }
+
   void nextStep() {
     // If we aren't on the last page, go to the next
     if (_currentPage < totalSteps - 1) {
@@ -46,9 +59,6 @@ class _CreateCampaignState extends State<CreateCampaign> {
         curve: Curves.easeIn
       );
     }
-    else {
-      Navigator.of(context).pop();
-    }
   }
 
   void _submitCampaign() async {
@@ -59,7 +69,6 @@ class _CreateCampaignState extends State<CreateCampaign> {
     // TODO: Create a Campaign object using the data and add it to the DB
     // Needs to call the constructor AND use the organiserID usign the Auth service
     // Needs to be in a try-catch block so that errors can be displayed
-    
   }
 
   @override
@@ -76,13 +85,13 @@ class _CreateCampaignState extends State<CreateCampaign> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close),
-          onPressed: previousStep, // Позволява затваряне при първа стъпка
+          onPressed: () { Navigator.of(context).pop(); }
         ),
       ),
 
       body: Stack(
         children: [
-          // The registration pages
+          // The Campaign creation pages
           PageView(
             controller: _pageController,
             physics: const NeverScrollableScrollPhysics(),
@@ -93,9 +102,9 @@ class _CreateCampaignState extends State<CreateCampaign> {
               });
             },
             children: [
-              CreateCampaignStepOne(),
-              CreateCampaignStepTwo(),
-              CreateCampaignStepThree()
+              CreateCampaignStepOne(data: _data, formKey: _stepOneFormKey),
+              CreateCampaignStepTwo(data: _data, formKey: _stepTwoFormKey),
+              CreateCampaignStepThree(data: _data, formKey: _stepThreeFormKey)
             ],
           ),
 
