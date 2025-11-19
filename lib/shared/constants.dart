@@ -29,3 +29,9 @@ const mainHeadingStyle = TextStyle(
   fontSize: 28,
   fontWeight: FontWeight.bold,
   );
+
+const appBarHeadingStyle = TextStyle(
+  color: Colors.black,
+  fontSize: 22,
+  fontWeight: FontWeight.w600,
+  );

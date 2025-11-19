@@ -4,6 +4,7 @@ class Campaign {
   final String title;
   final String description;
   final String location;
+  final String instructions; // Not required
   final int requiredVolunteers;
   final DateTime startDate;
   final DateTime endDate;
@@ -26,6 +27,7 @@ class Campaign {
     required this.createdAt,
     required this.updatedAt,
     required this.categories,
+    this.instructions = '',
     this.registeredVolunteersUids = const [],
   });
 }
