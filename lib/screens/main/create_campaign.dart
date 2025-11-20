@@ -40,15 +40,19 @@ class _CreateCampaignState extends State<CreateCampaign> {
   }
 
   void nextStep() {
-    // If we aren't on the last page, go to the next
-    if (_currentPage < totalSteps - 1) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 300), 
-        curve: Curves.easeIn
-      );
-    }
-    else {
-      Navigator.pop(context);
+    final currentFormKey = _getCurrentFormKey();
+
+    if (currentFormKey.currentState!.validate()) {
+      // If we aren't on the last page, go to the next
+      if (_currentPage < totalSteps - 1) {
+        _pageController.nextPage(
+          duration: const Duration(milliseconds: 300), 
+          curve: Curves.easeIn
+        );
+      }
+      else {
+        _submitCampaign();
+      }
     }
   }
   
@@ -65,6 +69,8 @@ class _CreateCampaignState extends State<CreateCampaign> {
     setState(() {
       _loading = true;
       });
+
+    Navigator.of(context).pop();
     
     // TODO: Create a Campaign object using the data and add it to the DB
     // Needs to call the constructor AND use the organiserID usign the Auth service
