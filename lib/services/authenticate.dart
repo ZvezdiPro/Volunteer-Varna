@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:volunteer_app/models/registration_data.dart';
 import 'package:volunteer_app/models/volunteer.dart';
-// import 'package:volunteer_app/services/database.dart';
+import 'package:volunteer_app/services/database.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -15,12 +16,13 @@ class AuthService {
     // Same as .map((User? user) => _userFromFirebaseUser(user));
     }
 
-  Future<VolunteerUser?> registerWithEmailAndPassword(String email, String password) async {
+  Future<VolunteerUser?> registerWithEmailAndPassword(String email, String password, RegistrationData data) async {
   try {
     UserCredential result = await _auth.createUserWithEmailAndPassword(
         email: email, password: password);
     User? user = result.user;
-    return _userFromFirebaseUser(user);
+    await DatabaseService(uid: user!.uid).updateUserData(data);
+    return _volunteerFromFirebaseUser(user, data);
   } catch (e) {
     print(e.toString());
     return null;
@@ -46,5 +48,23 @@ class AuthService {
     } catch (e) {
       print(e.toString());
     }
+  }
+  
+  Future<VolunteerUser?> _volunteerFromFirebaseUser(User? user, RegistrationData data) async {
+    return user != null ? VolunteerUser(
+      uid: user.uid,
+      email: data.email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      interests: data.interests, 
+      experiencePoints: 0,
+      userLevel: 1,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      bio: data.bio,
+      avatarUrl: data.avatarUrl,
+      phoneNumber: data.phoneNumber,
+      dateOfBirth: data.dateOfBirth,
+    ) : null;
   } 
 }
