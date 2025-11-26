@@ -20,7 +20,7 @@ class CreateCampaignStepThree extends StatefulWidget {
 
 class _CreateCampaignStepThreeState extends State<CreateCampaignStepThree> {
 
-  GlobalKey<FormFieldState> _volunteerCountKey = GlobalKey<FormFieldState>();
+  final GlobalKey<FormFieldState> _volunteerCountKey = GlobalKey<FormFieldState>();
 
   @override
   Widget build(BuildContext context) {

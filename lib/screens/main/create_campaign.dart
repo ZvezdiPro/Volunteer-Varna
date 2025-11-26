@@ -70,9 +70,21 @@ class _CreateCampaignState extends State<CreateCampaign> {
       _loading = true;
       });
 
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: greenPrimary,
+        content: Container(
+          alignment: Alignment.center,
+          height: 45,
+          child: Text('Кампанията е създадена успешно!', style: TextStyle(fontSize: 16, color: Colors.white))
+        ),
+        duration: Duration(seconds: 3),
+      ),
+    );
+
     Navigator.of(context).pop();
     
-    // TODO: Create a Campaign object using the data and add it to the DB
+    // TODO: Add a new record to the DB
     // Needs to call the constructor AND use the organiserID usign the Auth service
     // Needs to be in a try-catch block so that errors can be displayed
   }
