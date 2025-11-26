@@ -17,6 +17,10 @@ class CreateCampaignStepOne extends StatefulWidget {
 }
 
 class _CreateCampaignStepOneState extends State<CreateCampaignStepOne> {
+
+  final GlobalKey<FormFieldState> _titleKey = GlobalKey<FormFieldState>();
+  final GlobalKey<FormFieldState> _descriptionKey = GlobalKey<FormFieldState>();
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -36,23 +40,35 @@ class _CreateCampaignStepOneState extends State<CreateCampaignStepOne> {
             SizedBox(height: 40.0),
 
             // Campaign title input
+            Text('Име на кампанията', style: textFormFieldHeading),
+            SizedBox(height: 10.0),
             TextFormField(
+              key: _titleKey,
               initialValue: widget.data.title,
-              decoration: textInputDecoration.copyWith(labelText: 'Име на кампанията', hintText: 'Например: Почистване на плажа'),
-              validator: (val) => val!.isEmpty ? 'Въведете заглавие' : null,
-              onChanged: (val) => widget.data.title = val.trim(),
+              decoration: textInputDecoration.copyWith(labelText: 'Име', hintText: 'Например: Почистване на плажа'),
+              validator: (val) => val!.isEmpty ? 'Въведете име' : null,
+              onChanged: (val) {
+                widget.data.title = val.trim();
+                _titleKey.currentState?.validate();
+              },
             ),
 
             SizedBox(height: 20.0),
 
             // Description input
+            Text('Кратко описание', style: textFormFieldHeading),
+            SizedBox(height: 10.0),
             TextFormField(
+              key: _descriptionKey,
               initialValue: widget.data.description,
-              decoration: textInputDecoration.copyWith(labelText: 'Кратко описание', hintText: 'Ще съберем пластмасови отпадъци от плажната ивица и ще ги рециклираме.'),
+              decoration: textInputDecoration.copyWith(labelText: 'Въведете описание', hintText: 'Ще съберем пластмасови отпадъци от плажната ивица и ще ги рециклираме.'),
               maxLines: 4,
               keyboardType: TextInputType.multiline,
               validator: (val) => val!.isEmpty ? 'Въведете описание' : null,
-              onChanged: (val) => widget.data.description = val.trim(),
+              onChanged: (val) {
+                widget.data.description = val.trim();
+                _descriptionKey.currentState?.validate();
+              }
             ),
           ],
         ),

@@ -19,6 +19,9 @@ class CreateCampaignStepThree extends StatefulWidget {
 }
 
 class _CreateCampaignStepThreeState extends State<CreateCampaignStepThree> {
+
+  GlobalKey<FormFieldState> _volunteerCountKey = GlobalKey<FormFieldState>();
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -37,6 +40,7 @@ class _CreateCampaignStepThreeState extends State<CreateCampaignStepThree> {
             Text('Необходим брой доброволци', style: textFormFieldHeading),
             SizedBox(height: 10.0),
             TextFormField(
+              key: _volunteerCountKey,
               decoration: textInputDecoration.copyWith(labelText: 'Брой доброволци', hintText: 'Въведете брой'),
               keyboardType: TextInputType.number,
               validator: (val) {
@@ -48,7 +52,10 @@ class _CreateCampaignStepThreeState extends State<CreateCampaignStepThree> {
                 }
                 return null;
               },
-              onChanged: (val) => widget.data.requiredVolunteers = int.tryParse(val) ?? 0,
+              onChanged: (val) {
+                widget.data.requiredVolunteers = int.tryParse(val) ?? 0;
+                _volunteerCountKey.currentState?.validate();
+              },
             ),
 
             SizedBox(height: 20.0),
