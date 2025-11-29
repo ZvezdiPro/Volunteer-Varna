@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:volunteer_app/shared/colors.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -11,8 +12,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: const Center(
-        child: Text('Добре дошли в приложението за доброволци!'),
+      body: Container(
+        color: backgroundGrey,
+        child: Center(
+          child: Text('Добре дошли в приложението за доброволци!'),
+        ),
       ),
     );
   }

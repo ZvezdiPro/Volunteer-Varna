@@ -12,7 +12,6 @@ import 'package:volunteer_app/screens/authenticate/register_step_two.dart';
 import 'package:volunteer_app/screens/authenticate/register_step_three.dart';
 
 class Register extends StatefulWidget {
-  // const Register({super.key});
 
   final Function toggleView;
   Register({required this.toggleView});

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:volunteer_app/shared/colors.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -11,8 +12,11 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: const Center(
-        child: Text('Това е страницата за потребителския профил!'),
+      body: Container(
+        color: backgroundGrey,
+        child: Center(
+          child: Text('Това е страницата за потребителския профил!'),
+        ),
       ),
     );
   }

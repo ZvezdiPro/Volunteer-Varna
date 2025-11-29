@@ -85,7 +85,7 @@ class _CreateCampaignState extends State<CreateCampaign> {
     Navigator.of(context).pop();
     
     // TODO: Add a new record to the DB
-    // Needs to call the constructor AND use the organiserID usign the Auth service
+    // Needs to call the constructor AND use the organiserID using the Auth service
     // Needs to be in a try-catch block so that errors can be displayed
   }
 

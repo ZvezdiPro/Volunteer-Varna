@@ -36,7 +36,7 @@ const appBarHeadingStyle = TextStyle(
   fontWeight: FontWeight.w600,
   );
 
-const textFormFieldHeading = const TextStyle(
+const textFormFieldHeading = TextStyle(
   color: Colors.black54,
   fontSize: 16,
   fontWeight: FontWeight.bold
