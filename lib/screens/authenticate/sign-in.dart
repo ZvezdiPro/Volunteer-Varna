@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:volunteer_app/services/authenticate.dart';
+import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/shared/constants.dart';
+import 'package:volunteer_app/shared/loading.dart';
+import 'package:volunteer_app/widgets/social_button.dart';
 
 class SignIn extends StatefulWidget {
   // const SignIn({super.key});
@@ -25,83 +28,144 @@ class _SignInState extends State<SignIn> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.green[100],
-      appBar: AppBar(
-        backgroundColor: Colors.green[400],
-        elevation: 0.0,
-        title: const Text('Влезте'),
-        actions: <Widget>[
-          TextButton.icon(
-            icon: Icon(Icons.person),
-            label: Text('Регистрация'),
-            onPressed: () {
-              // Toggle to register view
-              widget.toggleView();
-            },
-          )
-        ],
-      ),
-      body: Container(
-        padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 50.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: <Widget>[
-              SizedBox(height: 20.0),
-              TextFormField(
-                decoration: textInputDecoration.copyWith(hintText: 'Имейл'),
-                validator: (val) => val!.isEmpty ? 'Моля, въведете имейл' : null,
-                onChanged: (val) {
-                  // Handle email input change
-                  setState(() {
-                    email = val;
-                  });
-                },
-              ),
-              SizedBox(height: 20.0),
-              TextFormField(
-                decoration: textInputDecoration.copyWith(hintText: 'Парола'),
-                obscureText: true,
-                validator: (val) => val!.length < 6 ? 'Въведете парола с най-малко 6 знака' : null,
-                onChanged: (val) {
-                  // Handle password input change
-                  setState(() {
-                    password = val;
-                  });
-                },
-              ),
-              SizedBox(height: 20.0),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.pink[400],
-                  foregroundColor: Colors.white,
+    return loading ? Loading() : Scaffold(
+      backgroundColor: backgroundGrey,
+
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 50.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: <Widget>[
+                SizedBox(height: 160.0),
+                Text('Добре дошли отново!', style: mainHeadingStyle),
+                SizedBox(height: 30.0),
+
+                // Email input
+                TextFormField(
+                  decoration: textInputDecoration.copyWith(hintText: 'Имейл'),
+                  validator: (val) => val!.isEmpty ? 'Моля, въведете имейл' : null,
+                  onChanged: (val) {
+                    // Handle email input change
+                    setState(() {
+                      email = val;
+                    });
+                  },
                 ),
-                child: Text('Влезте'),
-                onPressed: () async {
-                  if (_formKey.currentState!.validate()) {
-                    setState(() => loading = true);
-                    dynamic result = await _auth.signInWithEmailAndPassword(email, password);
-                    if (result == null) {
-                      setState(() {
-                        error = 'Настъпи грешка при влизането';
-                        loading = false;
-                      });
+
+                SizedBox(height: 20.0),
+
+                // Password input
+                TextFormField(
+                  decoration: textInputDecoration.copyWith(hintText: 'Парола'),
+                  obscureText: true,
+                  validator: (val) => val!.length < 6 ? 'Въведете парола с най-малко 6 знака' : null,
+                  onChanged: (val) {
+                    // Handle password input change
+                    setState(() {
+                      password = val;
+                    });
+                  },
+                ),
+
+                SizedBox(height: 20.0),
+
+                // Sign-in button
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: greenPrimary,
+                    foregroundColor: Colors.white,
+                    minimumSize: Size(double.infinity, 36),
+                    shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20.0),
+                    ),
+                  ),
+                  child: Text('Влезте'),
+
+                  // Logs the user in if correct, throws error message otherwise
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                      setState(() => loading = true);
+                      dynamic result = await _auth.signInWithEmailAndPassword(email, password);
+                      if (result == null) {
+                        setState(() {
+                          error = 'Настъпи грешка при влизането';
+                          loading = false;
+                        });
+                      }
                     }
-                  }
-                },
-              ),
+                  },
+                ),
 
-              SizedBox(height: 12.0),
-              Text(
-                error,
-                style: TextStyle(color: Colors.red, fontSize: 14.0),
-              ),
+                SizedBox(height: 20.0),
 
-            ],
-          )
+                Text(
+                  'Или влезте с:',
+                  style: TextStyle(fontSize: 16)
+                ),
+                SizedBox(height: 12.0),
+
+                // Sign-in with Google or Facebook
+                // TODO - Add Logic
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    SocialButton(
+                      label: 'Google',
+                      icon: const Icon(Icons.g_mobiledata, size: 30, color: blueSecondary),
+                      onPressed: () {
+                        // !!! TODO: Add Google Login Logic
+                      },
+                    ),
+                    SocialButton(
+                      label: 'Facebook',
+                      icon: const Icon(Icons.facebook, size: 24, color: blueSecondary),
+                      onPressed: () {
+                        // !!! TODO: Add Facebook Login Logic
+                      },
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 40.0),
+
+                // Links to register page                
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Нямате регистрация?'),
+                    GestureDetector(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 4.0, right: 4.0), 
+                      child: const Text(
+                        'Регистрирайте се!',
+                        style: TextStyle(
+                          color: greenPrimary, 
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    onTap: () {
+                      widget.toggleView();
+                    },
+                  ),
+                  ],
+                ),
+
+                // Error message
+                SizedBox(height: 12.0),
+                Text(
+                  error,
+                  style: TextStyle(color: Colors.red, fontSize: 14.0),
+                ),
+        
+              ],
+            )
+          ),
         ),
       ),
+
     );
   }
 }
