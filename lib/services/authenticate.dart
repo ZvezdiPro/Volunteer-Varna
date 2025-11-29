@@ -6,10 +6,23 @@ import 'package:volunteer_app/services/database.dart';
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  // Auth change user stream
+  // Maps the Firebase User to a VolunteerUser using asyncMap
+  // and the helper method which uses the id to fetch the full data
+  Stream<VolunteerUser?> get user {
+    // We use the asyncMap() because of the async method _fullUserFromFirebaseUser
+    return _auth.authStateChanges().asyncMap(_fullUserFromFirebaseUser);
+  }
+
   // Create user object based on Firebase User
-  VolunteerUser? _userFromFirebaseUser(User? user) {
-      return user != null ? VolunteerUser.forAuth(uid: user.uid) : null;
+  // The method is asynchronous because it fetches additional data from Firestore (which takes time)
+  Future<VolunteerUser?> _fullUserFromFirebaseUser(User? user) async {
+    if (user == null) {
+      return null; 
     }
+    // Get the VolunteerUser from the database using the uid
+    return await DatabaseService(uid: user.uid).getVolunteerUser();
+  }
 
   Future<VolunteerUser?> _volunteerFromFirebaseUser(User? user, RegistrationData data) async {
     return user != null ? VolunteerUser(
@@ -27,12 +40,7 @@ class AuthService {
       phoneNumber: data.phoneNumber,
       dateOfBirth: data.dateOfBirth,
     ) : null;
-  } 
-
-  Stream<VolunteerUser?> get user {
-    return _auth.authStateChanges().map(_userFromFirebaseUser);
-    // Same as .map((User? user) => _userFromFirebaseUser(user));
-    }
+  }
 
   Future<VolunteerUser?> registerWithEmailAndPassword(String email, String password, RegistrationData data) async {
     try {

@@ -55,7 +55,7 @@ class VolunteerUser {
 
   // Factory constructor to create a VolunteerUser from Firestore document
   factory VolunteerUser.fromFirestore(DocumentSnapshot doc) {
-    // Get the data from the document as a map
+    // Get the data from the document as a map of kvpairs
     final Map data = doc.data() as Map<String, dynamic>;
     return VolunteerUser(
       uid: doc.id,
