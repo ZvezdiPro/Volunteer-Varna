@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:volunteer_app/models/registration_data.dart';
+import 'package:volunteer_app/models/volunteer.dart';
 
 class DatabaseService {
   
@@ -23,5 +24,17 @@ class DatabaseService {
     'phoneNumber': data.phoneNumber,
     'dateOfBirth': data.dateOfBirth,
     });
+  }
+
+  Future<VolunteerUser?> getVolunteerUser() async {
+    if (uid == null) return null;
+    // Get the document snapshot for the user with the given uid
+    DocumentSnapshot doc = await volunteerCollection.doc(uid).get();
+    if (doc.exists) {
+      // Uses the factory constructor to create a VolunteerUser from the document snapshot
+      return VolunteerUser.fromFirestore(doc);
+    } else {
+      return null;
+    }
   }
 }

@@ -11,45 +11,6 @@ class AuthService {
       return user != null ? VolunteerUser.forAuth(uid: user.uid) : null;
     }
 
-  Stream<VolunteerUser?> get user {
-    return _auth.authStateChanges().map(_userFromFirebaseUser);
-    // Same as .map((User? user) => _userFromFirebaseUser(user));
-    }
-
-  Future<VolunteerUser?> registerWithEmailAndPassword(String email, String password, RegistrationData data) async {
-  try {
-    UserCredential result = await _auth.createUserWithEmailAndPassword(
-        email: email, password: password);
-    User? user = result.user;
-    await DatabaseService(uid: user!.uid).updateUserData(data);
-    return _volunteerFromFirebaseUser(user, data);
-  } catch (e) {
-    print(e.toString());
-    return null;
-  }
-  }
-
-  // Sign in with email and password
-  Future<VolunteerUser?> signInWithEmailAndPassword(String email, String password) async {
-    try {
-      UserCredential result = await _auth.signInWithEmailAndPassword(
-          email: email, password: password);
-      return _userFromFirebaseUser(result.user);
-    } catch (e) {
-      print(e.toString());
-      return null;
-    }
-  }
-
-  // Sign out
-  Future<void> signOut() async {
-    try {
-      return await _auth.signOut();
-    } catch (e) {
-      print(e.toString());
-    }
-  }
-  
   Future<VolunteerUser?> _volunteerFromFirebaseUser(User? user, RegistrationData data) async {
     return user != null ? VolunteerUser(
       uid: user.uid,
@@ -67,4 +28,49 @@ class AuthService {
       dateOfBirth: data.dateOfBirth,
     ) : null;
   } 
+
+  Stream<VolunteerUser?> get user {
+    return _auth.authStateChanges().map(_userFromFirebaseUser);
+    // Same as .map((User? user) => _userFromFirebaseUser(user));
+    }
+
+  Future<VolunteerUser?> registerWithEmailAndPassword(String email, String password, RegistrationData data) async {
+    try {
+      // Attempt to create the user
+      UserCredential result = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      // Get the newly created firebase (authenticated) user (could be null)
+      User? user = result.user;
+      // Create a new document for the user with the uid using the registration data
+      await DatabaseService(uid: user!.uid).updateUserData(data);
+      // Return the VolunteerUser object using both Firebase User (for the uid) and registration data
+      return await _volunteerFromFirebaseUser(user, data);
+    }
+    catch (e) {
+      print(e.toString());
+      return null;
+    }
+  }
+
+  // Sign in with email and password
+  Future<VolunteerUser?> signInWithEmailAndPassword(String email, String password) async {
+    try {
+      UserCredential result = await _auth.signInWithEmailAndPassword(email: email, password: password);
+      User? user = result.user;
+      // Fetch and return the VolunteerUser object from the database
+      return await DatabaseService(uid: user!.uid).getVolunteerUser();
+    } catch (e) {
+      print(e.toString());
+      return null;
+    }
+  }
+
+  // Sign out
+  Future<void> signOut() async {
+    try {
+      return await _auth.signOut();
+    } catch (e) {
+      print(e.toString());
+    }
+  }
+  
 }

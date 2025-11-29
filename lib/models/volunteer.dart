@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class VolunteerUser {
 
   // Required fields
@@ -50,4 +52,25 @@ class VolunteerUser {
     this.phoneNumber,
     this.dateOfBirth,
   });
+
+  // Factory constructor to create a VolunteerUser from Firestore document
+  factory VolunteerUser.fromFirestore(DocumentSnapshot doc) {
+    // Get the data from the document as a map
+    final Map data = doc.data() as Map<String, dynamic>;
+    return VolunteerUser(
+      uid: doc.id,
+      email: data['email'] ?? '',
+      firstName: data['firstName'] ?? '',
+      lastName: data['lastName'] ?? '',
+      interests: List<String>.from(data['interests'] ?? []),
+      experiencePoints: data['experiencePoints'] ?? 0,
+      userLevel: data['userLevel'] ?? 1,
+      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+      bio: data['bio'],
+      avatarUrl: data['avatarUrl'],
+      phoneNumber: data['phoneNumber'],
+      dateOfBirth: data['dateOfBirth'] != null ? (data['dateOfBirth'] as Timestamp).toDate() : null,
+    );
+  }
 }
