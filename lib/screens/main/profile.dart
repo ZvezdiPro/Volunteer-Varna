@@ -11,6 +11,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
+    final VolunteerUser? volunteer = Provider.of<VolunteerUser?>(context);
     return Scaffold(
       body: Container(
         color: backgroundGrey,

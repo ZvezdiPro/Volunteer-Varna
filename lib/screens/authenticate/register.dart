@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:volunteer_app/services/authenticate.dart';
-// TODO: Import database service file
+import 'package:volunteer_app/services/database.dart';
 import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/shared/loading.dart';
 import 'package:volunteer_app/models/volunteer.dart';
@@ -23,7 +23,7 @@ class Register extends StatefulWidget {
 class _RegisterState extends State<Register> {
   
   final AuthService _auth = AuthService();
-  // TODO: Add database service instance here
+  final DatabaseService _db = DatabaseService();
   final RegistrationData _data = RegistrationData(); // To keep the user data before creating an object
 
   // Pages keys for the forms on each page
@@ -92,35 +92,14 @@ class _RegisterState extends State<Register> {
       loading = true;
     });
     
-    // Firebase Authentication
-    VolunteerUser? authUser = await _auth.registerWithEmailAndPassword(_data.email, _data.password);
+    dynamic result = await _auth.registerWithEmailAndPassword(_data.email, _data.password, _data);
 
-    if (authUser == null) {
+    if (result == null) {
       setState(() {
-        _authError = 'Неуспешна регистрация! Проверете имейла и паролата.';
+        _authError = "Настъпи грешка при регистрацията";
         loading = false;
       });
-      return; 
     }
-
-    // Creating a new VolunteerUser
-    final VolunteerUser newUser = VolunteerUser(
-      uid: authUser.uid,
-      email: _data.email, 
-      firstName: _data.firstName, 
-      lastName: _data.lastName,
-      interests: _data.interests,
-      phoneNumber: _data.phoneNumber,
-      dateOfBirth: _data.dateOfBirth,
-      bio: _data.bio,
-      avatarUrl: _data.avatarUrl,
-      
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
-
-    // TODO: Update user data in the database (something like the line below:)
-    // await _dbService.updateUserData(newUser);
 
     widget.toggleView();
   }
