@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:volunteer_app/models/volunteer.dart';
 import 'package:volunteer_app/shared/colors.dart';
 
 class ProfilePage extends StatefulWidget {
