@@ -30,7 +30,8 @@ class _RegisterStepOneState extends State<RegisterStepOne> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 50.0),
+      // The bottom padding is determined based on the height of the keyboard as to NOT show the navigation while the keyboard is open
+      padding: EdgeInsets.only(left: 50.0, right: 50.0, top: 40.0, bottom: MediaQuery.of(context).viewInsets.bottom + 20),
         child: Form(
           key: widget.formKey,
           child: Column(

@@ -28,13 +28,13 @@ class _RegisterStepThreeState extends State<RegisterStepThree> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 50.0),
+      padding: EdgeInsets.only(left: 50.0, right: 50.0, top: 20.0, bottom: MediaQuery.of(context).viewInsets.bottom + 20),
       child: Form(
         key: widget.formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            SizedBox(height: 150.0),
+            SizedBox(height: 100.0),
             Text('Стъпка 3: Избор на интереси', style: mainHeadingStyle),
             SizedBox(height: 30.0),
 
@@ -68,7 +68,10 @@ class _RegisterStepThreeState extends State<RegisterStepThree> {
                         }
                         else {
                            ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Може да изберете максимум 5 интереса!')),
+                            SnackBar(
+                              backgroundColor: Colors.green[400],
+                              content: Text('Можете да изберете до максимум 5 интереса!', style: TextStyle(color: Colors.black))
+                              ),
                           );
                         }
                       }

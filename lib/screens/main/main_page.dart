@@ -4,6 +4,7 @@ import 'package:volunteer_app/screens/main/events_page.dart';
 import 'package:volunteer_app/screens/main/chats.dart';
 import 'package:volunteer_app/screens/main/profile.dart';
 import 'package:volunteer_app/services/authenticate.dart';
+import 'package:volunteer_app/shared/colors.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -20,20 +21,21 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     
     return Scaffold(
-
       // Appbar at the top
       appBar: AppBar(
-        title: Text('Основна страница'),
-        backgroundColor: Colors.green,
+        title: Text('Основна страница', style: TextStyle(color: greenPrimary, fontSize: 24.0, fontWeight: FontWeight.bold)),
+        centerTitle: true,
+        backgroundColor: backgroundGrey,
+        elevation: 1.0,
         actions: [
-            TextButton.icon(
-              icon: Icon(Icons.logout),
-              label: Text('Излезте'),
-              onPressed: () async {
-                await _auth.signOut();
-              },
-            ),
-          ],
+          TextButton.icon(
+            icon: Icon(Icons.logout, color: blueSecondary),
+            label: Text('Изход', style: TextStyle(color: greenPrimary, fontSize: 14.0)),
+            onPressed: () async {
+              await _auth.signOut();
+            },
+          ),
+        ],
       ),
 
       // The four pages to navigate between
@@ -65,6 +67,8 @@ class _MainPageState extends State<MainPage> {
             label: 'Профил',
           ),
         ],
+        backgroundColor: blueSecondary.withAlpha(15),
+        indicatorColor: greenPrimary.withAlpha(40),
         selectedIndex: currentPageIndex,
         onDestinationSelected: (int index) {
           setState(() {
