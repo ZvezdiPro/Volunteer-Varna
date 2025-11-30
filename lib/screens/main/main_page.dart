@@ -26,15 +26,16 @@ class _MainPageState extends State<MainPage> {
         title: Text('Основна страница', style: TextStyle(color: greenPrimary, fontSize: 24.0, fontWeight: FontWeight.bold)),
         centerTitle: true,
         backgroundColor: backgroundGrey,
+        elevation: 1.0,
         actions: [
-            TextButton.icon(
-              icon: Icon(Icons.logout),
-              label: Text('Излезте', style: TextStyle(color: greenPrimary, fontSize: 14.0)),
-              onPressed: () async {
-                await _auth.signOut();
-              },
-            ),
-          ],
+          TextButton.icon(
+            icon: Icon(Icons.logout, color: blueSecondary),
+            label: Text('Изход', style: TextStyle(color: greenPrimary, fontSize: 14.0)),
+            onPressed: () async {
+              await _auth.signOut();
+            },
+          ),
+        ],
       ),
 
       // The four pages to navigate between
@@ -66,7 +67,7 @@ class _MainPageState extends State<MainPage> {
             label: 'Профил',
           ),
         ],
-        backgroundColor: backgroundGrey,
+        backgroundColor: blueSecondary.withAlpha(15),
         indicatorColor: greenPrimary.withAlpha(40),
         selectedIndex: currentPageIndex,
         onDestinationSelected: (int index) {
