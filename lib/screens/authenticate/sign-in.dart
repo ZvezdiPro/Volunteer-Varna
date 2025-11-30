@@ -38,8 +38,8 @@ class _SignInState extends State<SignIn> {
             key: _formKey,
             child: Column(
               children: <Widget>[
-                SizedBox(height: 160.0),
-                Text('Добре дошли отново!', style: mainHeadingStyle),
+                SizedBox(height: 150.0),
+                Text('Добре дошли отново!', style: mainHeadingStyle, textAlign: TextAlign.center),
                 SizedBox(height: 30.0),
 
                 // Email input
