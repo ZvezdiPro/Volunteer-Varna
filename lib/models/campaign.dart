@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Campaign {
   final String id;
   final String organizerId;
@@ -30,5 +32,25 @@ class Campaign {
     this.instructions = '',
     this.registeredVolunteersUids = const [],
   });
+
+  factory Campaign.fromFirestore(DocumentSnapshot doc) {
+    Map data = doc.data() as Map<String, dynamic>;
+    return Campaign(
+      id: doc.id,
+      organizerId: data['organizerId'] ?? '',
+      title: data['title'] ?? '',
+      description: data['description'] ?? '',
+      location: data['location'] ?? '',
+      instructions: data['instructions'] ?? '',
+      requiredVolunteers: data['requiredVolunteers'] ?? 0,
+      startDate: (data['startDate'] as Timestamp).toDate(),
+      endDate: (data['endDate'] as Timestamp).toDate(),
+      imageUrl: data['imageUrl'] ?? '',
+      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+      categories: List<String>.from(data['categories'] ?? const []),
+      registeredVolunteersUids: List<String>.from(data['registeredVolunteersUids'] ?? const []),
+    );
+  }
 }
   

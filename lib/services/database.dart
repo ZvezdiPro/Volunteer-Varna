@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:volunteer_app/models/campaign.dart';
 import 'package:volunteer_app/models/registration_data.dart';
 import 'package:volunteer_app/models/volunteer.dart';
 import 'package:volunteer_app/models/campaign_data.dart';
@@ -58,5 +59,15 @@ class DatabaseService {
     } else {
       return null;
     }
+  }
+
+  Stream<List<Campaign>> get campaigns {
+    return campaignCollection.snapshots().map(_campaignListFromSnapshot);
+  }
+  
+  List<Campaign> _campaignListFromSnapshot(QuerySnapshot snapshot) {
+    return snapshot.docs.map((doc) {
+      return Campaign.fromFirestore(doc);
+    }).toList();
   }
 }
