@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:volunteer_app/models/registration_data.dart';
 import 'package:volunteer_app/models/volunteer.dart';
+import 'package:volunteer_app/models/campaign_data.dart';
 
 class DatabaseService {
   
@@ -8,6 +9,7 @@ class DatabaseService {
   DatabaseService({ this.uid });
 
   final CollectionReference volunteerCollection = FirebaseFirestore.instance.collection('volunteers');
+  final CollectionReference campaignCollection = FirebaseFirestore.instance.collection('campaigns');
 
   Future updateUserData(RegistrationData data) async {
     return await volunteerCollection.doc(uid).set({
@@ -23,6 +25,26 @@ class DatabaseService {
     'avatarUrl': data.avatarUrl,
     'phoneNumber': data.phoneNumber,
     'dateOfBirth': data.dateOfBirth,
+    });
+  }
+
+  Future updateCampaignData(CampaignData data) async {
+    DocumentReference docRef = campaignCollection.doc();
+    String campaignId = docRef.id;
+    return await campaignCollection.doc(campaignId).set({
+    'title': data.title,
+    'organizerId': uid,
+    'description': data.description,
+    'location': data.location,
+    'instructions': data.instructions,
+    'requiredVolunteers': data.requiredVolunteers,
+    'startDate': data.startDate,
+    'endDate': data.endDate,
+    'imageUrl': data.imageUrl,
+    'categories': data.categories,
+    'createdAt': DateTime.now(),
+    'updatedAt': DateTime.now(),
+    'registeredVolunteersUids': const[]
     });
   }
 

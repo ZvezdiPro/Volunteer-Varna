@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:volunteer_app/models/campaign_data.dart';
+import 'package:volunteer_app/models/volunteer.dart';
+import 'package:volunteer_app/services/database.dart';
 import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/shared/constants.dart';
 import 'package:volunteer_app/shared/loading.dart';
@@ -70,23 +73,36 @@ class _CreateCampaignState extends State<CreateCampaign> {
       _loading = true;
       });
 
-    Navigator.of(context).pop();
+    try {
+      final VolunteerUser? volunteer = Provider.of<VolunteerUser?>(context, listen: false);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: greenPrimary,
-        content: Container(
-          alignment: Alignment.center,
-          height: 45,
-          child: Text('Кампанията е създадена успешно!', style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
+      await DatabaseService(uid: volunteer!.uid).updateCampaignData(_data);
+
+      Navigator.of(context).pop();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: greenPrimary,
+          content: Container(
+            alignment: Alignment.center,
+            height: 45,
+            child: Text('Кампанията е създадена успешно!', style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+          duration: Duration(seconds: 3),
         ),
-        duration: Duration(seconds: 3),
-      ),
-    );
-
-    // TODO: Add a new record to the DB
-    // Needs to call the constructor AND use the organiserID using the Auth service
-    // Needs to be in a try-catch block so that errors can be displayed
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red[400],
+          content: Text('Настъпи грешка при създаването на кампанията. Моля, опитайте отново.', style: TextStyle(color: Colors.black))
+        ),
+      );
+    } finally {
+      setState(() {
+        _loading = false;
+      });
+    }
   }
 
   @override
