@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:volunteer_app/models/registration_data.dart';
 import 'package:volunteer_app/models/volunteer.dart';
@@ -6,6 +7,8 @@ import 'package:volunteer_app/services/database.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  int loginType = 0;
 
   // Auth change user stream
   // Maps the Firebase User to a VolunteerUser using asyncMap
@@ -73,11 +76,11 @@ class AuthService {
     }
   }
 
-  Future<bool> googleLogin() async {
-    final user = await GoogleSignIn().signIn();
+  Future<VolunteerUser?> googleLogin() async {
+    final user = await _googleSignIn.signIn();
 
     if (user == null) {
-      return false; 
+      return null; 
     }
 
     GoogleSignInAuthentication userAuth = await user.authentication;
@@ -89,15 +92,72 @@ class AuthService {
 
     await FirebaseAuth.instance.signInWithCredential(credential);
 
-    return await FirebaseAuth.instance.currentUser != null;
+    if (_auth.currentUser != null) {
+      if (await DatabaseService(uid: _auth.currentUser!.uid).checkUserExists()) {
+        // User exists, fetch and return the VolunteerUser
+        return await DatabaseService(uid: _auth.currentUser!.uid).getVolunteerUser();
+      } 
+      else {
+        // New user, create a new document in Firestore
+        RegistrationData data = RegistrationData();
+        data.email = _auth.currentUser!.email ?? '';
+        data.firstName = _auth.currentUser!.displayName?.split(' ').first ?? '';
+        data.lastName = _auth.currentUser!.displayName?.split(' ').last ?? '';
+        data.avatarUrl = _auth.currentUser!.photoURL ?? '';
+
+        await DatabaseService(uid: _auth.currentUser!.uid).updateUserData(data);
+        return await _volunteerFromFirebaseUser(_auth.currentUser, data);
+      }
+    }
   }
 
   // Sign out
   Future<void> signOut() async {
+    final User? user = _auth.currentUser;
+    String providerId = user!.providerData[0].providerId;
+
+    switch (providerId) {
+      case 'google.com':
+        await _signOutGoogle();
+        break;
+      case 'password': // Email/Password login
+        await _signOutFirebaseOnly();
+        break;
+        // TODO: Add other providers as needed
+        // case 'facebook.com':
+        //   // Implement Facebook sign-out logic here
+        //   print('Signing out from Facebook...');
+        //   await _signOutFacebook();
+        //   break;
+      default:
+        // Handle other providers or default to Firebase sign-out
+        await _signOutFirebaseOnly();
+        break;
+    }
+  }
+
+  // --- Specific Sign-Out Functions ---
+
+  // 1. Sign out for Google-authenticated users
+  Future<void> _signOutGoogle() async {
     try {
-      return await _auth.signOut();
+      // 1. Clear the Google session
+      await _googleSignIn.signOut();
+      // 2. Clear the Firebase session
+      print('Google user signed out successfully.');
+      await _auth.signOut();
     } catch (e) {
-      print(e.toString());
+      print('Error signing out Google: $e');
+    }
+  }
+
+  // 2. Sign out for Email/Password or other simple providers
+  Future<void> _signOutFirebaseOnly() async {
+    try {
+      await _auth.signOut();
+      print('User signed out successfully (Firebase only).');
+    } catch (e) {
+      print('Error signing out Firebase: $e');
     }
   }
   

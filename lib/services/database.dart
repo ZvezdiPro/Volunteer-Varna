@@ -70,4 +70,9 @@ class DatabaseService {
       return Campaign.fromFirestore(doc);
     }).toList();
   }
+
+  Future<bool> checkUserExists() async {
+    final querySnapshot = await volunteerCollection.where('uid', isEqualTo: uid).get();
+    return querySnapshot.docs.isNotEmpty;
+  }
 }

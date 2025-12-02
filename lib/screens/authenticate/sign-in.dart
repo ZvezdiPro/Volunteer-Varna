@@ -118,14 +118,13 @@ class _SignInState extends State<SignIn> {
                       label: 'Google',
                       icon: const Icon(Icons.g_mobiledata, size: 30, color: blueSecondary),
                       onPressed: () async {
-                        bool isLogged = await _auth.googleLogin();
-
-                        if (isLogged) {
-                          print('Babababababa' + isLogged.toString());
-                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>MainPage()));
-                        }
-                        else {
-                          print('Alabala' + isLogged.toString());
+                        setState(() => loading = true);
+                        dynamic result = await _auth.googleLogin();
+                        if (result == null) {
+                          setState(() {
+                            error = 'Настъпи грешка при влизането';
+                            loading = false;
+                          });
                         }
                       },
                     ),
