@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:volunteer_app/models/registration_data.dart';
 import 'package:volunteer_app/models/volunteer.dart';
 import 'package:volunteer_app/services/database.dart';
@@ -70,6 +71,25 @@ class AuthService {
       print(e.toString());
       return null;
     }
+  }
+
+  Future<bool> googleLogin() async {
+    final user = await GoogleSignIn().signIn();
+
+    if (user == null) {
+      return false; 
+    }
+
+    GoogleSignInAuthentication userAuth = await user.authentication;
+
+    var credential = GoogleAuthProvider.credential(
+      idToken: userAuth.idToken, 
+      accessToken: userAuth.accessToken
+    );
+
+    await FirebaseAuth.instance.signInWithCredential(credential);
+
+    return await FirebaseAuth.instance.currentUser != null;
   }
 
   // Sign out

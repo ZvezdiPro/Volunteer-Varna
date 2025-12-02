@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:volunteer_app/screens/main/home.dart';
+import 'package:volunteer_app/screens/main/main_page.dart';
 import 'package:volunteer_app/services/authenticate.dart';
 import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/shared/constants.dart';
@@ -20,6 +22,7 @@ class _SignInState extends State<SignIn> {
   final AuthService _auth = AuthService();
   final _formKey = GlobalKey<FormState>();
   bool loading = false;
+  
 
   // Text field state
   String email = '';
@@ -114,8 +117,16 @@ class _SignInState extends State<SignIn> {
                     SocialButton(
                       label: 'Google',
                       icon: const Icon(Icons.g_mobiledata, size: 30, color: blueSecondary),
-                      onPressed: () {
-                        // !!! TODO: Add Google Login Logic
+                      onPressed: () async {
+                        bool isLogged = await _auth.googleLogin();
+
+                        if (isLogged) {
+                          print('Babababababa' + isLogged.toString());
+                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>MainPage()));
+                        }
+                        else {
+                          print('Alabala' + isLogged.toString());
+                        }
                       },
                     ),
                     SocialButton(
