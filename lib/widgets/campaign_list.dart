@@ -17,7 +17,9 @@ class _CampaignListState extends State<CampaignList> {
     final campaigns = Provider.of<List<Campaign>>(context);
 
     return ListView.builder(
+      padding: EdgeInsets.only(bottom: 16.0),
       itemCount: campaigns.length,
+      cacheExtent: 800.0,
       itemBuilder: (context, index) {
         return CampaignCard(campaign: campaigns[index]);
       },
