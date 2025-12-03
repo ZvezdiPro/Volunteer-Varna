@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:volunteer_app/models/campaign.dart';
+import 'package:volunteer_app/widgets/campaign_details_screen.dart';
 import 'package:volunteer_app/shared/colors.dart';
 
 class CampaignCard extends StatefulWidget {
   
   final Campaign campaign;
-  CampaignCard({required this.campaign});
+  CampaignCard({super.key, required this.campaign});
 
   @override
   State<CampaignCard> createState() => _CampaignCardState();
@@ -48,6 +49,14 @@ class _CampaignCardState extends State<CampaignCard> {
         child: InkWell(
           onTap: () => {
             // Handle card tap and create (and push) a Campaign details page
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CampaignDetailsScreen(
+                    campaign: widget.campaign, 
+                  ),
+                ),
+              )
           },
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
