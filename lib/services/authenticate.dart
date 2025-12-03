@@ -1,13 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:volunteer_app/models/registration_data.dart';
 import 'package:volunteer_app/models/volunteer.dart';
 import 'package:volunteer_app/services/database.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final FacebookAuth _facebookAuth = FacebookAuth.instance;
   int loginType = 0;
 
   // Auth change user stream
@@ -27,7 +28,8 @@ class AuthService {
     // Get the VolunteerUser from the database using the uid
     return await DatabaseService(uid: user.uid).getVolunteerUser();
   }
-
+  
+  // Return VolunteerUser object from Firebase User and Registration Data
   Future<VolunteerUser?> _volunteerFromFirebaseUser(User? user, RegistrationData data) async {
     return user != null ? VolunteerUser(
       uid: user.uid,
@@ -76,23 +78,31 @@ class AuthService {
     }
   }
 
+  // Sign in with Google
   Future<VolunteerUser?> googleLogin() async {
+    // Trigger the authentication flow
     final user = await _googleSignIn.signIn();
-
+ 
+    // If the user cancels the sign-in, user will be null
     if (user == null) {
       return null; 
     }
 
+    // Obtain the auth details from the request
     GoogleSignInAuthentication userAuth = await user.authentication;
 
+
+    // Create a new credential
     var credential = GoogleAuthProvider.credential(
       idToken: userAuth.idToken, 
       accessToken: userAuth.accessToken
     );
 
+    // Sign in to Firebase with the Google credential
     await FirebaseAuth.instance.signInWithCredential(credential);
 
     if (_auth.currentUser != null) {
+      // Check if the user already exists in the database
       if (await DatabaseService(uid: _auth.currentUser!.uid).checkUserExists()) {
         // User exists, fetch and return the VolunteerUser
         return await DatabaseService(uid: _auth.currentUser!.uid).getVolunteerUser();
@@ -105,30 +115,73 @@ class AuthService {
         data.lastName = _auth.currentUser!.displayName?.split(' ').last ?? '';
         data.avatarUrl = _auth.currentUser!.photoURL ?? '';
 
+        // Update the user data in the database
         await DatabaseService(uid: _auth.currentUser!.uid).updateUserData(data);
+        // Return the VolunteerUser object
         return await _volunteerFromFirebaseUser(_auth.currentUser, data);
       }
     }
+    return null;
   }
+
+  // Sign in with facebook
+  Future<VolunteerUser?> facebookLogin() async {
+    // Trigger the sign-in flow
+    final LoginResult result = await _facebookAuth.login();
+
+    // Check the result status
+    if (result.status == LoginStatus.success) {
+      print('Facebook login successful');
+      // Get the access token
+      final AccessToken accessToken = result.accessToken!;
+      // Create a credential from the access token
+      final OAuthCredential credential = FacebookAuthProvider.credential(accessToken.tokenString);
+      // Sign in to Firebase with the Facebook credential
+      await _auth.signInWithCredential(credential);
+
+      if (_auth.currentUser != null) {
+        // Check if the user already exists in the database
+        if (await DatabaseService(uid: _auth.currentUser!.uid).checkUserExists()) {
+          // User exists, fetch and return the VolunteerUser
+          return await DatabaseService(uid: _auth.currentUser!.uid).getVolunteerUser();
+        } 
+        else {
+          // New user, create a new document in Firestore
+          RegistrationData data = RegistrationData();
+          data.email = _auth.currentUser!.email ?? '';
+          data.firstName = _auth.currentUser!.displayName?.split(' ').first ?? '';
+          data.lastName = _auth.currentUser!.displayName?.split(' ').last ?? '';
+          data.avatarUrl = _auth.currentUser!.photoURL ?? '';
+
+          // Update the user data in the database
+          await DatabaseService(uid: _auth.currentUser!.uid).updateUserData(data);
+          // Return the VolunteerUser object
+          return await _volunteerFromFirebaseUser(_auth.currentUser, data);
+        }
+      }
+    }
+    return null;
+  }
+
+  // TODO: Sign in anonymously
 
   // Sign out
   Future<void> signOut() async {
+    // Determine the provider used for sign-in
     final User? user = _auth.currentUser;
+    // Get the provider ID of the first linked provider
     String providerId = user!.providerData[0].providerId;
-
+    // Handle sign-out based on the provider
     switch (providerId) {
       case 'google.com':
         await _signOutGoogle();
         break;
+      case 'facebook.com':
+        await _signOutFacebook();
+        break;
       case 'password': // Email/Password login
         await _signOutFirebaseOnly();
         break;
-        // TODO: Add other providers as needed
-        // case 'facebook.com':
-        //   // Implement Facebook sign-out logic here
-        //   print('Signing out from Facebook...');
-        //   await _signOutFacebook();
-        //   break;
       default:
         // Handle other providers or default to Firebase sign-out
         await _signOutFirebaseOnly();
@@ -144,18 +197,28 @@ class AuthService {
       // 1. Clear the Google session
       await _googleSignIn.signOut();
       // 2. Clear the Firebase session
-      print('Google user signed out successfully.');
       await _auth.signOut();
     } catch (e) {
       print('Error signing out Google: $e');
     }
   }
 
+  Future<void> _signOutFacebook() async {
+    try {
+      // 1. Clear the Facebook session
+      await _facebookAuth.logOut();
+      // 2. Clear the Firebase session
+      await _auth.signOut();
+    } catch (e) {
+      print('Error signing out Facebook: $e');
+    }
+  }
+
   // 2. Sign out for Email/Password or other simple providers
   Future<void> _signOutFirebaseOnly() async {
     try {
+      // Clear only the Firebase session
       await _auth.signOut();
-      print('User signed out successfully (Firebase only).');
     } catch (e) {
       print('Error signing out Firebase: $e');
     }

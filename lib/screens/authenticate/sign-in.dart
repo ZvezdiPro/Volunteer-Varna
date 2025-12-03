@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:volunteer_app/screens/main/home.dart';
-import 'package:volunteer_app/screens/main/main_page.dart';
 import 'package:volunteer_app/services/authenticate.dart';
 import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/shared/constants.dart';
@@ -8,7 +6,6 @@ import 'package:volunteer_app/shared/loading.dart';
 import 'package:volunteer_app/widgets/social_button.dart';
 
 class SignIn extends StatefulWidget {
-  // const SignIn({super.key});
 
   final Function toggleView;
   SignIn({required this.toggleView});
@@ -108,12 +105,11 @@ class _SignInState extends State<SignIn> {
                   style: TextStyle(fontSize: 16)
                 ),
                 SizedBox(height: 12.0),
-
-                // Sign-in with Google or Facebook
-                // TODO - Add Logic
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
+
+                    // Sign-in with Google
                     SocialButton(
                       label: 'Google',
                       icon: const Icon(Icons.g_mobiledata, size: 30, color: blueSecondary),
@@ -128,11 +124,20 @@ class _SignInState extends State<SignIn> {
                         }
                       },
                     ),
+
+                    // Sign-in with Facebook
                     SocialButton(
                       label: 'Facebook',
                       icon: const Icon(Icons.facebook, size: 24, color: blueSecondary),
-                      onPressed: () {
-                        // !!! TODO: Add Facebook Login Logic
+                      onPressed: () async {
+                        setState(() => loading = true);
+                        dynamic result = await _auth.facebookLogin();
+                        if (result == null) {
+                          setState(() {
+                            error = 'Настъпи грешка при влизането';
+                            loading = false;
+                          });
+                        }
                       },
                     ),
                   ],
