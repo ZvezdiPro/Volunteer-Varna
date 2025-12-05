@@ -7,7 +7,8 @@ import 'package:volunteer_app/shared/colors.dart';
 class CampaignCard extends StatefulWidget {
   
   final Campaign campaign;
-  CampaignCard({super.key, required this.campaign});
+  final bool showRegisterButton;
+  CampaignCard({super.key, required this.campaign, this.showRegisterButton = true});
 
   @override
   State<CampaignCard> createState() => _CampaignCardState();
@@ -53,7 +54,8 @@ class _CampaignCardState extends State<CampaignCard> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => CampaignDetailsScreen(
-                    campaign: widget.campaign, 
+                    campaign: widget.campaign,
+                    showRegisterButton: widget.showRegisterButton,
                   ),
                 ),
               )

@@ -9,8 +9,9 @@ import 'package:volunteer_app/shared/constants.dart';
 
 class CampaignDetailsScreen extends StatelessWidget {
 
-  final Campaign campaign;  
-  const CampaignDetailsScreen({super.key, required this.campaign});
+  final Campaign campaign;
+  final bool showRegisterButton;
+  const CampaignDetailsScreen({super.key, required this.campaign, this.showRegisterButton = true});
 
   String _formatDate(DateTime date) {
     final formatter = DateFormat('EEE, d MMM y, HH:mm', 'en_US');
@@ -39,8 +40,8 @@ class CampaignDetailsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: backgroundGrey,
 
-      // Button for registering for the campaign
-      bottomNavigationBar: Container(
+      // Button for registering for the campaign (only shown if the user is not already registered)
+      bottomNavigationBar: showRegisterButton ? Container(
         padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
         decoration: BoxDecoration(
           color: backgroundGrey
@@ -97,7 +98,7 @@ class CampaignDetailsScreen extends StatelessWidget {
             ),
           ),
         ),
-      ),
+      ) : null,
 
       body: Stack(
         children: <Widget>[

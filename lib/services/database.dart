@@ -61,8 +61,14 @@ class DatabaseService {
     }
   }
 
+  // Stream to get all campaigns from Firestore and map them to Campaign objects
   Stream<List<Campaign>> get campaigns {
     return campaignCollection.snapshots().map(_campaignListFromSnapshot);
+  }
+
+  // Stream to get campaigns the logged-in volunteer is registered for
+  Stream<List<Campaign>> get registeredCampaigns {
+    return campaignCollection.where('registeredVolunteersUids', arrayContains: uid).snapshots().map(_campaignListFromSnapshot);
   }
   
   List<Campaign> _campaignListFromSnapshot(QuerySnapshot snapshot) {
