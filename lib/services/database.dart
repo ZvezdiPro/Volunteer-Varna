@@ -70,4 +70,14 @@ class DatabaseService {
       return Campaign.fromFirestore(doc);
     }).toList();
   }
+
+  // Method for registering a volunteer for a campaign
+  Future<void> registerUserForCampaign(String campaignId) async {
+    // Get the document reference for the campaign
+    DocumentReference campaignRef = campaignCollection.doc(campaignId);
+
+    return await campaignRef.update({
+      'registeredVolunteersUids': FieldValue.arrayUnion([uid])
+    });
+  }
 }
