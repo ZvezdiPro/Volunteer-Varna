@@ -17,7 +17,7 @@ class CampaignCard extends StatefulWidget {
 class _CampaignCardState extends State<CampaignCard> {
   // Helper method to format the date
   String _formatDate(DateTime date) {
-    final formatter = DateFormat('d. MMM y', 'en_US');
+    final formatter = DateFormat('d. MMM y', 'bg_BG');
     return formatter.format(date);
   }
 

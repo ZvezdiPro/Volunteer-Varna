@@ -14,7 +14,7 @@ class CampaignDetailsScreen extends StatelessWidget {
   const CampaignDetailsScreen({super.key, required this.campaign, this.showRegisterButton = true});
 
   String _formatDate(DateTime date) {
-    final formatter = DateFormat('EEE, d MMM y, HH:mm', 'en_US');
+    final formatter = DateFormat('EEE, d MMM y, HH:mm', 'bg_BG');
     return formatter.format(date);
   }
 
