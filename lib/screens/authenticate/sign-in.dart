@@ -106,9 +106,8 @@ class _SignInState extends State<SignIn> {
                 ),
                 SizedBox(height: 12.0),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-
                     // Sign-in with Google
                     SocialButton(
                       label: 'Google',
@@ -142,6 +141,23 @@ class _SignInState extends State<SignIn> {
                     ),
                   ],
                 ),
+
+                // Sign-in anonymously
+                // SocialButton(
+                //   label: 'Влезте като гост',
+                //   icon: const Icon(Icons.person, size: 24, color: Colors.grey),
+                //   onPressed: () async {
+                //     setState(() => loading = true);
+                //     // TODO: Implement anonymous sign-in
+                //     // dynamic result = await _auth.signInAnon();
+                //     // if (result == null) {
+                //     //   setState(() {
+                //     //     error = 'Настъпи грешка при влизането';
+                //     //     loading = false;
+                //     //   });
+                //     // }
+                //   },
+                // ),
 
                 SizedBox(height: 40.0),
 
