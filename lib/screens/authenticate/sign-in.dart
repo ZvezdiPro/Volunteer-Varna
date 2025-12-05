@@ -143,21 +143,20 @@ class _SignInState extends State<SignIn> {
                 ),
 
                 // Sign-in anonymously
-                // SocialButton(
-                //   label: 'Влезте като гост',
-                //   icon: const Icon(Icons.person, size: 24, color: Colors.grey),
-                //   onPressed: () async {
-                //     setState(() => loading = true);
-                //     // TODO: Implement anonymous sign-in
-                //     // dynamic result = await _auth.signInAnon();
-                //     // if (result == null) {
-                //     //   setState(() {
-                //     //     error = 'Настъпи грешка при влизането';
-                //     //     loading = false;
-                //     //   });
-                //     // }
-                //   },
-                // ),
+                SocialButton(
+                  label: 'Влезте като гост',
+                  icon: const Icon(Icons.person, size: 24, color: Colors.grey),
+                  onPressed: () async {
+                    setState(() => loading = true);
+                    dynamic result = await _auth.signInAnon();
+                    if (result == null) {
+                      setState(() {
+                        error = 'Настъпи грешка при влизането';
+                        loading = false;
+                      });
+                    }
+                  },
+                ),
 
                 SizedBox(height: 40.0),
 

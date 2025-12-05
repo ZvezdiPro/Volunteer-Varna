@@ -131,7 +131,6 @@ class AuthService {
 
     // Check the result status
     if (result.status == LoginStatus.success) {
-      print('Facebook login successful');
       // Get the access token
       final AccessToken accessToken = result.accessToken!;
       // Create a credential from the access token
@@ -163,7 +162,21 @@ class AuthService {
     return null;
   }
 
-  // TODO: Sign in anonymously
+  // TODO: Fix anonymous sign-in
+  // Sign in anonymously
+  Future<VolunteerUser?> signInAnon() async {
+    try {
+      // Sign in anonymously with Firebase
+      UserCredential result = await _auth.signInAnonymously();
+      // Get the Firebase user
+      User? user = result.user;
+      // Fetch and return the VolunteerUser object from the database
+      return VolunteerUser.forAuth(uid: user!.uid);
+    } catch (e) {
+      print(e.toString());
+      return null;
+    }
+  }
 
   // Sign out
   Future<void> signOut() async {
@@ -180,6 +193,9 @@ class AuthService {
         await _signOutFacebook();
         break;
       case 'password': // Email/Password login
+        await _signOutFirebaseOnly();
+        break;
+      case 'anonymous':
         await _signOutFirebaseOnly();
         break;
       default:
