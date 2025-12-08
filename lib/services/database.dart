@@ -85,5 +85,9 @@ class DatabaseService {
     return await campaignRef.update({
       'registeredVolunteersUids': FieldValue.arrayUnion([uid])
     });
+    
+  Future<bool> checkUserExists() async {
+    final querySnapshot = await volunteerCollection.where('uid', isEqualTo: uid).get();
+    return querySnapshot.docs.isNotEmpty;
   }
 }

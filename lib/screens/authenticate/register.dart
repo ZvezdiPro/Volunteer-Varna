@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:volunteer_app/services/authenticate.dart';
-import 'package:volunteer_app/services/database.dart';
 import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/shared/loading.dart';
-import 'package:volunteer_app/models/volunteer.dart';
 import 'package:volunteer_app/models/registration_data.dart';
 
 import 'package:volunteer_app/screens/authenticate/register_step_one.dart';
@@ -23,7 +21,6 @@ class Register extends StatefulWidget {
 class _RegisterState extends State<Register> {
   
   final AuthService _auth = AuthService();
-  final DatabaseService _db = DatabaseService();
   final RegistrationData _data = RegistrationData(); // To keep the user data before creating an object
 
   // Pages keys for the forms on each page
@@ -36,7 +33,6 @@ class _RegisterState extends State<Register> {
 
   bool loading = false;
   int _currentPage = 0;
-  String _authError = '';
 
   @override
   void initState() {
@@ -96,7 +92,6 @@ class _RegisterState extends State<Register> {
 
     if (result == null) {
       setState(() {
-        _authError = "Настъпи грешка при регистрацията";
         loading = false;
       });
     }

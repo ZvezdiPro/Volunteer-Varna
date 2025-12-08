@@ -8,6 +8,7 @@ plugins {
 
 dependencies {
     implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
+    implementation(platform("com.facebook.android:facebook-android-sdk:4.42.0"))
 }
 
 android {
