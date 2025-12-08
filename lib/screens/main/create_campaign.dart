@@ -1,46 +1,37 @@
 import 'package:flutter/material.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:volunteer_app/services/authenticate.dart';
+import 'package:provider/provider.dart';
+import 'package:volunteer_app/models/campaign_data.dart';
+import 'package:volunteer_app/models/volunteer.dart';
+import 'package:volunteer_app/services/database.dart';
 import 'package:volunteer_app/shared/colors.dart';
+import 'package:volunteer_app/shared/constants.dart';
 import 'package:volunteer_app/shared/loading.dart';
-import 'package:volunteer_app/models/registration_data.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+// TODO: Import database service file
 
-import 'package:volunteer_app/screens/authenticate/register_step_one.dart';
-import 'package:volunteer_app/screens/authenticate/register_step_two.dart';
-import 'package:volunteer_app/screens/authenticate/register_step_three.dart';
+import 'package:volunteer_app/screens/main/create_campaign_step_one.dart';
+import 'package:volunteer_app/screens/main/create_campaign_step_two.dart';
+import 'package:volunteer_app/screens/main/create_campaign_step_three.dart';
 
-class Register extends StatefulWidget {
 
-  final Function toggleView;
-  Register({required this.toggleView});
+class CreateCampaign extends StatefulWidget {
+  const CreateCampaign({super.key});
 
   @override
-  State<Register> createState() => _RegisterState();
+  State<CreateCampaign> createState() => _CreateCampaignState();
 }
 
-class _RegisterState extends State<Register> {
-  
-  final AuthService _auth = AuthService();
-  final RegistrationData _data = RegistrationData(); // To keep the user data before creating an object
+class _CreateCampaignState extends State<CreateCampaign> {
+  final CampaignData _data = CampaignData();
+  final PageController _pageController = PageController();
 
-  // Pages keys for the forms on each page
+  bool _loading = false;
+  int _currentPage = 0;
+  final int totalSteps = 3;
+
   final GlobalKey<FormState> _stepOneFormKey = GlobalKey<FormState>();
   final GlobalKey<FormState> _stepTwoFormKey = GlobalKey<FormState>();
   final GlobalKey<FormState> _stepThreeFormKey = GlobalKey<FormState>();
-
-  // The PageController keeps track of which page the user is on
-  PageController pageController = PageController();
-
-  bool loading = false;
-  int _currentPage = 0;
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  // There are a total of three registration screens
-  final int totalSteps = 3;
 
   GlobalKey<FormState> _getCurrentFormKey() {
     switch (_currentPage) {
@@ -51,65 +42,92 @@ class _RegisterState extends State<Register> {
     }
   }
 
-  // Method to go to the next page
   void nextStep() {
     final currentFormKey = _getCurrentFormKey();
+
     if (currentFormKey.currentState!.validate()) {
-      // If not on the last page, go to the next
+      // If we aren't on the last page, go to the next
       if (_currentPage < totalSteps - 1) {
-        pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeIn);
+        _pageController.nextPage(
+          duration: const Duration(milliseconds: 300), 
+          curve: Curves.easeIn
+        );
       }
-      // If on the last page (interests), finish the registration
       else {
-        if (_data.interests.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              backgroundColor: Colors.green[400],
-              content: Text('Моля, изберете поне един интерес.', style: TextStyle(color: Colors.black))
-              ),
-          );
-          return;
-        }
-        _submitRegistration();
+        _submitCampaign();
       }
     }
   }
-
-  // Method to go back to the previous page
+  
   void previousStep() {
     if (_currentPage > 0) {
-      pageController.previousPage(duration: const Duration(milliseconds: 300), curve: Curves.easeIn);
+      _pageController.previousPage(
+        duration: const Duration(milliseconds: 300), 
+        curve: Curves.easeIn
+      );
     }
   }
 
-  // Submit registration method
-  Future<void> _submitRegistration() async {
+  void _submitCampaign() async {
     setState(() {
-      loading = true;
-    });
-    
-    dynamic result = await _auth.registerWithEmailAndPassword(_data.email, _data.password, _data);
+      _loading = true;
+      });
 
-    if (result == null) {
+    try {
+      final VolunteerUser? volunteer = Provider.of<VolunteerUser?>(context, listen: false);
+
+      await DatabaseService(uid: volunteer!.uid).updateCampaignData(_data);
+
+      Navigator.of(context).pop();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: greenPrimary,
+          content: Container(
+            alignment: Alignment.center,
+            height: 45,
+            child: Text('Кампанията е създадена успешно!', style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red[400],
+          content: Text('Настъпи грешка при създаването на кампанията. Моля, опитайте отново.', style: TextStyle(color: Colors.black))
+        ),
+      );
+    } finally {
       setState(() {
-        loading = false;
+        _loading = false;
       });
     }
-
-    widget.toggleView();
   }
 
   @override
   Widget build(BuildContext context) {
-    return loading ? Loading() : Scaffold(
+    return _loading ? const Loading() : Scaffold (
       backgroundColor: backgroundGrey,
       resizeToAvoidBottomInset: false,
-      
+
+      // AppBar at the top
+      appBar: AppBar(
+        title: const Text('Добавяне на кампания', style: appBarHeadingStyle),
+        centerTitle: true,
+        backgroundColor: backgroundGrey,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () { Navigator.of(context).pop(); }
+        ),
+      ),
+
       body: Stack(
         children: [
-          // The registration pages
+          // The Campaign creation pages
           PageView(
-            controller: pageController,
+            controller: _pageController,
             physics: const NeverScrollableScrollPhysics(),
             // The value of _currentPage changes when a page is selected
             onPageChanged: (int index) {
@@ -118,9 +136,9 @@ class _RegisterState extends State<Register> {
               });
             },
             children: [
-              RegisterStepOne(data: _data, formKey: _stepOneFormKey, toggleView: widget.toggleView),
-              RegisterStepTwo(data: _data, formKey: _stepTwoFormKey),
-              RegisterStepThree(data: _data, formKey: _stepThreeFormKey),
+              CreateCampaignStepOne(data: _data, formKey: _stepOneFormKey),
+              CreateCampaignStepTwo(data: _data, formKey: _stepTwoFormKey),
+              CreateCampaignStepThree(data: _data, formKey: _stepThreeFormKey)
             ],
           ),
 
@@ -156,7 +174,7 @@ class _RegisterState extends State<Register> {
 
                   // Dot indicator              
                   SmoothPageIndicator(
-                    controller: pageController,
+                    controller: _pageController,
                     count: totalSteps,
                     effect: JumpingDotEffect(
                       dotHeight: 10,
@@ -170,7 +188,7 @@ class _RegisterState extends State<Register> {
                         nextStep();
                       }
                       else {
-                        pageController.animateToPage(
+                        _pageController.animateToPage(
                           index,
                           duration: Duration(milliseconds: 300),
                           curve: Curves.easeIn
@@ -201,7 +219,8 @@ class _RegisterState extends State<Register> {
             )
           )
         ]
-      )
+      ),
+      
     );
   }
 }
