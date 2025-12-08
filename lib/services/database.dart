@@ -61,8 +61,14 @@ class DatabaseService {
     }
   }
 
+  // Stream to get all campaigns from Firestore and map them to Campaign objects
   Stream<List<Campaign>> get campaigns {
     return campaignCollection.snapshots().map(_campaignListFromSnapshot);
+  }
+
+  // Stream to get campaigns the logged-in volunteer is registered for
+  Stream<List<Campaign>> get registeredCampaigns {
+    return campaignCollection.where('registeredVolunteersUids', arrayContains: uid).snapshots().map(_campaignListFromSnapshot);
   }
   
   List<Campaign> _campaignListFromSnapshot(QuerySnapshot snapshot) {
@@ -71,6 +77,15 @@ class DatabaseService {
     }).toList();
   }
 
+  // Method for registering a volunteer for a campaign
+  Future<void> registerUserForCampaign(String campaignId) async {
+    // Get the document reference for the campaign
+    DocumentReference campaignRef = campaignCollection.doc(campaignId);
+
+    return await campaignRef.update({
+      'registeredVolunteersUids': FieldValue.arrayUnion([uid])
+    });
+    
   Future<bool> checkUserExists() async {
     final querySnapshot = await volunteerCollection.where('uid', isEqualTo: uid).get();
     return querySnapshot.docs.isNotEmpty;

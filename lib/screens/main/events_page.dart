@@ -20,7 +20,10 @@ class _EventsPageState extends State<EventsPage> {
       value: DatabaseService().campaigns,
       initialData: [],
       child: Scaffold(
-        body: CampaignList(),
+        body: Container(
+          color: backgroundGrey,
+          child: CampaignList()
+        ),
         floatingActionButton: FloatingActionButton.extended(
           icon: Icon(Icons.add_task),
           label: Text('Добави събитие'),
