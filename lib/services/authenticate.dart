@@ -184,7 +184,13 @@ class AuthService {
     if (user == null) return;
     // Handle anonymous sign-out
     if (user.isAnonymous) {
-      await _signOutFirebaseOnly();
+      try {
+        // Delete the anonymous user account
+        await user.delete();
+      } catch (e) {
+        print('Error deleting anonymous user: $e');
+        await _signOutFirebaseOnly();
+      }
       return;
     }
     // Get the provider ID of the first linked provider
