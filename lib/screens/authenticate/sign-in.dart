@@ -6,7 +6,6 @@ import 'package:volunteer_app/shared/loading.dart';
 import 'package:volunteer_app/widgets/social_button.dart';
 
 class SignIn extends StatefulWidget {
-  // const SignIn({super.key});
 
   final Function toggleView;
   SignIn({required this.toggleView});
@@ -20,6 +19,7 @@ class _SignInState extends State<SignIn> {
   final AuthService _auth = AuthService();
   final _formKey = GlobalKey<FormState>();
   bool loading = false;
+  
 
   // Text field state
   String email = '';
@@ -105,27 +105,57 @@ class _SignInState extends State<SignIn> {
                   style: TextStyle(fontSize: 16)
                 ),
                 SizedBox(height: 12.0),
-
-                // Sign-in with Google or Facebook
-                // TODO - Add Logic
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    // Sign-in with Google
                     SocialButton(
                       label: 'Google',
                       icon: const Icon(Icons.g_mobiledata, size: 30, color: blueSecondary),
-                      onPressed: () {
-                        // !!! TODO: Add Google Login Logic
+                      onPressed: () async {
+                        setState(() => loading = true);
+                        dynamic result = await _auth.googleLogin();
+                        if (result == null) {
+                          setState(() {
+                            error = 'Настъпи грешка при влизането';
+                            loading = false;
+                          });
+                        }
                       },
                     ),
+
+                    // Sign-in with Facebook
                     SocialButton(
                       label: 'Facebook',
                       icon: const Icon(Icons.facebook, size: 24, color: blueSecondary),
-                      onPressed: () {
-                        // !!! TODO: Add Facebook Login Logic
+                      onPressed: () async {
+                        setState(() => loading = true);
+                        dynamic result = await _auth.facebookLogin();
+                        if (result == null) {
+                          setState(() {
+                            error = 'Настъпи грешка при влизането';
+                            loading = false;
+                          });
+                        }
                       },
                     ),
                   ],
+                ),
+
+                // Sign-in anonymously
+                SocialButton(
+                  label: 'Влезте като гост',
+                  icon: const Icon(Icons.person, size: 24, color: Colors.grey),
+                  onPressed: () async {
+                    setState(() => loading = true);
+                    dynamic result = await _auth.signInAnon();
+                    if (result == null) {
+                      setState(() {
+                        error = 'Настъпи грешка при влизането';
+                        loading = false;
+                      });
+                    }
+                  },
                 ),
 
                 SizedBox(height: 40.0),

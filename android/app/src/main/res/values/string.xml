@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Volunteer-Varna</string>
+    <string name="facebook_app_id">1819254895374684</string>
+    <string name="fb_login_protocol_scheme">fb1819254895374684</string>
+    <string name="facebook_client_token">fb7fb4aa55a4d051b1ce68dae80cdb23</string>
+</resources>
