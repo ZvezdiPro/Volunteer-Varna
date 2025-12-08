@@ -25,8 +25,8 @@ class AuthService {
     if (user == null) {
       return null; 
     }
-    // Get the VolunteerUser from the database using the uid
-    return await DatabaseService(uid: user.uid).getVolunteerUser();
+    // Get the VolunteerUser from the database using the uid or return the default auth-only object
+    return await DatabaseService(uid: user.uid).getVolunteerUser() ?? VolunteerUser.forAuth(uid: user.uid);
   }
   
   // Return VolunteerUser object from Firebase User and Registration Data
@@ -90,7 +90,6 @@ class AuthService {
 
     // Obtain the auth details from the request
     GoogleSignInAuthentication userAuth = await user.authentication;
-
 
     // Create a new credential
     var credential = GoogleAuthProvider.credential(
@@ -162,7 +161,6 @@ class AuthService {
     return null;
   }
 
-  // TODO: Fix anonymous sign-in
   // Sign in anonymously
   Future<VolunteerUser?> signInAnon() async {
     try {
@@ -170,7 +168,7 @@ class AuthService {
       UserCredential result = await _auth.signInAnonymously();
       // Get the Firebase user
       User? user = result.user;
-      // Fetch and return the VolunteerUser object from the database
+      // Fetch and return the VolunteerUser object
       return VolunteerUser.forAuth(uid: user!.uid);
     } catch (e) {
       print(e.toString());
@@ -182,8 +180,15 @@ class AuthService {
   Future<void> signOut() async {
     // Determine the provider used for sign-in
     final User? user = _auth.currentUser;
+    // If no user is signed in, simply return
+    if (user == null) return;
+    // Handle anonymous sign-out
+    if (user.isAnonymous) {
+      await _signOutFirebaseOnly();
+      return;
+    }
     // Get the provider ID of the first linked provider
-    String providerId = user!.providerData[0].providerId;
+    String providerId = user.providerData[0].providerId;
     // Handle sign-out based on the provider
     switch (providerId) {
       case 'google.com':
@@ -193,9 +198,6 @@ class AuthService {
         await _signOutFacebook();
         break;
       case 'password': // Email/Password login
-        await _signOutFirebaseOnly();
-        break;
-      case 'anonymous':
         await _signOutFirebaseOnly();
         break;
       default:
