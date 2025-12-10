@@ -52,5 +52,11 @@ class Campaign {
       registeredVolunteersUids: List<String>.from(data['registeredVolunteersUids'] ?? const []),
     );
   }
+
+  // Method to get the duration of the campaign in hours
+  int get durationInHours {
+    final Duration duration = endDate.difference(startDate);
+    return duration.inHours; 
+  }
 }
   
