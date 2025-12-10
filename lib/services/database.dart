@@ -1,4 +1,8 @@
+import 'dart:io';
+
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:volunteer_app/models/campaign.dart';
 import 'package:volunteer_app/models/registration_data.dart';
 import 'package:volunteer_app/models/volunteer.dart';
@@ -90,5 +94,17 @@ class DatabaseService {
   Future<bool> checkUserExists() async {
     final querySnapshot = await volunteerCollection.where('uid', isEqualTo: uid).get();
     return querySnapshot.docs.isNotEmpty;
+  }
+
+  Future<String?> uploadImage(String path, XFile image) async {
+    try {
+      final ref = FirebaseStorage.instance.ref(path).child(image.name);
+      await ref.putFile(File(image.path));
+      final url = await ref.getDownloadURL();
+      return url;
+    } catch (e) {
+      print(e.toString());
+      return null;
+    }
   }
 }
