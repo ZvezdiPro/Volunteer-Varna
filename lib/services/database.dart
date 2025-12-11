@@ -33,6 +33,7 @@ class DatabaseService {
     });
   }
 
+  // Method for creating a new campaign document in Firestore
   Future updateCampaignData(CampaignData data) async {
     DocumentReference docRef = campaignCollection.doc();
     String campaignId = docRef.id;
@@ -41,6 +42,8 @@ class DatabaseService {
     'organizerId': uid,
     'description': data.description,
     'location': data.location,
+    'latitude': data.latitude,
+    'longitude': data.longitude,
     'instructions': data.instructions,
     'requiredVolunteers': data.requiredVolunteers,
     'startDate': data.startDate,

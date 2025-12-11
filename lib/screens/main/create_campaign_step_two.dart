@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/models/campaign_data.dart';
 import 'package:volunteer_app/shared/constants.dart';
+import 'package:volunteer_app/screens/main/choose_location.dart';
 
 class CreateCampaignStepTwo extends StatefulWidget {
   final CampaignData data;
@@ -27,6 +28,51 @@ class _CreateCampaignStepTwoState extends State<CreateCampaignStepTwo> {
   final GlobalKey<FormFieldState> _endTimeKey = GlobalKey<FormFieldState>();
   final GlobalKey<FormFieldState> _locationKey = GlobalKey<FormFieldState>();
   final GlobalKey<FormFieldState> _categoryKey = GlobalKey<FormFieldState>();
+
+  late TextEditingController _locationController;
+  
+  @override
+  void initState() {
+    super.initState();
+    // 2. Initialize the controller with existing data (if any)
+    _locationController = TextEditingController(text: widget.data.location);
+  }
+
+  @override
+  void dispose() {
+    // 3. Clean up the controller
+    _locationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _selectLocationOnMap() async {
+    // Navigate to MapPicker and wait for result
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MapPickerScreen(
+          // Pass current coordinates if they exist, so the map opens there
+          initialLat: widget.data.latitude,
+          initialLng: widget.data.longitude,
+        ),
+      ),
+    );
+
+    if (result != null && result is Map) {
+      setState(() {
+        // Update Data Model
+        widget.data.latitude = result['latitude'];
+        widget.data.longitude = result['longitude'];
+        widget.data.location = result['address'];
+        
+        // Update the UI Text Field
+        _locationController.text = result['address'];
+      });
+
+      // Trigger validation to remove any "Field is required" errors
+      _locationKey.currentState?.validate();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -142,23 +188,19 @@ class _CreateCampaignStepTwoState extends State<CreateCampaignStepTwo> {
             SizedBox(height: 20.0),
 
             // Choose Location
-            // TODO: Make location selection from the map
             Text('Местоположение', style: textFormFieldHeading),   
             SizedBox(height: 5.0),         
             TextFormField(
               key: _locationKey,
-              initialValue: widget.data.location,
+              controller: _locationController,
+              readOnly: true,
+              onTap: _selectLocationOnMap,
               decoration: textInputDecoration.copyWith(
                 labelText: 'Адрес / точка на среща',
-                hintText: 'Конкретен адрес или място',
+                hintText: 'Изберете местоположение от картата',
+                suffixIcon: Icon(Icons.map, color: greenPrimary),
               ),
               validator: (val) => val!.isEmpty ? 'Въведете местоположение' : null,
-              onChanged: (val) {
-                setState(() {
-                  widget.data.location = val.trim();
-                });
-                _locationKey.currentState?.validate();
-              },
             ),
 
             SizedBox(height: 20.0),

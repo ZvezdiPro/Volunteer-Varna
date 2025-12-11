@@ -1,3 +1,23 @@
+import java.util.Properties
+import org.gradle.api.Project
+
+fun getLocalProperties(rootProject: Project): Properties {
+    // 1. We no longer need 'java.util' due to the import
+    val localProperties = Properties()
+
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { inputStream ->
+            // 2. We call load() on the localProperties object explicitly,
+            //    rather than relying on an implicit receiver.
+            localProperties.load(inputStream)
+        }
+    }
+    return localProperties
+}
+
+val localProperties = getLocalProperties(rootProject)
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -31,6 +51,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["googleMapsApiKey"] = localProperties.getProperty("googleMapsApiKey", "")
     }
 
     buildTypes {
