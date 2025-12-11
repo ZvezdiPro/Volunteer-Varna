@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:volunteer_app/models/campaign.dart';
@@ -14,6 +15,8 @@ class EventsPage extends StatefulWidget {
 }
 
 class _EventsPageState extends State<EventsPage> {
+  FirebaseAuth _auth = FirebaseAuth.instance;
+
   @override
   Widget build(BuildContext context) {
     return StreamProvider<List<Campaign>>.value(
@@ -22,22 +25,29 @@ class _EventsPageState extends State<EventsPage> {
       child: Scaffold(
         body: Container(
           color: backgroundGrey,
-          child: CampaignList()
+          // Display the button to sign up only for non anonymous users
+          child: !_auth.currentUser!.isAnonymous
+          ? CampaignList()
+          : CampaignList(showRegisterButton: false)
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          icon: Icon(Icons.add_task),
-          label: Text('Добави събитие'),
-          backgroundColor: greenPrimary,
-          foregroundColor: Colors.white,
-          // When pressed, "push" the CreateCampaign screen
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => CreateCampaign(), 
-              ),
-            );
-          },
-        ),
+        // Show FAB only for non-anonymous users
+        floatingActionButton: !_auth.currentUser!.isAnonymous
+          ? FloatingActionButton.extended(
+              icon: Icon(Icons.add_task),
+              label: Text('Добави събитие'),
+              backgroundColor: greenPrimary,
+              foregroundColor: Colors.white,
+              // When pressed, "push" the CreateCampaign screen
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => CreateCampaign(), 
+                  ),
+                );
+              },
+            )
+          : null,
+        
         
       ),
     );
