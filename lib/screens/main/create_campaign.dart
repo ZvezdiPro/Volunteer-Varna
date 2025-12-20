@@ -9,9 +9,9 @@ import 'package:volunteer_app/shared/loading.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 // TODO: Import database service file
 
-import 'package:volunteer_app/screens/main/create_campaign_step_one.dart';
-import 'package:volunteer_app/screens/main/create_campaign_step_two.dart';
-import 'package:volunteer_app/screens/main/create_campaign_step_three.dart';
+import 'package:volunteer_app/screens/main/helper_screens/create_campaign_step_one.dart';
+import 'package:volunteer_app/screens/main/helper_screens/create_campaign_step_two.dart';
+import 'package:volunteer_app/screens/main/helper_screens/create_campaign_step_three.dart';
 
 
 class CreateCampaign extends StatefulWidget {
