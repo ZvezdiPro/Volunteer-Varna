@@ -1,10 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:volunteer_app/models/campaign.dart';
 import 'package:volunteer_app/models/volunteer.dart';
+import 'package:volunteer_app/screens/main/chat_screen.dart'; 
 import 'package:volunteer_app/services/database.dart';
 import 'package:volunteer_app/shared/colors.dart';
-import 'package:volunteer_app/widgets/campaign_list.dart';
 
 class ChatsScreen extends StatefulWidget {
   const ChatsScreen({super.key});
@@ -14,33 +15,102 @@ class ChatsScreen extends StatefulWidget {
 }
 
 class _ChatsScreenState extends State<ChatsScreen> {
+  final String currentUid = FirebaseAuth.instance.currentUser!.uid;
+
   @override
   Widget build(BuildContext context) {
-    
-    final VolunteerUser? volunteer = Provider.of<VolunteerUser?>(context);
-    final databaseService = DatabaseService(uid: volunteer!.uid);
+    // Fetch current user details
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('volunteers') 
+          .doc(currentUid)
+          .snapshots(),
+      builder: (context, userSnapshot) {
+        if (userSnapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    return StreamProvider<List<Campaign>>.value(
-      value: databaseService.registeredCampaigns,
-      initialData: [],
-      child: Scaffold(
-        backgroundColor: backgroundGrey,
-        // If the user is not registered for any campaigns, show a message
-        body: Consumer<List<Campaign>>(
-          builder: (context, registeredCampaigns, _) {
-            if (registeredCampaigns.isEmpty) {
+        if (userSnapshot.hasError) {
+          return Center(child: Text("Error: ${userSnapshot.error}"));
+        }
+
+        if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
+          return const Center(
+            child: Text("User profile not found in 'volunteers' collection."),
+          );
+        }
+
+        VolunteerUser currentUser = VolunteerUser.fromFirestore(userSnapshot.data!);
+
+        // Fetch campaigns using your existing DatabaseService logic
+        return StreamBuilder<List<Campaign>>(
+          stream: DatabaseService(uid: currentUid).userChats,
+          builder: (context, campaignSnapshot) {
+            
+            if (campaignSnapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (!campaignSnapshot.hasData || campaignSnapshot.data!.isEmpty) {
               return Center(
-                child: Text(
-                  'Все още не сте записани за кампании.',
-                  style: TextStyle(fontSize: 18, color: Colors.black),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey[400]),
+                    const SizedBox(height: 16),
+                    const Text("Нямате активни чатове", style: TextStyle(color: Colors.grey)),
+                    const Text("Запишете се за кампания!", style: TextStyle(color: Colors.grey)),
+                  ],
                 ),
               );
-            } else {
-              return CampaignList(showRegisterButton: false);
             }
+
+            final campaigns = campaignSnapshot.data!;
+
+            return ListView.builder(
+              itemCount: campaigns.length,
+              itemBuilder: (context, index) {
+                final campaign = campaigns[index];
+                return Card(
+                  elevation: 2,
+                  margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: greenPrimary.withAlpha(50),
+                      backgroundImage: campaign.imageUrl.isNotEmpty 
+                          ? NetworkImage(campaign.imageUrl) 
+                          : null,
+                      child: campaign.imageUrl.isEmpty 
+                          ? Icon(Icons.group, color: greenPrimary) 
+                          : null,
+                    ),
+                    title: Text(
+                      campaign.title,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      "Натисни за чат",
+                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                    ),
+                    trailing: Icon(Icons.arrow_forward_ios, size: 16, color: blueSecondary),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CampaignChatScreen(
+                            campaign: campaign,
+                            currentUser: currentUser,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
+            );
           },
-        ),
-      ),
+        );
+      },
     );
   }
 }

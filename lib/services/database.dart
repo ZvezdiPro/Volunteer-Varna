@@ -12,6 +12,7 @@ class DatabaseService {
   final CollectionReference volunteerCollection = FirebaseFirestore.instance.collection('volunteers');
   final CollectionReference campaignCollection = FirebaseFirestore.instance.collection('campaigns');
 
+  // Method to create or update volunteer user data
   Future updateUserData(RegistrationData data) async {
     return await volunteerCollection.doc(uid).set({
     'email': data.email,
@@ -29,6 +30,7 @@ class DatabaseService {
     });
   }
 
+  // Method to create or update campaign data
   Future updateCampaignData(CampaignData data) async {
     DocumentReference docRef = campaignCollection.doc();
     String campaignId = docRef.id;
@@ -49,6 +51,7 @@ class DatabaseService {
     });
   }
 
+  // Method to get volunteer user data as a VolunteerUser object
   Future<VolunteerUser?> getVolunteerUser() async {
     if (uid == null) return null;
     // Get the document snapshot for the user with the given uid
@@ -66,11 +69,32 @@ class DatabaseService {
     return campaignCollection.snapshots().map(_campaignListFromSnapshot);
   }
 
-  // Stream to get campaigns the logged-in volunteer is registered for
+  // Stream campaigns the current user has registered for (For "My Campaigns" Screen)
   Stream<List<Campaign>> get registeredCampaigns {
-    return campaignCollection.where('registeredVolunteersUids', arrayContains: uid).snapshots().map(_campaignListFromSnapshot);
+    if (uid == null) return Stream.value([]); 
+
+    // Query campaigns where the volunteer's uid is in the 'registeredVolunteersUids' array
+    return campaignCollection
+        .where('registeredVolunteersUids', arrayContains: uid)
+        .snapshots()
+        .map(_campaignListFromSnapshot);
+  }
+
+  // Stream campaigns where the user is either the organizer or a registered volunteer
+  Stream<List<Campaign>> get userChats {
+    if (uid == null) return Stream.value([]);
+
+    // Query campaigns where the user is either the organizer or a registered volunteer
+    return campaignCollection
+      .where(Filter.or(
+        Filter('organizerId', isEqualTo: uid),       
+        Filter('registeredVolunteersUids', arrayContains: uid) 
+      ))
+      .snapshots()
+      .map(_campaignListFromSnapshot);
   }
   
+  // Helper method to convert QuerySnapshot to List<Campaign>
   List<Campaign> _campaignListFromSnapshot(QuerySnapshot snapshot) {
     return snapshot.docs.map((doc) {
       return Campaign.fromFirestore(doc);
@@ -82,11 +106,13 @@ class DatabaseService {
     // Get the document reference for the campaign
     DocumentReference campaignRef = campaignCollection.doc(campaignId);
 
+    // Update the 'registeredVolunteersUids' array to include the current user's uid
     return await campaignRef.update({
       'registeredVolunteersUids': FieldValue.arrayUnion([uid])
     });
   }
     
+  // Method to check if a volunteer user exists
   Future<bool> checkUserExists() async {
     final querySnapshot = await volunteerCollection.where('uid', isEqualTo: uid).get();
     return querySnapshot.docs.isNotEmpty;
