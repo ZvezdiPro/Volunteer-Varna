@@ -40,6 +40,27 @@ class _CreateCampaignState extends State<CreateCampaign> {
     }
   }
 
+  Future<bool> _showExitConfirmation() async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Предупреждение', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        content: Text('Сигурни ли сте, че искате да излезете? Въведената информация за кампанията няма да бъде запазена.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false), // Не излизай
+            child: Text('Отказ', style: TextStyle(color: Colors.black)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red[400]),
+            onPressed: () => Navigator.of(context).pop(true), // Излез
+            child: Text('Излизане', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    ) ?? false;
+  }
+
   void nextStep() {
     final currentFormKey = _getCurrentFormKey();
 
@@ -105,123 +126,139 @@ class _CreateCampaignState extends State<CreateCampaign> {
 
   @override
   Widget build(BuildContext context) {
-    return _loading ? Loading() : Scaffold (
-      backgroundColor: backgroundGrey,
-      resizeToAvoidBottomInset: false,
-
-      // AppBar at the top
-      appBar: AppBar(
-        title: Text('Добавяне на кампания', style: appBarHeadingStyle),
-        centerTitle: true,
+    return _loading ? Loading() : PopScope(
+      canPop: false, // Предотвратява автоматичното излизане
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        
+        final shouldPop = await _showExitConfirmation();
+        if (shouldPop && context.mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold (
         backgroundColor: backgroundGrey,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.close),
-          onPressed: () { Navigator.of(context).pop(); }
-        ),
-      ),
-
-      body: Stack(
-        children: [
-          // The Campaign creation pages
-          Padding(
-            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-            child: PageView(
-              controller: _pageController,
-              physics: NeverScrollableScrollPhysics(),
-              // The value of _currentPage changes when a page is selected
-              onPageChanged: (int index) {
-                setState(() {
-                  _currentPage = index;
-                });
-              },
-              children: [
-                CreateCampaignStepOne(data: _data, formKey: _stepOneFormKey),
-                CreateCampaignStepTwo(data: _data, formKey: _stepTwoFormKey),
-                CreateCampaignStepThree(data: _data, formKey: _stepThreeFormKey)
-              ],
-            ),
+        resizeToAvoidBottomInset: false,
+      
+        // AppBar at the top
+        appBar: AppBar(
+          title: Text('Добавяне на кампания', style: appBarHeadingStyle),
+          centerTitle: true,
+          backgroundColor: backgroundGrey,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.close),
+            onPressed: () async {
+              final shouldPop = await _showExitConfirmation();
+              if (shouldPop && context.mounted) {
+                Navigator.of(context).pop();
+              }
+            }
           ),
-
-          // Navigation
-          Container(
-            alignment: Alignment(0, 0.85),
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 50.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        ),
+      
+        body: Stack(
+          children: [
+            // The Campaign creation pages
+            Padding(
+              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+              child: PageView(
+                controller: _pageController,
+                physics: NeverScrollableScrollPhysics(),
+                // The value of _currentPage changes when a page is selected
+                onPageChanged: (int index) {
+                  setState(() {
+                    _currentPage = index;
+                  });
+                },
                 children: [
-                  // Go to the previous page
-                  SizedBox(
-                    width: 100,
-                    child: GestureDetector(
-                      onTap: previousStep,
-                      // The text will appear with an animation
-                      child: AnimatedOpacity(
-                        opacity: _currentPage > 0 ? 1.0 : 0.0,
-                        duration: Duration(milliseconds: 300),
+                  CreateCampaignStepOne(data: _data, formKey: _stepOneFormKey),
+                  CreateCampaignStepTwo(data: _data, formKey: _stepTwoFormKey),
+                  CreateCampaignStepThree(data: _data, formKey: _stepThreeFormKey)
+                ],
+              ),
+            ),
+      
+            // Navigation
+            Container(
+              alignment: Alignment(0, 0.85),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 50.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Go to the previous page
+                    SizedBox(
+                      width: 100,
+                      child: GestureDetector(
+                        onTap: previousStep,
+                        // The text will appear with an animation
+                        child: AnimatedOpacity(
+                          opacity: _currentPage > 0 ? 1.0 : 0.0,
+                          duration: Duration(milliseconds: 300),
+                          child: Text(
+                            'Назад',
+                            textAlign: TextAlign.left,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: _currentPage > 0 ? greenPrimary : Colors.transparent,
+                            ),
+                          ),
+                        )
+                      ),
+                    ),
+      
+                    // Dot indicator              
+                    SmoothPageIndicator(
+                      controller: _pageController,
+                      count: totalSteps,
+                      effect: JumpingDotEffect(
+                        dotHeight: 10,
+                        dotWidth: 10,
+                        activeDotColor: greenPrimary,
+                        dotColor: Colors.grey.shade400,
+                      ),
+                      onDotClicked: (index) {
+                        // If it's forward, make the validation
+                        if (index > _currentPage) {
+                          nextStep();
+                        }
+                        else {
+                          _pageController.animateToPage(
+                            index,
+                            duration: Duration(milliseconds: 300),
+                            curve: Curves.easeIn
+                          );
+                        }
+                      }
+                    ),
+      
+                    // Go to the next page
+                    SizedBox(
+                      width: 100,
+                      child: GestureDetector(
+                        onTap: nextStep,
+                        // If we're on the last step, show different text
                         child: Text(
-                          'Назад',
-                          textAlign: TextAlign.left,
+                          _currentPage == totalSteps - 1 ? 'Край' : 'Напред',
+                          textAlign: TextAlign.right,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: _currentPage > 0 ? greenPrimary : Colors.transparent,
+                            color: greenPrimary,
                           ),
-                        ),
-                      )
+                        )
+                      ),
                     ),
-                  ),
-
-                  // Dot indicator              
-                  SmoothPageIndicator(
-                    controller: _pageController,
-                    count: totalSteps,
-                    effect: JumpingDotEffect(
-                      dotHeight: 10,
-                      dotWidth: 10,
-                      activeDotColor: greenPrimary,
-                      dotColor: Colors.grey.shade400,
-                    ),
-                    onDotClicked: (index) {
-                      // If it's forward, make the validation
-                      if (index > _currentPage) {
-                        nextStep();
-                      }
-                      else {
-                        _pageController.animateToPage(
-                          index,
-                          duration: Duration(milliseconds: 300),
-                          curve: Curves.easeIn
-                        );
-                      }
-                    }
-                  ),
-
-                  // Go to the next page
-                  SizedBox(
-                    width: 100,
-                    child: GestureDetector(
-                      onTap: nextStep,
-                      // If we're on the last step, show different text
-                      child: Text(
-                        _currentPage == totalSteps - 1 ? 'Край' : 'Напред',
-                        textAlign: TextAlign.right,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: greenPrimary,
-                        ),
-                      )
-                    ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+              )
             )
-          )
-        ]
+          ]
+        ),
+        
       ),
-      
     );
   }
 }
