@@ -48,12 +48,12 @@ class _CreateCampaignState extends State<CreateCampaign> {
         content: Text('Сигурни ли сте, че искате да излезете? Въведената информация за кампанията няма да бъде запазена.'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false), // Не излизай
+            onPressed: () => Navigator.of(context).pop(false),
             child: Text('Отказ', style: TextStyle(color: Colors.black)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red[400]),
-            onPressed: () => Navigator.of(context).pop(true), // Излез
+            onPressed: () => Navigator.of(context).pop(true),
             child: Text('Излизане', style: TextStyle(color: Colors.white)),
           ),
         ],
@@ -127,7 +127,7 @@ class _CreateCampaignState extends State<CreateCampaign> {
   @override
   Widget build(BuildContext context) {
     return _loading ? Loading() : PopScope(
-      canPop: false, // Предотвратява автоматичното излизане
+      canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
         

@@ -22,18 +22,24 @@ class CreateCampaignStepThree extends StatefulWidget {
 }
 
 class _CreateCampaignStepThreeState extends State<CreateCampaignStepThree> {
-  
-  final GlobalKey<FormFieldState> _volunteerCountKey = GlobalKey<FormFieldState>();
+
+  TextEditingController? _volunteerController;
 
   // State for image handling
   File? _displayImage; 
   bool _isUploading = false;
   final ImagePicker _picker = ImagePicker();
 
+  @override
+  void dispose() {
+    _volunteerController?.dispose();
+    super.dispose();
+  }
+
   // Function to handle Picking and Uploading
   Future<void> _handleImageUpload() async {
     try {
-      // 1. Pick Image
+      // Pick Image
       final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
       
       if (pickedFile == null) return;
@@ -75,6 +81,15 @@ class _CreateCampaignStepThreeState extends State<CreateCampaignStepThree> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.data.requiredVolunteers <= 0) {
+      widget.data.requiredVolunteers = 1;
+    }
+
+    // If it is null, we initialise the controller with the same value as the requiredVolunteers field
+    _volunteerController ??= TextEditingController(
+      text: widget.data.requiredVolunteers.toString(),
+    );
+
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: 50.0, vertical: 40.0),
       child: Form (
@@ -87,25 +102,97 @@ class _CreateCampaignStepThreeState extends State<CreateCampaignStepThree> {
             SizedBox(height: 30.0),
             
             // Required Volunteers
-            // TODO: Make it a field with increment/decrement buttons
             Text('Необходим брой доброволци', style: textFormFieldHeading),
             SizedBox(height: 10.0),
-            TextFormField(
-              key: _volunteerCountKey,
-              decoration: textInputDecoration.copyWith(labelText: 'Брой доброволци', hintText: 'Въведете брой'),
-              keyboardType: TextInputType.number,
+            FormField<int>(
+              initialValue: widget.data.requiredVolunteers,
               validator: (val) {
-                if (val == null || val.isEmpty) {
-                  return 'Моля, въведете брой доброволци';
-                }
-                if (int.tryParse(val) == null || int.parse(val) <= 0) {
-                  return 'Моля, въведете валиден положителен брой';
+                if (val == null || val <= 0) {
+                  return 'Моля, изберете поне 1 доброволец';
                 }
                 return null;
               },
-              onChanged: (val) {
-                widget.data.requiredVolunteers = int.tryParse(val) ?? 0;
-                _volunteerCountKey.currentState?.validate();
+              builder: (FormFieldState<int> state) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: state.hasError ? Colors.red : Colors.grey.shade300,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          // The minus button
+                          IconButton(
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            icon: const Icon(Icons.remove_circle_outline, color: greenPrimary),
+                            onPressed: () {
+                              int current = int.tryParse(_volunteerController!.text) ?? 1;
+                              if (current > 1) {
+                                int newValue = current - 1;
+                                _volunteerController!.text = newValue.toString();
+                                state.didChange(newValue);
+                                widget.data.requiredVolunteers = newValue;
+                              }
+                            },
+                          ),
+
+                          // The text form field in the middle
+                          Expanded(
+                            child: TextField(
+                              controller: _volunteerController,
+                              keyboardType: TextInputType.number,
+                              textAlign: TextAlign.center,
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              onChanged: (val) {
+                                int? parsed = int.tryParse(val);
+                                if (parsed != null) {
+                                  state.didChange(parsed);
+                                  widget.data.requiredVolunteers = parsed;
+                                } else {
+                                  state.didChange(0);
+                                }
+                              },
+                            ),
+                          ),
+
+                          // The plus button
+                          IconButton(
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            icon: const Icon(Icons.add_circle_outline, color: greenPrimary),
+                            onPressed: () {
+                              int current = int.tryParse(_volunteerController!.text) ?? 0;
+                              int newValue = current + 1;
+                              _volunteerController!.text = newValue.toString();
+                              state.didChange(newValue);
+                              widget.data.requiredVolunteers = newValue;
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    // Error message
+                    if (state.hasError)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0, left: 12.0),
+                        child: Text(
+                          state.errorText!,
+                          style: const TextStyle(color: Colors.red, fontSize: 12),
+                        ),
+                      ),
+                  ],
+                );
               },
             ),
 
