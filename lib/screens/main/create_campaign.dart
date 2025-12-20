@@ -47,7 +47,7 @@ class _CreateCampaignState extends State<CreateCampaign> {
       // If we aren't on the last page, go to the next
       if (_currentPage < totalSteps - 1) {
         _pageController.nextPage(
-          duration: const Duration(milliseconds: 300), 
+          duration: Duration(milliseconds: 300), 
           curve: Curves.easeIn
         );
       }
@@ -60,7 +60,7 @@ class _CreateCampaignState extends State<CreateCampaign> {
   void previousStep() {
     if (_currentPage > 0) {
       _pageController.previousPage(
-        duration: const Duration(milliseconds: 300), 
+        duration: Duration(milliseconds: 300), 
         curve: Curves.easeIn
       );
     }
@@ -105,18 +105,18 @@ class _CreateCampaignState extends State<CreateCampaign> {
 
   @override
   Widget build(BuildContext context) {
-    return _loading ? const Loading() : Scaffold (
+    return _loading ? Loading() : Scaffold (
       backgroundColor: backgroundGrey,
       resizeToAvoidBottomInset: false,
 
       // AppBar at the top
       appBar: AppBar(
-        title: const Text('Добавяне на кампания', style: appBarHeadingStyle),
+        title: Text('Добавяне на кампания', style: appBarHeadingStyle),
         centerTitle: true,
         backgroundColor: backgroundGrey,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close),
+          icon: Icon(Icons.close),
           onPressed: () { Navigator.of(context).pop(); }
         ),
       ),
@@ -124,27 +124,30 @@ class _CreateCampaignState extends State<CreateCampaign> {
       body: Stack(
         children: [
           // The Campaign creation pages
-          PageView(
-            controller: _pageController,
-            physics: const NeverScrollableScrollPhysics(),
-            // The value of _currentPage changes when a page is selected
-            onPageChanged: (int index) {
-              setState(() {
-                _currentPage = index;
-              });
-            },
-            children: [
-              CreateCampaignStepOne(data: _data, formKey: _stepOneFormKey),
-              CreateCampaignStepTwo(data: _data, formKey: _stepTwoFormKey),
-              CreateCampaignStepThree(data: _data, formKey: _stepThreeFormKey)
-            ],
+          Padding(
+            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+            child: PageView(
+              controller: _pageController,
+              physics: NeverScrollableScrollPhysics(),
+              // The value of _currentPage changes when a page is selected
+              onPageChanged: (int index) {
+                setState(() {
+                  _currentPage = index;
+                });
+              },
+              children: [
+                CreateCampaignStepOne(data: _data, formKey: _stepOneFormKey),
+                CreateCampaignStepTwo(data: _data, formKey: _stepTwoFormKey),
+                CreateCampaignStepThree(data: _data, formKey: _stepThreeFormKey)
+              ],
+            ),
           ),
 
           // Navigation
           Container(
             alignment: Alignment(0, 0.85),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 50.0),
+              padding: EdgeInsets.symmetric(horizontal: 50.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -156,7 +159,7 @@ class _CreateCampaignState extends State<CreateCampaign> {
                       // The text will appear with an animation
                       child: AnimatedOpacity(
                         opacity: _currentPage > 0 ? 1.0 : 0.0,
-                        duration: const Duration(milliseconds: 300),
+                        duration: Duration(milliseconds: 300),
                         child: Text(
                           'Назад',
                           textAlign: TextAlign.left,
@@ -204,7 +207,7 @@ class _CreateCampaignState extends State<CreateCampaign> {
                       child: Text(
                         _currentPage == totalSteps - 1 ? 'Край' : 'Напред',
                         textAlign: TextAlign.right,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: greenPrimary,

@@ -36,21 +36,19 @@ class _CreateCampaignStepThreeState extends State<CreateCampaignStepThree> {
       // 1. Pick Image
       final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
       
-      if (pickedFile == null) return; // User cancelled
+      if (pickedFile == null) return;
 
       setState(() {
         _isUploading = true;
-        _displayImage = File(pickedFile.path); // Set local preview
+        _displayImage = File(pickedFile.path);
       });
 
-      // 2. Upload to Firebase Storage
-      // We create a unique path folder so filenames don't collide
-      // Path result: campaign_uploads/1689234000000/image.jpg
+      // Upload to Firebase Storage
       String uniquePath = 'campaign_uploads/${DateTime.now().millisecondsSinceEpoch}';
       
       String? downloadUrl = await DatabaseService().uploadImage(uniquePath, pickedFile);
 
-      // 3. Update Campaign Data
+      // Update Campaign Data
       if (downloadUrl != null) {
         setState(() {
           widget.data.imageUrl = downloadUrl;
@@ -67,7 +65,7 @@ class _CreateCampaignStepThreeState extends State<CreateCampaignStepThree> {
     } catch (e) {
       setState(() {
         _isUploading = false;
-        _displayImage = null; // Clear preview on error
+        _displayImage = null;
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Грешка при качване: $e'), backgroundColor: Colors.red),
@@ -78,7 +76,7 @@ class _CreateCampaignStepThreeState extends State<CreateCampaignStepThree> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: EdgeInsets.only(left: 50.0, right: 50.0, top: 40.0, bottom: MediaQuery.of(context).viewInsets.bottom + 20),
+      padding: EdgeInsets.symmetric(horizontal: 50.0, vertical: 40.0),
       child: Form (
         key: widget.formKey,
         child: Column(
@@ -117,6 +115,7 @@ class _CreateCampaignStepThreeState extends State<CreateCampaignStepThree> {
             Text('Инструкции (опционално)', style: textFormFieldHeading),
             SizedBox(height: 10.0),
             TextFormField(
+              scrollPadding: EdgeInsets.only(bottom: 130),
               decoration: textInputDecoration.copyWith(labelText: 'Допълнителни инструкции', hintText: 'Например: носете ръкавици и чували'),
               onChanged: (val) => widget.data.instructions = val,
               maxLines: 5,

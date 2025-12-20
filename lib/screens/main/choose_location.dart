@@ -42,7 +42,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     setState(() => _isLoadingAddress = true);
 
     try {
-      // 1. Reverse Geocoding: Get address from Lat/Lng
+      // Reverse Geocoding: Get address from Lat/Lng
       List<Placemark> placemarks = await placemarkFromCoordinates(
         _currentCenter.latitude,
         _currentCenter.longitude,
@@ -64,7 +64,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
         }
       }
 
-      // 2. Return the data to the previous screen
+      // Return the data to the previous screen
       if (mounted) {
         Navigator.pop(context, {
           'latitude': _currentCenter.latitude,
@@ -94,7 +94,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
       ),
       body: Stack(
         children: [
-          // 1. The Map
+          // The Map
           GoogleMap(
             padding: EdgeInsets.only(bottom: 90.0),
             initialCameraPosition: CameraPosition(
@@ -108,7 +108,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             mapToolbarEnabled: false, // Hides the "Open in Maps" buttons
           ),
 
-          // 2. The Pin (Always in the center)
+          // The Pin (Always in the center)
           Center(
             child: Padding(
               padding: EdgeInsets.only(bottom: 40.0),
@@ -120,7 +120,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             ),
           ),
 
-          // 3. The "Pick Here" Button
+          // The "Pick Here" Button
           Positioned(
             bottom: 30,
             left: 20,

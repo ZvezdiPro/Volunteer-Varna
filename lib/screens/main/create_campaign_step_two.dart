@@ -34,13 +34,13 @@ class _CreateCampaignStepTwoState extends State<CreateCampaignStepTwo> {
   @override
   void initState() {
     super.initState();
-    // 2. Initialize the controller with existing data (if any)
+    // Initialize the controller with existing data (if any)
     _locationController = TextEditingController(text: widget.data.location);
   }
 
   @override
   void dispose() {
-    // 3. Clean up the controller
+    // Clean up the controller
     _locationController.dispose();
     super.dispose();
   }
