@@ -69,11 +69,12 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            // Profile picture
-            // Temporarily using a placeholder image
+            // Profile picture - either from URL or placeholder
             CircleAvatar(
               radius: 50.0,
-              backgroundImage: AssetImage('assets/images/profile_placeholder.png'),
+              backgroundImage: (volunteer.avatarUrl != null && volunteer.avatarUrl!.isNotEmpty)
+                ? NetworkImage(volunteer.avatarUrl!) as ImageProvider
+                : const AssetImage('assets/images/profile_placeholder.png'),
               backgroundColor: Colors.transparent,
             ),
             SizedBox(height: 10.0),
