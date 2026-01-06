@@ -41,64 +41,66 @@ class CampaignDetailsScreen extends StatelessWidget {
       backgroundColor: backgroundGrey,
 
       // Button for registering for the campaign (only shown if the user is not already registered)
-      bottomNavigationBar: showRegisterButton ? Container(
-        padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-        decoration: BoxDecoration(
-          color: backgroundGrey
-        ),
-        child: SafeArea(
-          child: SizedBox(
-            height: 50.0,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: greenPrimary, 
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20.0),
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+          decoration: BoxDecoration(color: backgroundGrey),
+          child: Builder(
+            builder: (context) {
+              final volunteer = Provider.of<VolunteerUser?>(context);
+              
+              bool isAlreadyRegistered = volunteer != null && 
+                  campaign.registeredVolunteersUids.contains(volunteer.uid);
+
+              if (!showRegisterButton) return SizedBox.shrink();
+
+              return SizedBox(
+                height: 50.0,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    // If the user is already registered, the button is greyed out
+                    backgroundColor: isAlreadyRegistered ? Colors.grey[400] : greenPrimary, 
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                    elevation: 0,
+                  ),
+
+                  onPressed: isAlreadyRegistered ? null : () async {
+                    if (volunteer == null) return;
+
+                    try {
+                      await DatabaseService(uid: volunteer.uid).registerUserForCampaign(campaign.id);
+                      
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          backgroundColor: greenPrimary,
+                          content: Center(child: Text('Успешно се записахте!', style: TextStyle(fontWeight: FontWeight.bold))),
+                        ),
+                      );
+                      
+                      Navigator.pop(context);
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(backgroundColor: Colors.red, content: Center(child: Text('Грешка при записване!'))),
+                      );
+                    }
+                  },
+                  
+                  child: Text(
+                    isAlreadyRegistered ? 'Вече сте записан за кампанията' : 'Запиши се за кампанията',
+                    style: TextStyle(
+                      fontSize: 16.0, 
+                      color: isAlreadyRegistered ? Colors.black : Colors.white, 
+                      fontWeight: FontWeight.bold
+                    ),
+                  ),
                 ),
-                elevation: 0,
-              ),
-              // When pressed, register the user for the campaign
-              onPressed: () async {
-                VolunteerUser? volunteer = Provider.of<VolunteerUser?>(context, listen: false)!;
-
-                try {
-                  DatabaseService(uid: volunteer.uid).registerUserForCampaign(campaign.id);
-                  Navigator.of(context).pop();
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      backgroundColor: greenPrimary,
-                      content: Container(
-                        alignment: Alignment.center,
-                        height: 45,
-                        child: Text('Успешно се записахте за кампанията!', style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
-                      ),
-                      duration: Duration(seconds: 3),
-                    ),
-                  );
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      backgroundColor: Colors.red,
-                      content: Container(
-                        alignment: Alignment.center,
-                        height: 45,
-                        child: Text('Грешка при записването за кампанията. Моля, опитайте отново!', style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
-                      ),
-                      duration: Duration(seconds: 3),
-                    ),
-                  );
-                }
-              },
-
-              child: Text(
-                'Запиши се за кампанията',
-                style: TextStyle(fontSize: 18.0, color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-            ),
+              );
+            },
           ),
         ),
-      ) : null,
+      ),
 
       body: Stack(
         children: <Widget>[
