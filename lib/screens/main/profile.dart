@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:volunteer_app/models/campaign.dart';
 import 'package:volunteer_app/models/volunteer.dart';
 import 'package:volunteer_app/screens/main/edit_profile_screen.dart';
+import 'package:volunteer_app/screens/main/settings.dart';
+import 'package:volunteer_app/screens/main/achievements.dart';
 import 'package:volunteer_app/services/database.dart';
 import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/shared/loading.dart';
@@ -157,12 +159,33 @@ class _ProfilePageState extends State<ProfilePage> {
                 SizedBox(height: 10.0),
 
                 // Achievements
-                _buildMenuTile(Icons.emoji_events, 'Моите Постижения', Colors.orange.shade100, accentAmber),
+                _buildMenuTile(
+                  Icons.emoji_events,
+                  'Моите Постижения',
+                  Colors.orange.shade100,
+                  accentAmber,
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const AchievementsPage()),
+                    );
+                  },),
 
                 SizedBox(height: 10.0),
 
                 // Settings
-                _buildMenuTile(Icons.settings, 'Настройки', Colors.blue[100]!, Colors.blue),
+                _buildMenuTile(
+                  Icons.settings,
+                  'Настройки',
+                  Colors.blue.shade100,
+                  Colors.blue,
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SettingsPage()),
+                    );
+                  },
+                ),
 
                 SizedBox(height: 20.0),
 
@@ -177,7 +200,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                 SizedBox(height: 10.0),
 
-                // StreamBuilder for a 
+                // StreamBuilder for recent campaigns
                 StreamBuilder<List<Campaign>>(
                   stream: dbService.registeredCampaigns,
                   builder: (context, snapshot) {
@@ -254,7 +277,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildMenuTile(IconData icon, String title, Color bgColor, Color iconColor) {
+  Widget _buildMenuTile(IconData icon, String title, Color bgColor, Color iconColor, VoidCallback onTap) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -274,9 +297,7 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         title: Text(title, style: TextStyle(fontWeight: FontWeight.w600)),
         trailing: Icon(Icons.arrow_forward_ios, size: 16.0, color: Colors.grey),
-        onTap: () {
-          // TODO: Go to the respective screen
-        },
+        onTap: onTap,
       ),
     );
   }
