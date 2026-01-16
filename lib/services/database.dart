@@ -30,7 +30,7 @@ class DatabaseService {
     'avatarUrl': data.avatarUrl,
     'phoneNumber': data.phoneNumber,
     'dateOfBirth': data.dateOfBirth,
-    });
+    }, SetOptions(merge: true));
   }
 
   // Method for creating a new campaign document in Firestore
@@ -56,6 +56,7 @@ class DatabaseService {
     });
   }
 
+  // Method to get volunteer user data from Firestore (once)
   Future<VolunteerUser?> getVolunteerUser() async {
     if (uid == null) return null;
     // Get the document snapshot for the user with the given uid
@@ -66,6 +67,13 @@ class DatabaseService {
     } else {
       return null;
     }
+  }
+
+  // Stream to get volunteer user data from Firestore constantly
+  Stream<VolunteerUser> get volunteerUserData {
+    return volunteerCollection.doc(uid).snapshots().map((doc) {
+      return VolunteerUser.fromFirestore(doc);
+    });
   }
 
   // Stream to get all campaigns from Firestore and map them to Campaign objects
@@ -109,5 +117,16 @@ class DatabaseService {
       print(e.toString());
       return null;
     }
+  }
+
+  Future<void> toggleCampaignBookmark(String campaignId, bool isCurrentlyBookmarked) async {
+    if (uid == null) return;
+
+    return await volunteerCollection.doc(uid).update({
+      // If currently bookmarked, remove it; otherwise, add it
+      'bookmarkedCampaignsIds': isCurrentlyBookmarked
+          ? FieldValue.arrayRemove([campaignId])
+          : FieldValue.arrayUnion([campaignId])
+    });
   }
 }
