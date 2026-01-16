@@ -61,6 +61,12 @@ class DatabaseService {
     }
   }
 
+  Stream<VolunteerUser> get volunteerUserData {
+    return volunteerCollection.doc(uid).snapshots().map((doc) {
+      return VolunteerUser.fromFirestore(doc);
+    });
+  }
+
   // Stream to get all campaigns from Firestore and map them to Campaign objects
   Stream<List<Campaign>> get campaigns {
     return campaignCollection.snapshots().map(_campaignListFromSnapshot);
@@ -90,5 +96,20 @@ class DatabaseService {
   Future<bool> checkUserExists() async {
     final querySnapshot = await volunteerCollection.where('uid', isEqualTo: uid).get();
     return querySnapshot.docs.isNotEmpty;
+  }
+
+  Future<void> editUserProfileData({
+    required String firstName,
+    required String lastName,
+    required String bio,
+    required List<String> interests,
+  }) async {
+    return await volunteerCollection.doc(uid).update({
+      'firstName': firstName,
+      'lastName': lastName,
+      'bio': bio,
+      'interests': interests,
+      'updatedAt': DateTime.now(),
+    });
   }
 }
