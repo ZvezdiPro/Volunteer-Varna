@@ -1,4 +1,6 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -9,12 +11,23 @@ import 'package:volunteer_app/shared/colors.dart';
 class ChatBubble extends StatelessWidget {
   final String message;
   final String? fileUrl;
-  final String type;
+  final String type; // 'text', 'image', 'video', 'file', 'contact', 'audio'
   final String? fileName;
   final String? fileSize;
+  final String? contactName;
+  final String? contactPhone;
+  final String? duration; // Duration for audio
   final bool isMe;
   final String senderName;
   final DateTime timestamp;
+  
+  // Fields for Reply and Reactions
+  final Map<String, dynamic> reactions;
+  final String? replyToName;
+  final String? replyToText;
+  
+  final VoidCallback? onLongPress;
+  final Function(String emoji)? onReactionTap;
 
   const ChatBubble({
     super.key,
@@ -23,22 +36,28 @@ class ChatBubble extends StatelessWidget {
     required this.type,
     this.fileName,
     this.fileSize,
+    this.contactName,
+    this.contactPhone,
+    this.duration,
     required this.isMe,
     required this.senderName,
     required this.timestamp,
+    this.reactions = const {},
+    this.replyToName,
+    this.replyToText,
+    this.onLongPress,
+    this.onReactionTap,
   });
 
-  // Opens links found within the text message
   Future<void> _onOpenLink(LinkableElement link) async {
     final Uri url = Uri.parse(link.url);
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      throw Exception('Could not launch ${link.url}');
+      throw Exception('Не може да се отвори ${link.url}');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Custom border radius to distinguish sender vs receiver
     final borderRadius = BorderRadius.only(
       topLeft: const Radius.circular(16),
       topRight: const Radius.circular(16),
@@ -46,100 +65,376 @@ class ChatBubble extends StatelessWidget {
       bottomRight: isMe ? Radius.zero : const Radius.circular(16),
     );
 
-    return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-        decoration: BoxDecoration(
-          color: isMe ? greenPrimary : Colors.white,
-          borderRadius: borderRadius,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 2,
-              offset: const Offset(0, 1),
-            )
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Renders different content based on the message type
-            if (type == 'video' && fileUrl != null)
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                child: VideoThumbnailPlaceholder(videoUrl: fileUrl!),
-              )
-            else if (type == 'image' && fileUrl != null)
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                child: Image.network(
-                  fileUrl!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => const SizedBox(
-                    height: 150,
-                    child: Center(child: Icon(Icons.broken_image)),
-                  ),
-                ),
-              )
-            else if (type == 'file' && fileUrl != null)
-              FileBubble(
-                fileName: fileName ?? 'Document',
-                fileSize: fileSize ?? '',
-                fileUrl: fileUrl!,
-                isMe: isMe,
+    return GestureDetector(
+      onLongPress: onLongPress,
+      child: Column(
+        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          Align(
+            alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 4),
+              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+              decoration: BoxDecoration(
+                color: isMe ? greenPrimary : Colors.white,
+                borderRadius: borderRadius,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 2,
+                    offset: const Offset(0, 1),
+                  )
+                ],
               ),
-
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Displays sender name for received messages
-                  if (!isMe)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Text(
-                        senderName,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange[800],
-                        ),
+                  // --- DISPLAY REPLY PREVIEW ---
+                  if (replyToName != null && replyToText != null)
+                    Container(
+                      margin: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: isMe ? Colors.black.withOpacity(0.1) : Colors.grey[100],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border(
+                          left: BorderSide(
+                            color: isMe ? Colors.white70 : greenPrimary, 
+                            width: 4
+                          )
+                        )
                       ),
-                    ),
-                  
-                  // Text message with clickable links
-                  if (message.isNotEmpty)
-                    Linkify(
-                      onOpen: _onOpenLink,
-                      text: message,
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: isMe ? Colors.white : Colors.black87,
-                      ),
-                      linkStyle: TextStyle(
-                        color: isMe ? Colors.white : Colors.blue,
-                        decoration: TextDecoration.underline,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            replyToName!,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              color: isMe ? Colors.white70 : greenPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            replyToText!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isMe ? Colors.white70 : Colors.black54,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
 
-                  const SizedBox(height: 4),
-                  // Message timestamp
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: Text(
-                      DateFormat('HH:mm').format(timestamp),
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: isMe ? Colors.white.withOpacity(0.7) : Colors.grey[500],
+                  // --- CONTENT SWITCHER ---
+                  if (type == 'audio' && fileUrl != null)
+                    AudioBubble(
+                      url: fileUrl!,
+                      duration: duration,
+                      isMe: isMe,
+                    )
+                  else if (type == 'video' && fileUrl != null)
+                    ClipRRect(
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                      child: VideoThumbnailPlaceholder(videoUrl: fileUrl!),
+                    )
+                  else if (type == 'image' && fileUrl != null)
+                    ClipRRect(
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                      child: Image.network(
+                        fileUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => const SizedBox(
+                          height: 150,
+                          child: Center(child: Icon(Icons.broken_image)),
+                        ),
+                      ),
+                    )
+                  else if (type == 'file' && fileUrl != null)
+                    FileBubble(
+                      fileName: fileName ?? 'Документ',
+                      fileSize: fileSize ?? '',
+                      fileUrl: fileUrl!,
+                      isMe: isMe,
+                    )
+                  else if (type == 'contact')
+                    ContactBubble(
+                      name: contactName ?? 'Неизвестен',
+                      phone: contactPhone ?? '',
+                      isMe: isMe,
+                    ),
+      
+                  // --- TEXT CONTENT ---
+                  if (type == 'text' || (message.isNotEmpty && type != 'audio'))
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (!isMe)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Text(
+                                senderName,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.orange[800],
+                                ),
+                              ),
+                            ),
+                          
+                          if (message.isNotEmpty)
+                            Linkify(
+                              onOpen: _onOpenLink,
+                              text: message,
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: isMe ? Colors.white : Colors.black87,
+                              ),
+                              linkStyle: TextStyle(
+                                color: isMe ? Colors.white : Colors.blue,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+      
+                          const SizedBox(height: 4),
+                          Align(
+                            alignment: Alignment.bottomRight,
+                            child: Text(
+                              DateFormat('HH:mm').format(timestamp),
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: isMe ? Colors.white.withOpacity(0.7) : Colors.grey[500],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
+
+                   // Timestamp for media/audio only bubbles
+                   if (type != 'text' && message.isEmpty && type != 'audio')
+                     Padding(
+                       padding: const EdgeInsets.only(right: 12, bottom: 6),
+                       child: Align(
+                          alignment: Alignment.bottomRight,
+                          child: Text(
+                            DateFormat('HH:mm').format(timestamp),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: isMe ? Colors.white.withOpacity(0.7) : Colors.grey[500],
+                            ),
+                          ),
+                        ),
+                     ),
                 ],
               ),
             ),
+          ),
+
+          // --- REACTIONS CHIPS ---
+          if (reactions.isNotEmpty)
+            Padding(
+              padding: EdgeInsets.only(
+                left: isMe ? 0 : 12, 
+                right: isMe ? 12 : 0, 
+                top: 2
+              ),
+              child: Wrap(
+                spacing: 4,
+                children: _buildReactionChips(),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildReactionChips() {
+    final Map<String, int> counts = {};
+    reactions.forEach((uid, emoji) {
+      counts[emoji] = (counts[emoji] ?? 0) + 1;
+    });
+
+    return counts.entries.map((entry) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.grey.shade300),
+          boxShadow: [
+             BoxShadow(color: Colors.black12, blurRadius: 1, offset: const Offset(0,1))
+          ]
+        ),
+        child: Text(
+          "${entry.key} ${entry.value}",
+          style: const TextStyle(fontSize: 11),
+        ),
+      );
+    }).toList();
+  }
+}
+
+// --- NEW WIDGET FOR AUDIO MESSAGES ---
+class AudioBubble extends StatefulWidget {
+  final String url;
+  final String? duration;
+  final bool isMe;
+
+  const AudioBubble({super.key, required this.url, this.duration, required this.isMe});
+
+  @override
+  State<AudioBubble> createState() => _AudioBubbleState();
+}
+
+class _AudioBubbleState extends State<AudioBubble> {
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  bool _isPlaying = false;
+  Duration _currentPosition = Duration.zero;
+  Duration _totalDuration = Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayer.onPlayerStateChanged.listen((state) {
+      if (mounted) {
+        setState(() {
+          _isPlaying = state == PlayerState.playing;
+        });
+      }
+    });
+
+    _audioPlayer.onPositionChanged.listen((p) {
+      if (mounted) setState(() => _currentPosition = p);
+    });
+    
+    _audioPlayer.onDurationChanged.listen((d) {
+       if (mounted) setState(() => _totalDuration = d);
+    });
+
+    _audioPlayer.onPlayerComplete.listen((event) {
+      if (mounted) {
+        setState(() {
+          _isPlaying = false;
+          _currentPosition = Duration.zero;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  String _formatDuration(Duration d) {
+    String twoDigits(int n) => n.toString().padLeft(2, "0");
+    String twoDigitSeconds = twoDigits(d.inSeconds.remainder(60));
+    return "${twoDigits(d.inMinutes)}:$twoDigitSeconds";
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 200,
+      padding: const EdgeInsets.all(8),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () async {
+              if (_isPlaying) {
+                await _audioPlayer.pause();
+              } else {
+                await _audioPlayer.play(UrlSource(widget.url));
+              }
+            },
+            child: CircleAvatar(
+              radius: 20,
+              backgroundColor: widget.isMe ? Colors.white.withOpacity(0.3) : Colors.grey[200],
+              child: Icon(
+                _isPlaying ? Icons.pause : Icons.play_arrow,
+                color: widget.isMe ? Colors.white : Colors.black87,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                 SliderTheme(
+                   data: SliderTheme.of(context).copyWith(
+                     thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                     overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
+                     trackHeight: 2,
+                     thumbColor: widget.isMe ? Colors.white : Colors.orange,
+                     activeTrackColor: widget.isMe ? Colors.white70 : Colors.orange.withOpacity(0.5),
+                     inactiveTrackColor: widget.isMe ? Colors.white24 : Colors.grey[300],
+                   ),
+                   child: Slider(
+                    min: 0,
+                    max: _totalDuration.inSeconds > 0 ? _totalDuration.inSeconds.toDouble() : 1.0,
+                    value: _currentPosition.inSeconds.toDouble().clamp(0, (_totalDuration.inSeconds > 0 ? _totalDuration.inSeconds.toDouble() : 1.0)),
+                    onChanged: (val) async {
+                      await _audioPlayer.seek(Duration(seconds: val.toInt()));
+                    },
+                  ),
+                 ),
+                 Padding(
+                   padding: const EdgeInsets.symmetric(horizontal: 4),
+                   child: Row(
+                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                     children: [
+                        Text(
+                         _formatDuration(_currentPosition),
+                         style: TextStyle(fontSize: 10, color: widget.isMe ? Colors.white70 : Colors.grey),
+                       ),
+                       Text(
+                         widget.duration ?? _formatDuration(_totalDuration),
+                         style: TextStyle(fontSize: 10, color: widget.isMe ? Colors.white70 : Colors.grey),
+                       ),
+                     ],
+                   ),
+                 )
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+}
+
+// ... (Other Widgets like ContactBubble, FileBubble, VideoThumbnailPlaceholder, DateChip remain identical) ...
+
+class ContactBubble extends StatelessWidget {
+  final String name;
+  final String phone;
+  final bool isMe;
+  const ContactBubble({super.key, required this.name, required this.phone, required this.isMe});
+  Future<void> _callContact() async {
+    final Uri launchUri = Uri(scheme: 'tel', path: phone);
+    if (await canLaunchUrl(launchUri)) await launchUrl(launchUri);
+  }
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _callContact,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        width: 220,
+        decoration: BoxDecoration(border: Border(bottom: BorderSide(color: isMe ? Colors.white24 : Colors.grey.shade300))),
+        child: Row(
+          children: [
+            CircleAvatar(backgroundColor: isMe ? Colors.white24 : Colors.grey.shade200, radius: 20, child: Icon(Icons.person, color: isMe ? Colors.white : Colors.grey)),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: isMe ? Colors.white : Colors.black87)), Text(phone, style: TextStyle(fontSize: 12, color: isMe ? Colors.white70 : Colors.grey[600]))])),
           ],
         ),
       ),
@@ -147,162 +442,53 @@ class ChatBubble extends StatelessWidget {
   }
 }
 
-// Widget for displaying file attachments
 class FileBubble extends StatelessWidget {
   final String fileName;
   final String fileSize;
   final String fileUrl;
   final bool isMe;
-
-  const FileBubble({
-    super.key,
-    required this.fileName,
-    required this.fileSize,
-    required this.fileUrl,
-    required this.isMe,
-  });
-
-  // Opens the file URL in an external application
+  const FileBubble({super.key, required this.fileName, required this.fileSize, required this.fileUrl, required this.isMe});
   Future<void> _openFile() async {
     final Uri url = Uri.parse(fileUrl);
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      throw Exception('Could not launch $fileUrl');
-    }
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) throw Exception('Не може да се отвори $fileUrl');
   }
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: _openFile,
       child: Container(
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isMe ? Colors.black.withOpacity(0.1) : Colors.grey[100],
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: isMe ? Colors.white.withOpacity(0.2) : Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.insert_drive_file,
-                color: isMe ? Colors.white : Colors.orange,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Flexible(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    fileName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: isMe ? Colors.white : Colors.black87,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    fileSize,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: isMe ? Colors.white70 : Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+        decoration: BoxDecoration(color: isMe ? Colors.black.withOpacity(0.1) : Colors.grey[100], borderRadius: const BorderRadius.vertical(top: Radius.circular(16))),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: isMe ? Colors.white.withOpacity(0.2) : Colors.white, shape: BoxShape.circle), child: Icon(Icons.insert_drive_file, color: isMe ? Colors.white : Colors.orange, size: 24)), const SizedBox(width: 12), Flexible(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(fileName, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontWeight: FontWeight.bold, color: isMe ? Colors.white : Colors.black87, decoration: TextDecoration.underline)), const SizedBox(height: 4), Text(fileSize, style: TextStyle(fontSize: 11, color: isMe ? Colors.white70 : Colors.grey[600]))]))]),
       ),
     );
   }
 }
 
-// Placeholder widget for video messages
 class VideoThumbnailPlaceholder extends StatelessWidget {
   final String videoUrl;
-
   const VideoThumbnailPlaceholder({super.key, required this.videoUrl});
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      // Navigates to the video player screen on tap
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => VideoPlayerScreen(videoUrl: videoUrl),
-          ),
-        );
-      },
-      child: Container(
-        height: 160,
-        width: double.infinity,
-        color: Colors.black87,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Icon(Icons.play_circle_fill, color: Colors.white.withOpacity(0.8), size: 50),
-            Positioned(
-              bottom: 10,
-              child: Text(
-                "Video",
-                style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
-              ),
-            )
-          ],
-        ),
-      ),
+      onTap: () { Navigator.push(context, MaterialPageRoute(builder: (_) => VideoPlayerScreen(videoUrl: videoUrl))); },
+      child: Container(height: 160, width: double.infinity, color: Colors.black87, child: Stack(alignment: Alignment.center, children: [Icon(Icons.play_circle_fill, color: Colors.white.withOpacity(0.8), size: 50), Positioned(bottom: 10, child: Text("Видео", style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12)))])),
     );
   }
 }
 
-// Widget to display date separators between messages
 class DateChip extends StatelessWidget {
   final DateTime date;
   const DateChip({super.key, required this.date});
-
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.grey[300],
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            _formatDate(date),
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              color: Colors.black54
-            ),
-          ),
-        ),
-      ),
-    );
+    return Padding(padding: const EdgeInsets.symmetric(vertical: 16), child: Center(child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4), decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(12)), child: Text(_formatDate(date), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black54)))));
   }
-
-  // Formats the date string (Today, Yesterday, or specific date)
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date).inDays;
-    if (difference == 0 && now.day == date.day) return "TODAY";
-    if (difference == 1 || (difference == 0 && now.day != date.day)) return "YESTERDAY";
-    return DateFormat('MMMM d, y').format(date);
+    if (difference == 0 && now.day == date.day) return "ДНЕС";
+    if (difference == 1 || (difference == 0 && now.day != date.day)) return "ВЧЕРА";
+    return DateFormat('d MMMM y', 'bg').format(date);
   }
 }
