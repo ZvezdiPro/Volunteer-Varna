@@ -1,4 +1,8 @@
+import 'dart:io';
+
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:volunteer_app/models/campaign.dart';
 import 'package:volunteer_app/models/registration_data.dart';
 import 'package:volunteer_app/models/volunteer.dart';
@@ -26,9 +30,10 @@ class DatabaseService {
     'avatarUrl': data.avatarUrl,
     'phoneNumber': data.phoneNumber,
     'dateOfBirth': data.dateOfBirth,
-    });
+    }, SetOptions(merge: true));
   }
 
+  // Method for creating a new campaign document in Firestore
   Future updateCampaignData(CampaignData data) async {
     DocumentReference docRef = campaignCollection.doc();
     String campaignId = docRef.id;
@@ -37,6 +42,8 @@ class DatabaseService {
     'organizerId': uid,
     'description': data.description,
     'location': data.location,
+    'latitude': data.latitude,
+    'longitude': data.longitude,
     'instructions': data.instructions,
     'requiredVolunteers': data.requiredVolunteers,
     'startDate': data.startDate,
@@ -49,6 +56,7 @@ class DatabaseService {
     });
   }
 
+  // Method to get volunteer user data from Firestore (once)
   Future<VolunteerUser?> getVolunteerUser() async {
     if (uid == null) return null;
     // Get the document snapshot for the user with the given uid
@@ -59,6 +67,13 @@ class DatabaseService {
     } else {
       return null;
     }
+  }
+
+  // Stream to get volunteer user data from Firestore constantly
+  Stream<VolunteerUser> get volunteerUserData {
+    return volunteerCollection.doc(uid).snapshots().map((doc) {
+      return VolunteerUser.fromFirestore(doc);
+    });
   }
 
   // Stream to get all campaigns from Firestore and map them to Campaign objects
@@ -90,5 +105,28 @@ class DatabaseService {
   Future<bool> checkUserExists() async {
     final querySnapshot = await volunteerCollection.where('uid', isEqualTo: uid).get();
     return querySnapshot.docs.isNotEmpty;
+  }
+
+  Future<String?> uploadImage(String path, XFile image) async {
+    try {
+      final ref = FirebaseStorage.instance.ref(path).child(image.name);
+      await ref.putFile(File(image.path));
+      final url = await ref.getDownloadURL();
+      return url;
+    } catch (e) {
+      print(e.toString());
+      return null;
+    }
+  }
+
+  Future<void> toggleCampaignBookmark(String campaignId, bool isCurrentlyBookmarked) async {
+    if (uid == null) return;
+
+    return await volunteerCollection.doc(uid).update({
+      // If currently bookmarked, remove it; otherwise, add it
+      'bookmarkedCampaignsIds': isCurrentlyBookmarked
+          ? FieldValue.arrayRemove([campaignId])
+          : FieldValue.arrayUnion([campaignId])
+    });
   }
 }
