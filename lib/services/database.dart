@@ -73,7 +73,6 @@ class DatabaseService {
   Stream<List<Campaign>> get registeredCampaigns {
     if (uid == null) return Stream.value([]); 
 
-    // Query campaigns where the volunteer's uid is in the 'registeredVolunteersUids' array
     return campaignCollection
         .where('registeredVolunteersUids', arrayContains: uid)
         .snapshots()
@@ -84,7 +83,6 @@ class DatabaseService {
   Stream<List<Campaign>> get userChats {
     if (uid == null) return Stream.value([]);
 
-    // Query campaigns where the user is either the organizer or a registered volunteer
     return campaignCollection
       .where(Filter.or(
         Filter('organizerId', isEqualTo: uid),       
@@ -103,10 +101,7 @@ class DatabaseService {
 
   // Method for registering a volunteer for a campaign
   Future<void> registerUserForCampaign(String campaignId) async {
-    // Get the document reference for the campaign
     DocumentReference campaignRef = campaignCollection.doc(campaignId);
-
-    // Update the 'registeredVolunteersUids' array to include the current user's uid
     return await campaignRef.update({
       'registeredVolunteersUids': FieldValue.arrayUnion([uid])
     });

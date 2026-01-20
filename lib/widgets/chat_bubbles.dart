@@ -1,6 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -80,7 +79,7 @@ class ChatBubble extends StatelessWidget {
                 borderRadius: borderRadius,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withAlpha(13),
                     blurRadius: 2,
                     offset: const Offset(0, 1),
                   )
@@ -95,7 +94,7 @@ class ChatBubble extends StatelessWidget {
                       margin: const EdgeInsets.all(8),
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: isMe ? Colors.black.withOpacity(0.1) : Colors.grey[100],
+                        color: isMe ? Colors.black.withAlpha(25) : Colors.grey[100],
                         borderRadius: BorderRadius.circular(8),
                         border: Border(
                           left: BorderSide(
@@ -208,7 +207,7 @@ class ChatBubble extends StatelessWidget {
                               DateFormat('HH:mm').format(timestamp),
                               style: TextStyle(
                                 fontSize: 10,
-                                color: isMe ? Colors.white.withOpacity(0.7) : Colors.grey[500],
+                                color: isMe ? Colors.white.withAlpha(180) : Colors.grey[500],
                               ),
                             ),
                           ),
@@ -226,7 +225,7 @@ class ChatBubble extends StatelessWidget {
                             DateFormat('HH:mm').format(timestamp),
                             style: TextStyle(
                               fontSize: 10,
-                              color: isMe ? Colors.white.withOpacity(0.7) : Colors.grey[500],
+                              color: isMe ? Colors.white.withAlpha(180) : Colors.grey[500],
                             ),
                           ),
                         ),
@@ -356,7 +355,7 @@ class _AudioBubbleState extends State<AudioBubble> {
             },
             child: CircleAvatar(
               radius: 20,
-              backgroundColor: widget.isMe ? Colors.white.withOpacity(0.3) : Colors.grey[200],
+              backgroundColor: widget.isMe ? Colors.white.withAlpha(77) : Colors.grey[200],
               child: Icon(
                 _isPlaying ? Icons.pause : Icons.play_arrow,
                 color: widget.isMe ? Colors.white : Colors.black87,
@@ -374,7 +373,7 @@ class _AudioBubbleState extends State<AudioBubble> {
                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
                      trackHeight: 2,
                      thumbColor: widget.isMe ? Colors.white : Colors.orange,
-                     activeTrackColor: widget.isMe ? Colors.white70 : Colors.orange.withOpacity(0.5),
+                     activeTrackColor: widget.isMe ? Colors.white70 : Colors.orange.withAlpha(200),
                      inactiveTrackColor: widget.isMe ? Colors.white24 : Colors.grey[300],
                    ),
                    child: Slider(
@@ -458,8 +457,8 @@ class FileBubble extends StatelessWidget {
       onTap: _openFile,
       child: Container(
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: isMe ? Colors.black.withOpacity(0.1) : Colors.grey[100], borderRadius: const BorderRadius.vertical(top: Radius.circular(16))),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: isMe ? Colors.white.withOpacity(0.2) : Colors.white, shape: BoxShape.circle), child: Icon(Icons.insert_drive_file, color: isMe ? Colors.white : Colors.orange, size: 24)), const SizedBox(width: 12), Flexible(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(fileName, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontWeight: FontWeight.bold, color: isMe ? Colors.white : Colors.black87, decoration: TextDecoration.underline)), const SizedBox(height: 4), Text(fileSize, style: TextStyle(fontSize: 11, color: isMe ? Colors.white70 : Colors.grey[600]))]))]),
+        decoration: BoxDecoration(color: isMe ? Colors.black.withAlpha(25) : Colors.grey[100], borderRadius: const BorderRadius.vertical(top: Radius.circular(16))),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: isMe ? Colors.white.withAlpha(51) : Colors.white, shape: BoxShape.circle), child: Icon(Icons.insert_drive_file, color: isMe ? Colors.white : Colors.orange, size: 24)), const SizedBox(width: 12), Flexible(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(fileName, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontWeight: FontWeight.bold, color: isMe ? Colors.white : Colors.black87, decoration: TextDecoration.underline)), const SizedBox(height: 4), Text(fileSize, style: TextStyle(fontSize: 11, color: isMe ? Colors.white70 : Colors.grey[600]))]))]),
       ),
     );
   }
@@ -472,7 +471,7 @@ class VideoThumbnailPlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () { Navigator.push(context, MaterialPageRoute(builder: (_) => VideoPlayerScreen(videoUrl: videoUrl))); },
-      child: Container(height: 160, width: double.infinity, color: Colors.black87, child: Stack(alignment: Alignment.center, children: [Icon(Icons.play_circle_fill, color: Colors.white.withOpacity(0.8), size: 50), Positioned(bottom: 10, child: Text("Видео", style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12)))])),
+      child: Container(height: 160, width: double.infinity, color: Colors.black87, child: Stack(alignment: Alignment.center, children: [Icon(Icons.play_circle_fill, color: Colors.white.withAlpha(200), size: 50), Positioned(bottom: 10, child: Text("Видео", style: TextStyle(color: Colors.white.withAlpha(204), fontSize: 12)))])),
     );
   }
 }

@@ -1,3 +1,4 @@
+// ignore_for_file: curly_braces_in_flow_control_structures
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
@@ -19,7 +20,7 @@ import 'package:volunteer_app/models/volunteer.dart';
 import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/widgets/chat_bubbles.dart';
 
-// --- ОСНОВЕН ЕКРАН ---
+// Main screen for campaign chat widget
 class CampaignChatScreen extends StatefulWidget {
   final Campaign campaign;
   final VolunteerUser currentUser;
@@ -38,12 +39,11 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
   // State variables
   Map<String, String>? _replyMessage;
   bool _isUploading = false;
-  bool _isSharing = false; 
+  bool _isSharing = false;
 
-  // --- ПРОВЕРКА ЗА ПРАВА ---
   bool get _isOrganizer => widget.campaign.organizerId == widget.currentUser.uid;
 
-  // --- HELPER FUNCTIONS ---
+  // Helper method to format bytes to human-readable string
   String _formatBytes(int bytes, int decimals) {
     if (bytes <= 0) return "0 Б";
     const suffixes = ["Б", "КБ", "МБ", "ГБ", "ТБ"];
@@ -51,14 +51,15 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
     return '${(bytes / pow(1024, i)).toStringAsFixed(decimals)} ${suffixes[i]}';
   }
 
-  // --- SAVE / DOWNLOAD LOGIC (НОВО) ---
+  // Save file to device storage
   Future<void> _downloadAndSaveFile(String fileUrl, String? fileName, String type) async {
     if (fileUrl.isEmpty) return;
 
     try {
-      setState(() => _isSharing = true); // Използваме същия лоудър
+      setState(() => _isSharing = true);
 
-      // 1. Ако е iOS -> Използваме Share менюто, защото iOS не позволява директен запис лесно
+      // iOS logic (uses share sheet to save)
+      // Note: Currently, the app is being developed for Android only
       if (Platform.isIOS) {
         await _shareMessageContent(null, fileUrl, type);
         if (mounted) {
@@ -67,13 +68,12 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
         return;
       }
 
-      // 2. Логика за ANDROID
+      // Android logic
       if (Platform.isAndroid) {
-        // Проверка на правата (за по-стари Андроиди)
         final plugin = DeviceInfoPlugin();
         final androidInfo = await plugin.androidInfo;
         
-        // Ако е под Android 10 (SDK 29), искаме разрешение. За по-новите не е нужно за Download папката.
+        // Permission check for Android versions below 10 (sdkInt < 29)
         if (androidInfo.version.sdkInt < 29) {
           var status = await Permission.storage.status;
           if (!status.isGranted) {
@@ -84,22 +84,20 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
           }
         }
 
-        // Сваляне на байтовете
+        // Download the file
         final http.Response response = await http.get(Uri.parse(fileUrl));
         if (response.statusCode != 200) throw Exception("Грешка при сваляне.");
 
-        // Определяне на името
         String finalName = fileName ?? "file_${DateTime.now().millisecondsSinceEpoch}";
-        // Добавяме разширение, ако липсва
+
         if (!finalName.contains('.')) {
-          if (type == 'image') finalName += ".jpg";
-          else if (type == 'video') finalName += ".mp4";
+          if (type == 'image') {
+            finalName += ".jpg";
+          } else if (type == 'video') finalName += ".mp4";
           else if (type == 'audio') finalName += ".m4a";
           else finalName += ".bin";
         }
 
-        // Път към публичната папка Downloads
-        // Забележка: /storage/emulated/0/Download/ е стандартният път за повечето Android устройства
         final Directory downloadDir = Directory('/storage/emulated/0/Download/VolunteerApp');
         
         if (!await downloadDir.exists()) {
@@ -108,14 +106,12 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
 
         final File file = File('${downloadDir.path}/$finalName');
         
-        // Уникално име, ако файлът съществува
         String uniquePath = file.path;
         int counter = 1;
         while (await File(uniquePath).exists()) {
            uniquePath = '${downloadDir.path}/(${counter++})_$finalName';
         }
 
-        // Записване
         await File(uniquePath).writeAsBytes(response.bodyBytes);
 
         if (mounted) {
@@ -137,7 +133,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
     }
   }
 
-  // --- PIN MESSAGE LOGIC ---
+  // Pin message
   Future<void> _pinMessage(String messageId, String text, String type) async {
     if (!_isOrganizer) return;
     try {
@@ -166,7 +162,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
     }
   }
 
-  // --- SEND LOGIC ---
+  // Sand message handlers
   void _handleSendText(String text) {
     _sendMessage(text: text);
   }
@@ -238,7 +234,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
     }
   }
 
-  // --- ATTACHMENTS HANDLING ---
+  // Attachment handlers
   void _handleAttachment(String type) async {
     final ImagePicker picker = ImagePicker();
     try {
@@ -274,7 +270,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
     }
   }
 
-  // --- SHARE LOGIC ---
+  // Share message content to other apps
   Future<void> _shareMessageContent(String? text, String? fileUrl, String type) async {
     if ((fileUrl == null || fileUrl.isEmpty) && text != null && text.isNotEmpty) {
       await Share.share(text);
@@ -323,7 +319,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
     }
   }
 
-  // --- MESSAGE ACTIONS ---
+  // Toggle reaction
   Future<void> _toggleReaction(String docId, String emoji, Map<String, dynamic> currentReactions) async {
     final uid = widget.currentUser.uid;
     final docRef = FirebaseFirestore.instance.collection('campaigns').doc(widget.campaign.id).collection('messages').doc(docId);
@@ -334,7 +330,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
     }
   }
 
-  // МЕНЮ ПРИ ЗАДЪРЖАНЕ (ОБНОВЕНО С SAVE)
+  // Message long press menu
   void _handleMessageLongPress(String docId, bool isMe, String messageText, String senderName, String? fileUrl, String type, Map<String, dynamic> currentReactions, String? fileName) {
     showModalBottomSheet(
       context: context,
@@ -346,6 +342,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Reactions row
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Row(
@@ -360,7 +357,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
               ),
               const Divider(height: 1),
               
-              // БУТОН ОТГОВОРИ
+              // Response button
               ListTile(
                 leading: const Icon(Icons.reply, color: Colors.blue),
                 title: const Text('Отговори'),
@@ -372,31 +369,30 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
                 },
               ),
 
-              // БУТОН ЗАПАЗИ (НОВО)
+              // Save button
               if (fileUrl != null && fileUrl.isNotEmpty)
                 ListTile(
                   leading: const Icon(Icons.download_rounded, color: Colors.purple),
                   title: const Text('Запази в устройството'),
                   onTap: () {
                     Navigator.pop(context);
-                    // Извикваме новата функция за запазване
                     _downloadAndSaveFile(fileUrl, fileName, type);
                   },
                 ),
 
-              // БУТОН СПОДЕЛИ
+              // Share button
               ListTile(
                 leading: const Icon(Icons.share, color: Colors.green),
                 title: const Text('Сподели / Препрати'),
                 onTap: () {
                   Navigator.pop(context);
                   String contentToShare = messageText;
-                  if (type == 'contact') contentToShare = "$messageText"; 
+                  if (type == 'contact') contentToShare = messageText;
                   _shareMessageContent(contentToShare, fileUrl, type);
                 },
               ),
 
-              // БУТОН ЗАКАЧИ (САМО ОРГ)
+              // Pin button (only for organizers)
               if (_isOrganizer)
                 ListTile(
                   leading: const Icon(Icons.push_pin, color: Colors.orange),
@@ -449,12 +445,13 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
     return currentMsgTime.day != previousMsgTime.day;
   }
 
+  // Build method
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF2F4F7),
       appBar: AppBar(
-        title: Text(widget.campaign.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        title: Text(widget.campaign.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 1,
@@ -463,8 +460,6 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
         children: [
           Column(
             children: [
-              
-              // --- ЛЕНТА ЗА ЗАКАЧЕНО СЪОБЩЕНИЕ ---
               StreamBuilder<DocumentSnapshot>(
                 stream: FirebaseFirestore.instance.collection('campaigns').doc(widget.campaign.id).snapshots(),
                 builder: (context, snapshot) {
@@ -478,7 +473,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
 
                   return Container(
                     width: double.infinity,
-                    color: Colors.amber.withOpacity(0.15),
+                    color: Colors.amber.withAlpha(50),
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     child: Row(
                       children: [
@@ -564,7 +559,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
                                 fileUrl,
                                 type,
                                 reactions,
-                                data['fileName'] // Подаваме името на файла за Save функцията
+                                data['fileName']
                               ),
                             ),
                           ],
@@ -606,7 +601,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
 
           if (_isSharing)
             Container(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withAlpha(100),
               child: const Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -624,7 +619,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
   }
 }
 
-// --- WIDGET ЗА ВЪВЕЖДАНЕ (Без промяна) ---
+// Chat input area widget
 class ChatInputArea extends StatefulWidget {
   final Function(String) onSendText;
   final Function(String) onSendAudio;
@@ -655,6 +650,7 @@ class _ChatInputAreaState extends State<ChatInputArea> {
     super.dispose();
   }
 
+  // Start audio recording
   Future<void> _startRecording() async {
     try {
       if (await _audioRecorder.hasPermission()) {
@@ -671,6 +667,7 @@ class _ChatInputAreaState extends State<ChatInputArea> {
     }
   }
 
+  // Stop audio recording
   Future<void> _stopRecording() async {
     try {
       final String? path = await _audioRecorder.stop();
@@ -683,6 +680,7 @@ class _ChatInputAreaState extends State<ChatInputArea> {
     }
   }
 
+  // Show attachment options
   void _showAttachmentOptions() {
     showModalBottomSheet(
       context: context,
@@ -733,55 +731,58 @@ class _ChatInputAreaState extends State<ChatInputArea> {
                 ),
               ),
 
+              // Text input / Recording indicator
               Expanded(
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   margin: const EdgeInsets.only(bottom: 4),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _isRecording ? Colors.red.withOpacity(0.1) : Colors.grey[100],
+                    color: _isRecording ? Colors.red.withAlpha(25) : Colors.grey[100],
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(color: _isRecording ? Colors.red : Colors.grey[300]!)
                   ),
+                  // Recording indicator
                   child: _isRecording
-                      ? const SizedBox(
-                          height: 48,
-                          child: Row(
-                            children: [
-                              Icon(Icons.fiber_manual_record, color: Colors.red, size: 20),
-                              SizedBox(width: 8),
-                              DefaultTextStyle(
-                                style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16),
-                                child: Text("Записване..."),
-                              ),
-                            ],
+                  ? const SizedBox(
+                      height: 48,
+                      child: Row(
+                        children: [
+                          Icon(Icons.fiber_manual_record, color: Colors.red, size: 20),
+                          SizedBox(width: 8),
+                          DefaultTextStyle(
+                            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16),
+                            child: Text("Записване..."),
                           ),
-                        )
-                      : TextField(
-                          controller: _controller,
-                          maxLines: 5,
-                          minLines: 1,
-                          textCapitalization: TextCapitalization.sentences,
-                          onChanged: (text) {
-                            final shouldShow = text.trim().isNotEmpty;
-                            if (_showSendButton != shouldShow) {
-                              setState(() {
-                                _showSendButton = shouldShow;
-                              });
-                            }
-                          },
-                          decoration: const InputDecoration(
-                            hintText: "Напишете съобщение...",
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding: EdgeInsets.symmetric(vertical: 8),
-                          ),
-                        ),
+                        ],
+                      ),
+                    )
+                  : TextField(
+                      controller: _controller,
+                      maxLines: 5,
+                      minLines: 1,
+                      textCapitalization: TextCapitalization.sentences,
+                      onChanged: (text) {
+                        final shouldShow = text.trim().isNotEmpty;
+                        if (_showSendButton != shouldShow) {
+                          setState(() {
+                            _showSendButton = shouldShow;
+                          });
+                        }
+                      },
+                      decoration: const InputDecoration(
+                        hintText: "Напишете съобщение...",
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(vertical: 8),
+                      ),
+                    ),
                 ),
               ),
 
               const SizedBox(width: 8),
 
+              // Send / Record button
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
                 child: GestureDetector(
@@ -804,7 +805,7 @@ class _ChatInputAreaState extends State<ChatInputArea> {
                       color: _isRecording ? Colors.red : greenPrimary,
                       shape: BoxShape.circle,
                       boxShadow: [
-                         BoxShadow(color: (_isRecording ? Colors.red : greenPrimary).withOpacity(0.4), blurRadius: 4, offset: const Offset(0, 2))
+                         BoxShadow(color: (_isRecording ? Colors.red : greenPrimary).withAlpha(100), blurRadius: 4, offset: const Offset(0, 2))
                       ]
                     ),
                     child: Center(
@@ -829,6 +830,7 @@ class _ChatInputAreaState extends State<ChatInputArea> {
   }
 }
 
+// Attachment option widget
 class _AttachmentOption extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -837,6 +839,6 @@ class _AttachmentOption extends StatelessWidget {
   const _AttachmentOption({required this.icon, required this.label, required this.color, required this.onTap});
   @override
   Widget build(BuildContext context) {
-    return InkWell(onTap: onTap, child: Column(mainAxisSize: MainAxisSize.min, children: [CircleAvatar(radius: 25, backgroundColor: color.withOpacity(0.1), child: Icon(icon, color: color, size: 28)), const SizedBox(height: 8), Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500))]));
+    return InkWell(onTap: onTap, child: Column(mainAxisSize: MainAxisSize.min, children: [CircleAvatar(radius: 25, backgroundColor: color.withAlpha(25), child: Icon(icon, color: color, size: 28)), const SizedBox(height: 8), Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500))]));
   }
 }
