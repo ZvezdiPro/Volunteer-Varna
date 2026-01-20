@@ -3,12 +3,14 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:device_info_plus/device_info_plus.dart';
+import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
+import 'package:flutter_file_dialog/flutter_file_dialog.dart';
+import 'package:gal/gal.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -51,82 +53,96 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
     return '${(bytes / pow(1024, i)).toStringAsFixed(decimals)} ${suffixes[i]}';
   }
 
-  // Save file to device storage
-  Future<void> _downloadAndSaveFile(String fileUrl, String? fileName, String type) async {
+  // Save image/video to gallery
+  Future<void> _saveToGallery(String fileUrl, String type) async {
     if (fileUrl.isEmpty) return;
 
     try {
       setState(() => _isSharing = true);
 
-      // iOS logic (uses share sheet to save)
-      // Note: Currently, the app is being developed for Android only
-      if (Platform.isIOS) {
-        await _shareMessageContent(null, fileUrl, type);
-        if (mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Изберете 'Save to Files' или 'Save Image' от менюто.")));
-        }
-        return;
+      // See if we have access to gallery
+      final hasAccess = await Gal.hasAccess();
+      if (!hasAccess) {
+        await Gal.requestAccess();
       }
 
-      // Android logic
-      if (Platform.isAndroid) {
-        final plugin = DeviceInfoPlugin();
-        final androidInfo = await plugin.androidInfo;
-        
-        // Permission check for Android versions below 10 (sdkInt < 29)
-        if (androidInfo.version.sdkInt < 29) {
-          var status = await Permission.storage.status;
-          if (!status.isGranted) {
-            status = await Permission.storage.request();
-            if (!status.isGranted) {
-              throw Exception("Няма права за запис.");
-            }
-          }
+      final tempDir = await getTemporaryDirectory();
+      
+      // Determine file extension
+      String ext = "";
+      if (type == 'image') ext = "jpg";
+      else if (type == 'video') ext = "mp4";
+      else {
+        throw Exception("Аудио файловете не се поддържат от Галерията.");
+      }
+      
+      final String fileName = "volunteer_${DateTime.now().millisecondsSinceEpoch}.$ext";
+      final String filePath = '${tempDir.path}/$fileName';
+
+      await Dio().download(fileUrl, filePath);
+
+      if (type == 'image') {
+        await Gal.putImage(filePath, album: 'VolunteerApp');
+      } else if (type == 'video') {
+        await Gal.putVideo(filePath, album: 'VolunteerApp');
+      }
+
+      try {
+        File(filePath).delete(); 
+      } catch (_) {}
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Запазено в Галерията! (Албум VolunteerApp)"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+
+    } catch (e) {
+      debugPrint("Gallery Error: $e");
+      if (mounted) {
+        String errorMsg = "Грешка при запазване.";
+        if (e.toString().contains("ACCESS_DENIED")) {
+          errorMsg = "Няма права за достъп до Галерията.";
         }
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMsg)));
+      }
+    } finally {
+      if (mounted) setState(() => _isSharing = false);
+    }
+  }
 
-        // Download the file
-        final http.Response response = await http.get(Uri.parse(fileUrl));
-        if (response.statusCode != 200) throw Exception("Грешка при сваляне.");
+  // Save generic file (audio, document, etc.)
+  Future<void> _saveGenericFile(String fileUrl, String? fileName, String type) async {
+    try {
+      setState(() => _isSharing = true);
 
-        String finalName = fileName ?? "file_${DateTime.now().millisecondsSinceEpoch}";
+      final tempDir = await getTemporaryDirectory();
+      String ext = type == 'audio' ? 'm4a' : 'bin';
+      String finalName = fileName ?? "audio_${DateTime.now().millisecondsSinceEpoch}.$ext";
+      
+      if (!finalName.contains('.')) finalName += ".$ext";
 
-        if (!finalName.contains('.')) {
-          if (type == 'image') {
-            finalName += ".jpg";
-          } else if (type == 'video') finalName += ".mp4";
-          else if (type == 'audio') finalName += ".m4a";
-          else finalName += ".bin";
-        }
+      final String savePath = '${tempDir.path}/$finalName';
+      await Dio().download(fileUrl, savePath);
 
-        final Directory downloadDir = Directory('/storage/emulated/0/Download/VolunteerApp');
-        
-        if (!await downloadDir.exists()) {
-          await downloadDir.create(recursive: true);
-        }
+      final params = SaveFileDialogParams(sourceFilePath: savePath);
+      final filePath = await FlutterFileDialog.saveFile(params: params);
 
-        final File file = File('${downloadDir.path}/$finalName');
-        
-        String uniquePath = file.path;
-        int counter = 1;
-        while (await File(uniquePath).exists()) {
-           uniquePath = '${downloadDir.path}/(${counter++})_$finalName';
-        }
-
-        await File(uniquePath).writeAsBytes(response.bodyBytes);
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("Запазено в Downloads/VolunteerApp"),
-              backgroundColor: Colors.green,
-            )
-          );
-        }
+      if (mounted) {
+        if (filePath != null) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text("Аудио файлът е запазен!"), 
+              backgroundColor: Colors.green
+          ));
+        } 
       }
     } catch (e) {
-      debugPrint("Save Error: $e");
+      debugPrint("File Save Error: $e");
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Грешка при запазване: $e")));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Грешка: $e")));
       }
     } finally {
       if (mounted) setState(() => _isSharing = false);
@@ -376,7 +392,11 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
                   title: const Text('Запази в устройството'),
                   onTap: () {
                     Navigator.pop(context);
-                    _downloadAndSaveFile(fileUrl, fileName, type);
+                    if (type == 'image' || type == 'video') {
+                      _saveToGallery(fileUrl, type);
+                    } else {
+                      _saveGenericFile(fileUrl, fileName, type);
+                    }
                   },
                 ),
 

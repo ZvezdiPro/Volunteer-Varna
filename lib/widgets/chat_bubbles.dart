@@ -88,7 +88,7 @@ class ChatBubble extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // --- DISPLAY REPLY PREVIEW ---
+                  // Display reply preview if applicable
                   if (replyToName != null && replyToText != null)
                     Container(
                       margin: const EdgeInsets.all(8),
@@ -128,7 +128,7 @@ class ChatBubble extends StatelessWidget {
                       ),
                     ),
 
-                  // --- CONTENT SWITCHER ---
+                  // Content based on message type
                   if (type == 'audio' && fileUrl != null)
                     AudioBubble(
                       url: fileUrl!,
@@ -166,7 +166,7 @@ class ChatBubble extends StatelessWidget {
                       isMe: isMe,
                     ),
       
-                  // --- TEXT CONTENT ---
+                  // Text content and timestamp
                   if (type == 'text' || (message.isNotEmpty && type != 'audio'))
                     Padding(
                       padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
@@ -201,15 +201,19 @@ class ChatBubble extends StatelessWidget {
                             ),
       
                           const SizedBox(height: 4),
-                          Align(
-                            alignment: Alignment.bottomRight,
-                            child: Text(
-                              DateFormat('HH:mm').format(timestamp),
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: isMe ? Colors.white.withAlpha(180) : Colors.grey[500],
+
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text(
+                                DateFormat('HH:mm').format(timestamp),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: isMe ? Colors.white.withAlpha(180) : Colors.grey[500],
+                                ),
                               ),
-                            ),
+                            ],
                           ),
                         ],
                       ),
@@ -218,24 +222,27 @@ class ChatBubble extends StatelessWidget {
                    // Timestamp for media/audio only bubbles
                    if (type != 'text' && message.isEmpty && type != 'audio')
                      Padding(
-                       padding: const EdgeInsets.only(right: 12, bottom: 6),
-                       child: Align(
-                          alignment: Alignment.bottomRight,
-                          child: Text(
+                       padding: const EdgeInsets.only(right: 12, bottom: 6, left: 6),
+                       child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(
                             DateFormat('HH:mm').format(timestamp),
                             style: TextStyle(
                               fontSize: 10,
                               color: isMe ? Colors.white.withAlpha(180) : Colors.grey[500],
                             ),
                           ),
-                        ),
+                        ],
+                      ),
                      ),
                 ],
               ),
             ),
           ),
 
-          // --- REACTIONS CHIPS ---
+          // Reactions display
           if (reactions.isNotEmpty)
             Padding(
               padding: EdgeInsets.only(
@@ -279,7 +286,7 @@ class ChatBubble extends StatelessWidget {
   }
 }
 
-// --- NEW WIDGET FOR AUDIO MESSAGES ---
+// Audio message bubble widget
 class AudioBubble extends StatefulWidget {
   final String url;
   final String? duration;
@@ -410,8 +417,7 @@ class _AudioBubbleState extends State<AudioBubble> {
   }
 }
 
-// ... (Other Widgets like ContactBubble, FileBubble, VideoThumbnailPlaceholder, DateChip remain identical) ...
-
+// (Other Widgets like ContactBubble, FileBubble, VideoThumbnailPlaceholder, DateChip remain identical)
 class ContactBubble extends StatelessWidget {
   final String name;
   final String phone;
