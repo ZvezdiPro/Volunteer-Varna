@@ -166,4 +166,11 @@ class DatabaseService {
       'updatedAt': DateTime.now(),
     });
   }
+
+  // Leave a campaign (the volunteer removes themselves)
+  Future<void> leaveCampaign(String campaignId) async {
+    return await campaignCollection.doc(campaignId).update({
+      'registeredVolunteersUids': FieldValue.arrayRemove([uid]),
+    });
+  }
 }

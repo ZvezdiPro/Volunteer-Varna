@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
@@ -21,6 +22,7 @@ import 'package:volunteer_app/models/campaign.dart';
 import 'package:volunteer_app/models/volunteer.dart';
 import 'package:volunteer_app/screens/main/helper_screens/campaign_admin_panel.dart';
 import 'package:volunteer_app/screens/main/helper_screens/campaign_info_screen.dart';
+import 'package:volunteer_app/services/database.dart';
 import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/widgets/chat_bubbles.dart';
 
@@ -484,6 +486,59 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
     }
   }
 
+  void _confirmLeaveCampaign(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          title: const Text("Напускане"),
+          content: const Text("Сигурни ли сте, че искате да се отпишете от тази кампания?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text("Отказ", style: TextStyle(color: Colors.grey)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(ctx).pop(); 
+
+                final user = FirebaseAuth.instance.currentUser;
+
+                if (user != null) {
+                  // Save the context and messenger to local variables
+                  // As to avoid using 'mounted' and context in async calls
+                  final navigator = Navigator.of(context);
+                  final messenger = ScaffoldMessenger.of(context);
+
+                  try {
+                    await DatabaseService(uid: user.uid).leaveCampaign(widget.campaign.id);
+                    
+                    messenger.showSnackBar(
+                      const SnackBar(
+                        backgroundColor: greenPrimary,
+                        content: Center(
+                          child: Text("Успешно напуснахте кампанията.", style: TextStyle(fontWeight: FontWeight.bold),)
+                        )
+                      ),
+                    );
+                    
+                    navigator.pop(); 
+                    
+                  } catch (e) {
+                    messenger.showSnackBar(
+                      SnackBar(content: Text("Грешка: $e")),
+                    );
+                  }
+                }
+              },
+              child: const Text("Напусни", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   // Build method
   @override
   Widget build(BuildContext context) {
@@ -509,6 +564,8 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
                     builder: (context) => CampaignInfoScreen(campaign: widget.campaign),
                   ),
                 );
+              } else if (value == 'leave') {
+                _confirmLeaveCampaign(context);
               }
             },
             // The options in the menu
@@ -538,6 +595,21 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
                     ],
                   ),
                 ),
+
+                if (!_isOrganizer)
+                  const PopupMenuItem<String>(
+                    value: 'leave',
+                    child: Row(
+                      children: [
+                        Icon(Icons.exit_to_app, color: Colors.red, size: 20),
+                        SizedBox(width: 12),
+                        Text(
+                          'Напусни кампанията',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ],
+                    ),
+                  ),
               ];
             },
           ),
