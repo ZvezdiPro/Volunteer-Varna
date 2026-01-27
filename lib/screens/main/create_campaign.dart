@@ -71,14 +71,16 @@ class _CreateCampaignState extends State<CreateCampaign> {
       _loading = true;
       });
 
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final VolunteerUser? volunteer = Provider.of<VolunteerUser?>(context, listen: false);
+    
     try {
-      final VolunteerUser? volunteer = Provider.of<VolunteerUser?>(context, listen: false);
-
       await DatabaseService(uid: volunteer!.uid).updateCampaignData(_data);
 
-      Navigator.of(context).pop();
+      navigator.pop();
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           backgroundColor: greenPrimary,
           content: Container(
@@ -90,7 +92,7 @@ class _CreateCampaignState extends State<CreateCampaign> {
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           backgroundColor: Colors.red[400],
           content: Text('Настъпи грешка при създаването на кампанията. Моля, опитайте отново.', style: TextStyle(color: Colors.black))

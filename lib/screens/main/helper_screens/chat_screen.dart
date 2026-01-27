@@ -293,7 +293,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
   // Share message content to other apps
   Future<void> _shareMessageContent(String? text, String? fileUrl, String type) async {
     if ((fileUrl == null || fileUrl.isEmpty) && text != null && text.isNotEmpty) {
-      await Share.share(text);
+      await SharePlus.instance.share(ShareParams(text: text));
       return;
     }
 
@@ -327,7 +327,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
         final XFile xFile = XFile(file.path, mimeType: mimeType);
         
         await Future.delayed(const Duration(milliseconds: 100));
-        await Share.shareXFiles([xFile], text: (text != null && text.isNotEmpty) ? text : null);
+        await SharePlus.instance.share(ShareParams(files: [xFile], text: (text != null && text.isNotEmpty) ? text : null));
 
       } catch (e) {
         if (mounted) {
