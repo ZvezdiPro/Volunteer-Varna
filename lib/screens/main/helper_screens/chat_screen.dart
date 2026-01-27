@@ -19,6 +19,7 @@ import 'package:record/record.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:volunteer_app/models/campaign.dart';
 import 'package:volunteer_app/models/volunteer.dart';
+import 'package:volunteer_app/screens/main/helper_screens/campaign_admin_panel.dart';
 import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/widgets/chat_bubbles.dart';
 
@@ -465,6 +466,23 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
     return currentMsgTime.day != previousMsgTime.day;
   }
 
+  Future<void> _openAdminPanel() async {
+    final bool? campaignEnded = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CampaignAdminPanel(
+          campaign: widget.campaign,
+        ),
+      ),
+    );
+
+    if (campaignEnded == true) {
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    }
+  }
+
   // Build method
   @override
   Widget build(BuildContext context) {
@@ -475,6 +493,49 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 1,
+        actions: [
+          // Three dots menu
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            // What screen to open based on selection
+            onSelected: (String value) {
+              if (value == 'admin_panel') {
+                _openAdminPanel();
+              } else if (value == 'info') {
+                // TODO: Show campaign info screen
+              }
+            },
+            // The options in the menu
+            itemBuilder: (BuildContext context) {
+              return [
+                // Admin panel option for organizers only
+                if (_isOrganizer)
+                  const PopupMenuItem<String>(
+                    value: 'admin_panel',
+                    child: Row(
+                      children: [
+                        Icon(Icons.admin_panel_settings, color: Colors.black54, size: 20),
+                        SizedBox(width: 12),
+                        Text('Админ панел'),
+                      ],
+                    ),
+                  ),
+                
+                // Info option (TODO!)
+                // const PopupMenuItem<String>(
+                //   value: 'info',
+                //   child: Row(
+                //     children: [
+                //       Icon(Icons.info_outline, color: Colors.black54, size: 20),
+                //       SizedBox(width: 12),
+                //       Text('Информация'),
+                //     ],
+                //   ),
+                // ),
+              ];
+            },
+          ),
+        ],
       ),
       body: Stack(
         children: [

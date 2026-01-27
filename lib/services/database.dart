@@ -47,7 +47,8 @@ class DatabaseService {
     'categories': data.categories,
     'createdAt': DateTime.now(),
     'updatedAt': DateTime.now(),
-    'registeredVolunteersUids': const[]
+    'registeredVolunteersUids': const[],
+    'status': 'active',
     });
   }
 
@@ -111,5 +112,58 @@ class DatabaseService {
   Future<bool> checkUserExists() async {
     final querySnapshot = await volunteerCollection.where('uid', isEqualTo: uid).get();
     return querySnapshot.docs.isNotEmpty;
+  }
+
+  // Update campaign start and end dates
+  Future updateCampaignDates(String campaignId, DateTime start, DateTime end) async {
+    return await campaignCollection.doc(campaignId).update({
+      'startDate': start,
+      'endDate': end,
+      'updatedAt': DateTime.now(),
+    });
+  }
+
+  // Get list of volunteers for a campaign
+  Future<List<VolunteerUser>> getVolunteersFromList(List<dynamic> uids) async {
+    List<List<dynamic>> chunks = [];
+    for (var i = 0; i < uids.length; i += 10) {
+      chunks.add(
+        uids.sublist(i, i + 10 > uids.length ? uids.length : i + 10)
+      ); 
+    }
+
+    List<VolunteerUser> allVolunteers = [];
+
+    List<QuerySnapshot> snapshots = await Future.wait(
+      chunks.map((chunk) {
+        return volunteerCollection
+            .where(FieldPath.documentId, whereIn: chunk)
+            .get();
+      })
+    );
+
+    for (var snapshot in snapshots) {
+      allVolunteers.addAll(
+        snapshot.docs.map((doc) => VolunteerUser.fromFirestore(doc))
+      );
+    }
+
+    return allVolunteers;
+  }
+
+  // Remove a volunteer from the campaign
+  Future removeVolunteerFromCampaign(String campaignId, String volunteerUid) async {
+    return await campaignCollection.doc(campaignId).update({
+      'registeredVolunteersUids': FieldValue.arrayRemove([volunteerUid])
+    });
+  }
+
+  // End the campaign
+  // Set campaign status to 'ended'
+  Future<void> endCampaign(String campaignId) async {
+    return await campaignCollection.doc(campaignId).update({
+      'status': 'ended',
+      'updatedAt': DateTime.now(),
+    });
   }
 }

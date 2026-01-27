@@ -15,6 +15,7 @@ class Campaign {
   final DateTime updatedAt;
   final List<String> categories;
   final List<String> registeredVolunteersUids;
+  final String status;
 
   Campaign({
     required this.id,
@@ -31,7 +32,10 @@ class Campaign {
     required this.categories,
     this.instructions = '',
     this.registeredVolunteersUids = const [],
+    this.status = 'active',
   });
+
+  bool get isActive => status == 'active';
 
   factory Campaign.fromFirestore(DocumentSnapshot doc) {
     Map data = doc.data() as Map<String, dynamic>;
@@ -50,6 +54,7 @@ class Campaign {
       updatedAt: (data['updatedAt'] as Timestamp).toDate(),
       categories: List<String>.from(data['categories'] ?? const []),
       registeredVolunteersUids: List<String>.from(data['registeredVolunteersUids'] ?? const []),
+      status: data['status'] ?? 'active',
     );
   }
 }

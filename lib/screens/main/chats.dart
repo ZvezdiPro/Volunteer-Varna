@@ -42,7 +42,7 @@ class _ChatsScreenState extends State<ChatsScreen> {
 
         VolunteerUser currentUser = VolunteerUser.fromFirestore(userSnapshot.data!);
 
-        // Fetch campaigns using your existing DatabaseService logic
+        // Fetch campaigns using the DatabaseService logic
         return StreamBuilder<List<Campaign>>(
           stream: DatabaseService(uid: currentUid).userChats,
           builder: (context, campaignSnapshot) {
@@ -51,7 +51,10 @@ class _ChatsScreenState extends State<ChatsScreen> {
               return const Center(child: CircularProgressIndicator());
             }
 
-            if (!campaignSnapshot.hasData || campaignSnapshot.data!.isEmpty) {
+            final List<Campaign> allCampaigns = campaignSnapshot.data ?? [];
+            final activeCampaigns = allCampaigns.where((c) => c.isActive).toList();
+
+            if (activeCampaigns.isEmpty) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -65,12 +68,10 @@ class _ChatsScreenState extends State<ChatsScreen> {
               );
             }
 
-            final campaigns = campaignSnapshot.data!;
-
             return ListView.builder(
-              itemCount: campaigns.length,
+              itemCount: activeCampaigns.length,
               itemBuilder: (context, index) {
-                final campaign = campaigns[index];
+                final campaign = activeCampaigns[index];
                 return Card(
                   elevation: 2,
                   margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
