@@ -20,6 +20,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:volunteer_app/models/campaign.dart';
 import 'package:volunteer_app/models/volunteer.dart';
 import 'package:volunteer_app/screens/main/helper_screens/campaign_admin_panel.dart';
+import 'package:volunteer_app/screens/main/helper_screens/campaign_info_screen.dart';
 import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/widgets/chat_bubbles.dart';
 
@@ -502,7 +503,12 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
               if (value == 'admin_panel') {
                 _openAdminPanel();
               } else if (value == 'info') {
-                // TODO: Show campaign info screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CampaignInfoScreen(campaign: widget.campaign),
+                  ),
+                );
               }
             },
             // The options in the menu
@@ -521,17 +527,17 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
                     ),
                   ),
                 
-                // Info option (TODO!)
-                // const PopupMenuItem<String>(
-                //   value: 'info',
-                //   child: Row(
-                //     children: [
-                //       Icon(Icons.info_outline, color: Colors.black54, size: 20),
-                //       SizedBox(width: 12),
-                //       Text('Информация'),
-                //     ],
-                //   ),
-                // ),
+                // Info option
+                const PopupMenuItem<String>(
+                  value: 'info',
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Colors.black54, size: 20),
+                      SizedBox(width: 12),
+                      Text('Информация'),
+                    ],
+                  ),
+                ),
               ];
             },
           ),
