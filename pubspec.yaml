@@ -64,6 +64,8 @@ dependencies:
   gal: ^2.3.0
   dio: ^5.4.0
   flutter_file_dialog: ^3.0.3
+  google_maps_flutter: ^2.14.0
+  geocoding: ^4.0.0
 
 dev_dependencies:
   flutter_test:

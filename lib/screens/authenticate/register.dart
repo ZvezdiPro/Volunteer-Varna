@@ -108,20 +108,23 @@ class _RegisterState extends State<Register> {
       body: Stack(
         children: [
           // The registration pages
-          PageView(
-            controller: pageController,
-            physics: const NeverScrollableScrollPhysics(),
-            // The value of _currentPage changes when a page is selected
-            onPageChanged: (int index) {
-              setState(() {
-                _currentPage = index;
-              });
-            },
-            children: [
-              RegisterStepOne(data: _data, formKey: _stepOneFormKey, toggleView: widget.toggleView),
-              RegisterStepTwo(data: _data, formKey: _stepTwoFormKey),
-              RegisterStepThree(data: _data, formKey: _stepThreeFormKey),
-            ],
+          Padding(
+            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+            child: PageView(
+              controller: pageController,
+              physics: const NeverScrollableScrollPhysics(),
+              // The value of _currentPage changes when a page is selected
+              onPageChanged: (int index) {
+                setState(() {
+                  _currentPage = index;
+                });
+              },
+              children: [
+                RegisterStepOne(data: _data, formKey: _stepOneFormKey, toggleView: widget.toggleView),
+                RegisterStepTwo(data: _data, formKey: _stepTwoFormKey),
+                RegisterStepThree(data: _data, formKey: _stepThreeFormKey),
+              ],
+            ),
           ),
 
           // Navigation

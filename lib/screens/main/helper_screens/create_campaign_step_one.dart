@@ -24,7 +24,7 @@ class _CreateCampaignStepOneState extends State<CreateCampaignStepOne> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: EdgeInsets.only(left: 50.0, right: 50.0, top: 40.0, bottom: MediaQuery.of(context).viewInsets.bottom + 20),
+      padding: EdgeInsets.symmetric(horizontal: 50.0, vertical: 40.0),
       child: Form(
         key: widget.formKey,
         child: Column(
@@ -60,6 +60,7 @@ class _CreateCampaignStepOneState extends State<CreateCampaignStepOne> {
             SizedBox(height: 10.0),
             TextFormField(
               key: _descriptionKey,
+              scrollPadding: EdgeInsets.only(bottom: 100),
               initialValue: widget.data.description,
               decoration: textInputDecoration.copyWith(labelText: 'Въведете описание', hintText: 'Ще съберем пластмасови отпадъци от плажната ивица и ще ги рециклираме.'),
               maxLines: 4,
