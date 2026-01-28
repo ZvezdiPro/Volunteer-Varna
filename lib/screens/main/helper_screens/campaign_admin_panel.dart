@@ -97,7 +97,12 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Промените са запазени успешно!")),
+          const SnackBar(
+            backgroundColor: greenPrimary,
+            content: Center(
+              child: Text("Промените са запазени успешно!", style: TextStyle(fontWeight: FontWeight.bold),)
+            )
+          ),
         );
         setState(() {
           _hasChanges = false;
@@ -245,6 +250,7 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
       },
       child: Scaffold(
         backgroundColor: backgroundGrey,
+        // AppBar with the Title and Save button
         appBar: AppBar(
           title: const Text("Админ Панел", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
           backgroundColor: Colors.white,
@@ -332,6 +338,7 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
             ],
           ),
         ),
+        // Remove Campaign Button
         bottomNavigationBar: Container(
           padding: const EdgeInsets.fromLTRB(20, 15, 20, 15),
           decoration: BoxDecoration(
@@ -375,6 +382,7 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
         const SizedBox(height: 8),
         Row(
           children: [
+            // Date field
             Expanded(
               flex: 3,
               child: TextFormField(
@@ -388,6 +396,7 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
               ),
             ),
             const SizedBox(width: 10),
+            // Time field
             Expanded(
               flex: 2,
               child: TextFormField(
@@ -406,6 +415,7 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
     );
   }
 
+  // Method to confirm removing a volunteer
   Future<void> _confirmRemoveVolunteer(VolunteerUser user) async {
     final bool confirm = await showDialog(
       context: context,
@@ -422,6 +432,7 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
       ),
     ) ?? false;
 
+    // Call database to remove volunteer
     if (confirm) {
       await _db.removeVolunteerFromCampaign(widget.campaign.id, user.uid);
       setState(() {
@@ -431,6 +442,7 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
     }
   }
 
+  // Method to confirm ending the campaign
   Future<void> _confirmEndCampaign() async {
     final bool confirm = await showDialog(
       context: context,
@@ -447,6 +459,7 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
       ),
     ) ?? false;
 
+    // Call database to end campaign
     if (confirm) {
       await _db.endCampaign(widget.campaign.id);
       if (mounted) Navigator.pop(context);

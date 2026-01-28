@@ -98,8 +98,8 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Запазено в Галерията! (Албум VolunteerApp)"),
-            backgroundColor: Colors.green,
+            content: Center(child: Text("Запазено в Галерията! (Албум VolunteerApp)")),
+            backgroundColor: greenPrimary,
           ),
         );
       }
@@ -139,7 +139,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
         if (filePath != null) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
               content: Text("Аудио файлът е запазен!"), 
-              backgroundColor: Colors.green
+              backgroundColor: greenPrimary
           ));
         } 
       }
@@ -331,7 +331,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
 
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Неуспешно споделяне на файл.")));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: Colors.red.shade300, content: Center(child: Text("Неуспешно споделяне на файл."))));
         }
       } finally {
         if (mounted) setState(() => _isSharing = false);
@@ -406,7 +406,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
 
               // Share button
               ListTile(
-                leading: const Icon(Icons.share, color: Colors.green),
+                leading: const Icon(Icons.share, color: greenPrimary),
                 title: const Text('Сподели / Препрати'),
                 onTap: () {
                   Navigator.pop(context);
