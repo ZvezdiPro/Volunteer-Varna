@@ -20,6 +20,7 @@ class VolunteerUser {
   final int userLevel;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final List<String> bookmarkedCampaignsIds;
 
   // Constructor for temporary test and authentication
   VolunteerUser.forAuth({required this.uid})
@@ -34,7 +35,8 @@ class VolunteerUser {
       bio = null,
       avatarUrl = null,
       phoneNumber = null,
-      dateOfBirth = null;
+      dateOfBirth = null,
+      bookmarkedCampaignsIds = const [];
 
   // Full Constructor
   VolunteerUser({
@@ -51,6 +53,7 @@ class VolunteerUser {
     this.avatarUrl,
     this.phoneNumber,
     this.dateOfBirth,
+    this.bookmarkedCampaignsIds = const [],
   });
 
   // Factory constructor to create a VolunteerUser from Firestore document
@@ -71,6 +74,7 @@ class VolunteerUser {
       avatarUrl: data['avatarUrl'],
       phoneNumber: data['phoneNumber'],
       dateOfBirth: data['dateOfBirth'] != null ? (data['dateOfBirth'] as Timestamp).toDate() : null,
+      bookmarkedCampaignsIds: List<String>.from(data['bookmarkedCampaignsIds'] ?? []),
     );
   }
 }

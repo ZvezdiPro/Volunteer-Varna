@@ -6,12 +6,23 @@ import 'package:volunteer_app/services/database.dart';
 import 'package:volunteer_app/shared/colors.dart';
 import 'package:intl/intl.dart';
 import 'package:volunteer_app/shared/constants.dart';
+import 'package:volunteer_app/shared/loading.dart';
 
-class CampaignDetailsScreen extends StatelessWidget {
-
+class CampaignDetailsScreen extends StatefulWidget {
   final Campaign campaign;
   final bool showRegisterButton;
-  const CampaignDetailsScreen({super.key, required this.campaign, this.showRegisterButton = true});
+
+  const CampaignDetailsScreen({
+    super.key, 
+    required this.campaign, 
+    this.showRegisterButton = true
+  });
+
+  @override
+  State<CampaignDetailsScreen> createState() => _CampaignDetailsScreenState();
+}
+
+class _CampaignDetailsScreenState extends State<CampaignDetailsScreen> {
 
   String _formatDate(DateTime date) {
     final formatter = DateFormat('EEE, d MMM y, HH:mm', 'bg_BG');
@@ -23,82 +34,123 @@ class CampaignDetailsScreen extends StatelessWidget {
       mainAxisSize: MainAxisSize.min, 
       children: [
         Icon(icon, size: 20.0, color: color),
-        SizedBox(width: 4.0),
+        const SizedBox(width: 4.0),
         Flexible(
           child: Text(
             text, 
-            style: TextStyle(fontSize: 18.0, color: Colors.black),
-            overflow: TextOverflow.visible,
+            style: const TextStyle(fontSize: 18.0, color: Colors.black),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],
     );
   }
-  
+
+  void _onBookmarkTap(BuildContext context, VolunteerUser? user, bool currentStatus) async {
+    if (user == null) return;
+
+    bool newStatus = !currentStatus;
+    String message = newStatus ? 'Добавено в запазени кампании' : 'Премахнато от запазени кампании';
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Center(child: Text(message, style: TextStyle(fontWeight: FontWeight.bold))),
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: greenPrimary,
+        )
+      );
+    }
+
+    // Update in the database
+    try {
+      await DatabaseService(uid: user.uid).toggleCampaignBookmark(widget.campaign.id, currentStatus);
+    } catch (e) {
+      print("Error bookmarking: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Center(child: Text('Грешка при свързване с базата данни.', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold))))
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final authUser = Provider.of<VolunteerUser?>(context);
+
+    if (authUser == null) {
+      return const Scaffold(body: Center(child: Loading()));
+    }
+
+    return StreamBuilder<VolunteerUser?>(
+      stream: DatabaseService(uid: authUser.uid).volunteerUserData,
+      builder: (context, snapshot) {
+        VolunteerUser? user = snapshot.data ?? authUser;
+        bool isBookmarked = user.bookmarkedCampaignsIds.contains(widget.campaign.id);
+        return Scaffold(
       backgroundColor: backgroundGrey,
 
-      // Button for registering for the campaign (only shown if the user is not already registered)
-      bottomNavigationBar: showRegisterButton ? Container(
-        padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-        decoration: BoxDecoration(
-          color: backgroundGrey
-        ),
-        child: SafeArea(
-          child: SizedBox(
-            height: 50.0,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: greenPrimary, 
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20.0),
+      // Button for registering
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+          decoration: const BoxDecoration(color: backgroundGrey),
+          child: Builder(
+            builder: (context) {
+              bool isAlreadyRegistered = widget.campaign.registeredVolunteersUids.contains(user.uid);
+
+              if (!widget.showRegisterButton) return const SizedBox.shrink();
+
+              return SizedBox(
+                height: 50.0,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isAlreadyRegistered ? Colors.grey[400] : greenPrimary, 
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                    elevation: 0,
+                  ),
+
+                  onPressed: isAlreadyRegistered ? null : () async {
+                    try {
+                      await DatabaseService(uid: user.uid).registerUserForCampaign(widget.campaign.id);
+                      
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            backgroundColor: greenPrimary,
+                            content: Center(child: Text('Успешно се записахте за кампанията!', style: TextStyle(fontWeight: FontWeight.bold))),
+                          ),
+                        );
+                        Navigator.pop(context);
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(backgroundColor: Colors.red, content: Center(child: Text('Грешка при записване!'))),
+                        );
+                      }
+                    }
+                  },
+                  
+                  child: Text(
+                    isAlreadyRegistered ? 'Вече сте записан за кампанията' : 'Запиши се за кампанията',
+                    style: TextStyle(
+                      fontSize: 16.0, 
+                      color: isAlreadyRegistered ? Colors.black : Colors.white, 
+                      fontWeight: FontWeight.bold
+                    ),
+                  ),
                 ),
-                elevation: 0,
-              ),
-              // When pressed, register the user for the campaign
-              onPressed: () async {
-                VolunteerUser? volunteer = Provider.of<VolunteerUser?>(context, listen: false)!;
-
-                try {
-                  DatabaseService(uid: volunteer.uid).registerUserForCampaign(campaign.id);
-                  Navigator.of(context).pop();
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      backgroundColor: greenPrimary,
-                      content: Container(
-                        alignment: Alignment.center,
-                        height: 45,
-                        child: Text('Успешно се записахте за кампанията!', style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
-                      ),
-                      duration: Duration(seconds: 3),
-                    ),
-                  );
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      backgroundColor: Colors.red,
-                      content: Container(
-                        alignment: Alignment.center,
-                        height: 45,
-                        child: Text('Грешка при записването за кампанията. Моля, опитайте отново!', style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
-                      ),
-                      duration: Duration(seconds: 3),
-                    ),
-                  );
-                }
-              },
-
-              child: Text(
-                'Запиши се за кампанията',
-                style: TextStyle(fontSize: 18.0, color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-            ),
+              );
+            },
           ),
         ),
-      ) : null,
+      ),
 
       body: Stack(
         children: <Widget>[
@@ -107,14 +159,14 @@ class CampaignDetailsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 // Campaign image (if available)
-                (campaign.imageUrl.isNotEmpty) ?
+                (widget.campaign.imageUrl.isNotEmpty) ?
                   ClipRRect(
-                    borderRadius: BorderRadius.only(
+                    borderRadius: const BorderRadius.only(
                       bottomLeft: Radius.circular(12.0),
                       bottomRight: Radius.circular(12.0),
                     ),
                     child: Image.network(
-                      campaign.imageUrl,
+                      widget.campaign.imageUrl,
                       height: 250.0,
                       width: double.infinity,
                       fit: BoxFit.cover,
@@ -124,7 +176,7 @@ class CampaignDetailsScreen extends StatelessWidget {
                           color: Colors.red[100],
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
+                            children: const [
                               Icon(Icons.error_outline, size: 40.0, color: Colors.red),
                               SizedBox(height: 8.0),
                               Text('Грешка при зареждане на изображението', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
@@ -134,19 +186,18 @@ class CampaignDetailsScreen extends StatelessWidget {
                     ),
                   )
                 :
-                // Else build a something like an AppBar without a campaign image, just some text
+                // Header without image
                 Container(
                   color: backgroundGrey,
                   child: SafeArea(
                     child: Padding(
-                      padding: EdgeInsets.only(left: 4.0, right: 4.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: <Widget>[
-                          // Go back button
                           IconButton(
-                            icon: Icon(Icons.arrow_back, color: Colors.black, size: 24.0),
+                            icon: const Icon(Icons.arrow_back, color: Colors.black, size: 24.0),
                             onPressed: () => Navigator.pop(context),
                           ),
                       
@@ -161,10 +212,12 @@ class CampaignDetailsScreen extends StatelessWidget {
                           ),
                       
                           IconButton(
-                            icon: Icon(Icons.bookmark_border, color: Colors.black, size: 24.0),
-                            onPressed: () {
-                              // TODO (low priority): Bookmark logic
-                            },
+                            icon: Icon(
+                              isBookmarked ? Icons.bookmark : Icons.bookmark_border, 
+                              color: Colors.black,
+                              size: 24.0
+                            ),
+                            onPressed: () => _onBookmarkTap(context, user, isBookmarked),
                           ),
                         ]
                       ),
@@ -209,10 +262,10 @@ class CampaignDetailsScreen extends StatelessWidget {
                           'Описание:',
                           style: TextStyle(fontSize: 18.0, color: Colors.grey[800], fontWeight: FontWeight.bold),
                         ),
-                        SizedBox(height: 4.0),
+                        const SizedBox(height: 4.0),
                         Text(
-                          campaign.description,
-                          style: TextStyle(fontSize: 16.0, color: Colors.black),
+                          widget.campaign.instructions,
+                          style: const TextStyle(fontSize: 16.0, color: Colors.black),
                         ),
                   
                         SizedBox(height: 24.0),
@@ -237,14 +290,14 @@ class CampaignDetailsScreen extends StatelessWidget {
             )
           ),
 
-          // Button to go back (only visible when there is an image)
-          if (campaign.imageUrl.isNotEmpty)
+          // Back button (Image mode)
+          if (widget.campaign.imageUrl.isNotEmpty)
             Positioned(
               top: 0,
               left: 0,
               child: SafeArea( 
                 child: Padding(
-                  padding: EdgeInsets.all(8.0),
+                  padding: const EdgeInsets.all(8.0),
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.white.withAlpha(150),
@@ -252,23 +305,23 @@ class CampaignDetailsScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(50.0),
                     ),
                     child: IconButton(
-                      icon: Icon(Icons.arrow_back, color: Colors.white, size: 24.0),
+                      icon: const Icon(Icons.arrow_back, color: Colors.white, size: 24.0),
                       onPressed: () => Navigator.pop(context),
-                      padding: EdgeInsets.all(4.0),
+                      padding: const EdgeInsets.all(4.0),
                     ),
                   ),
                 ),
               ),
             ),
 
-          // Button to bookmark the campaign (only visible when there is an image)
-          if (campaign.imageUrl.isNotEmpty)
+          // Bookmark button (Image mode)
+          if (widget.campaign.imageUrl.isNotEmpty)
             Positioned(
               top: 0,
               right: 0,
               child: SafeArea( 
                 child: Padding(
-                  padding: EdgeInsets.all(8.0),
+                  padding: const EdgeInsets.all(8.0),
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.white.withAlpha(150),
@@ -276,10 +329,12 @@ class CampaignDetailsScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(50.0),
                     ),
                     child: IconButton(
-                      icon: Icon(Icons.bookmark_border, color: Colors.white, size: 24.0),
-                      onPressed: () {
-                        // TODO (low priority): Bookmark logic
-                      }
+                      icon: Icon(
+                        isBookmarked ? Icons.bookmark : Icons.bookmark_border, 
+                        color: Colors.white, 
+                        size: 24.0
+                      ),
+                      onPressed: () => _onBookmarkTap(context, user, isBookmarked),
                     )
                   )
                 )
@@ -288,6 +343,7 @@ class CampaignDetailsScreen extends StatelessWidget {
         ]
       )
     );
+  });
+    
   }
-
 }

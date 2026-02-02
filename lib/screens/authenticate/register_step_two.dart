@@ -29,7 +29,7 @@ class _RegisterStepTwoState extends State<RegisterStepTwo> {
         : DateFormat('dd.MM.yyyy').format(widget.data.dateOfBirth!);
 
     return SingleChildScrollView(
-      padding: EdgeInsets.only(left: 50.0, right: 50.0, top: 20.0, bottom: MediaQuery.of(context).viewInsets.bottom + 20),
+      padding: EdgeInsets.symmetric(horizontal: 50.0, vertical: 40.0),
       child: Form(
         key: widget.formKey,
         child: Column(
@@ -95,6 +95,7 @@ class _RegisterStepTwoState extends State<RegisterStepTwo> {
             TextFormField(
               initialValue: widget.data.bio,
               maxLines: 5,
+              scrollPadding: EdgeInsets.only(bottom: 140.0),
               decoration: textInputDecoration.copyWith(hintText: 'Разкажи за себе си... (по избор)', hintStyle: TextStyle(color: Colors.grey[600])),
               onChanged: (val) => widget.data.bio = val.isEmpty ? null : val, 
             ),
