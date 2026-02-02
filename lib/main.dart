@@ -1,9 +1,10 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:volunteer_app/models/volunteer.dart';
+// import 'package:volunteer_app/models/volunteer.dart';
 import 'package:volunteer_app/screens/wrapper.dart';
 import 'package:volunteer_app/services/authenticate.dart';
 
@@ -28,12 +29,14 @@ class VolunteerApp extends StatefulWidget {
 
 class _VolunteerAppState extends State<VolunteerApp> {
   int currentPageIndex = 0;
+  final AuthService _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
-    return StreamProvider<VolunteerUser?>.value (
+    return StreamProvider<User?>.value (
       initialData: null,
-      value: AuthService().user,
+      value: _authService.user,
+      catchError: (_, __) => null,
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Volunteer App',
