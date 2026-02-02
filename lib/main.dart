@@ -1,10 +1,9 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-// import 'package:volunteer_app/models/volunteer.dart';
+import 'package:volunteer_app/models/volunteer.dart';
 import 'package:volunteer_app/screens/wrapper.dart';
 import 'package:volunteer_app/services/authenticate.dart';
 
@@ -33,7 +32,7 @@ class _VolunteerAppState extends State<VolunteerApp> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamProvider<User?>.value (
+    return StreamProvider<VolunteerUser?>.value (
       initialData: null,
       value: _authService.user,
       catchError: (_, __) => null,

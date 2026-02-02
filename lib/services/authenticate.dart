@@ -14,20 +14,19 @@ class AuthService {
   // Auth change user stream
   // Maps the Firebase User to a VolunteerUser using asyncMap
   // and the helper method which uses the id to fetch the full data
-  Stream<User?> get user {
-    return _auth.authStateChanges();
+  Stream<VolunteerUser?> get user {
+    return _auth.authStateChanges().asyncMap(_fullUserFromFirebaseUser);
   }
 
   // Create user object based on Firebase User
   // The method is asynchronous because it fetches additional data from Firestore (which takes time)
-  // Deprecated method because the logic for fetching full user data is now in the Wrapper and uses FutureBuilder
-  // Future<VolunteerUser?> _fullUserFromFirebaseUser(User? user) async {
-  //   if (user == null) {
-  //     return null; 
-  //   }
-  //   // Get the VolunteerUser from the database using the uid or return the default auth-only object
-  //   return await DatabaseService(uid: user.uid).getVolunteerUser() ?? VolunteerUser.forAuth(uid: user.uid);
-  // }
+  Future<VolunteerUser?> _fullUserFromFirebaseUser(User? user) async {
+    if (user == null) {
+      return null; 
+    }
+    // Get the VolunteerUser from the database using the uid or return the default auth-only object
+    return await DatabaseService(uid: user.uid).getVolunteerUser() ?? VolunteerUser.forAuth(uid: user.uid);
+  }
   
   // Return VolunteerUser object from Firebase User and Registration Data
   Future<VolunteerUser?> _volunteerFromFirebaseUser(User? user, RegistrationData data) async {
