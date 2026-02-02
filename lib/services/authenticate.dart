@@ -15,7 +15,6 @@ class AuthService {
   // Maps the Firebase User to a VolunteerUser using asyncMap
   // and the helper method which uses the id to fetch the full data
   Stream<VolunteerUser?> get user {
-    // We use the asyncMap() because of the async method _fullUserFromFirebaseUser
     return _auth.authStateChanges().asyncMap(_fullUserFromFirebaseUser);
   }
 
@@ -48,6 +47,7 @@ class AuthService {
     ) : null;
   }
 
+  // Register with email and password
   Future<VolunteerUser?> registerWithEmailAndPassword(String email, String password, RegistrationData data) async {
     try {
       // Attempt to create the user
@@ -60,7 +60,7 @@ class AuthService {
       return await _volunteerFromFirebaseUser(user, data);
     }
     catch (e) {
-      print(e.toString());
+      // print(e.toString());
       return null;
     }
   }
@@ -71,9 +71,13 @@ class AuthService {
       UserCredential result = await _auth.signInWithEmailAndPassword(email: email, password: password);
       User? user = result.user;
       // Fetch and return the VolunteerUser object from the database
-      return await DatabaseService(uid: user!.uid).getVolunteerUser();
+      if (user != null) {
+        await DatabaseService(uid: user.uid).updateLastSeen();
+        return await DatabaseService(uid: user.uid).getVolunteerUser();
+      }
+      return null;
     } catch (e) {
-      print(e.toString());
+      // print(e.toString());
       return null;
     }
   }
@@ -101,24 +105,16 @@ class AuthService {
     await FirebaseAuth.instance.signInWithCredential(credential);
 
     if (_auth.currentUser != null) {
-      // Check if the user already exists in the database
-      if (await DatabaseService(uid: _auth.currentUser!.uid).checkUserExists()) {
-        // User exists, fetch and return the VolunteerUser
-        return await DatabaseService(uid: _auth.currentUser!.uid).getVolunteerUser();
-      } 
-      else {
-        // New user, create a new document in Firestore
-        RegistrationData data = RegistrationData();
-        data.email = _auth.currentUser!.email ?? '';
-        data.firstName = _auth.currentUser!.displayName?.split(' ').first ?? '';
-        data.lastName = _auth.currentUser!.displayName?.split(' ').last ?? '';
-        data.avatarUrl = _auth.currentUser!.photoURL ?? '';
+      RegistrationData data = RegistrationData();
+      data.email = _auth.currentUser!.email ?? '';
+      data.firstName = _auth.currentUser!.displayName?.split(' ').first ?? '';
+      data.lastName = _auth.currentUser!.displayName?.split(' ').last ?? '';
+      data.avatarUrl = _auth.currentUser!.photoURL ?? '';
 
-        // Update the user data in the database
-        await DatabaseService(uid: _auth.currentUser!.uid).updateUserData(data);
-        // Return the VolunteerUser object
-        return await _volunteerFromFirebaseUser(_auth.currentUser, data);
-      }
+      // Update the user data in the database (as the user could be new or they could've changed their info)
+      await DatabaseService(uid: _auth.currentUser!.uid).updateUserData(data, isOAuthLogin: true);
+      // Return the VolunteerUser object from the firebase document
+      return await DatabaseService(uid: _auth.currentUser!.uid).getVolunteerUser();
     }
     return null;
   }
@@ -138,24 +134,16 @@ class AuthService {
       await _auth.signInWithCredential(credential);
 
       if (_auth.currentUser != null) {
-        // Check if the user already exists in the database
-        if (await DatabaseService(uid: _auth.currentUser!.uid).checkUserExists()) {
-          // User exists, fetch and return the VolunteerUser
-          return await DatabaseService(uid: _auth.currentUser!.uid).getVolunteerUser();
-        } 
-        else {
-          // New user, create a new document in Firestore
-          RegistrationData data = RegistrationData();
-          data.email = _auth.currentUser!.email ?? '';
-          data.firstName = _auth.currentUser!.displayName?.split(' ').first ?? '';
-          data.lastName = _auth.currentUser!.displayName?.split(' ').last ?? '';
-          data.avatarUrl = _auth.currentUser!.photoURL ?? '';
+        RegistrationData data = RegistrationData();
+        data.email = _auth.currentUser!.email ?? '';
+        data.firstName = _auth.currentUser!.displayName?.split(' ').first ?? '';
+        data.lastName = _auth.currentUser!.displayName?.split(' ').last ?? '';
+        data.avatarUrl = _auth.currentUser!.photoURL ?? '';
 
-          // Update the user data in the database
-          await DatabaseService(uid: _auth.currentUser!.uid).updateUserData(data);
-          // Return the VolunteerUser object
-          return await _volunteerFromFirebaseUser(_auth.currentUser, data);
-        }
+        // Update the user data in the database
+        await DatabaseService(uid: _auth.currentUser!.uid).updateUserData(data, isOAuthLogin: true);
+        // Return the VolunteerUser object
+        return await DatabaseService(uid: _auth.currentUser!.uid).getVolunteerUser();
       }
     }
     return null;
@@ -171,7 +159,7 @@ class AuthService {
       // Fetch and return the VolunteerUser object
       return VolunteerUser.forAuth(uid: user!.uid);
     } catch (e) {
-      print(e.toString());
+      // print(e.toString());
       return null;
     }
   }
@@ -188,7 +176,7 @@ class AuthService {
         // Delete the anonymous user account
         await user.delete();
       } catch (e) {
-        print('Error deleting anonymous user: $e');
+        // print('Error deleting anonymous user: $e');
         await _signOutFirebaseOnly();
       }
       return;
@@ -223,7 +211,7 @@ class AuthService {
       // 2. Clear the Firebase session
       await _auth.signOut();
     } catch (e) {
-      print('Error signing out Google: $e');
+      // print('Error signing out Google: $e');
     }
   }
 
@@ -234,7 +222,7 @@ class AuthService {
       // 2. Clear the Firebase session
       await _auth.signOut();
     } catch (e) {
-      print('Error signing out Facebook: $e');
+      // print('Error signing out Facebook: $e');
     }
   }
 
@@ -244,7 +232,7 @@ class AuthService {
       // Clear only the Firebase session
       await _auth.signOut();
     } catch (e) {
-      print('Error signing out Firebase: $e');
+      // print('Error signing out Firebase: $e');
     }
   }
   

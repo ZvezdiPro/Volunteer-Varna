@@ -16,22 +16,52 @@ class DatabaseService {
   final CollectionReference volunteerCollection = FirebaseFirestore.instance.collection('volunteers');
   final CollectionReference campaignCollection = FirebaseFirestore.instance.collection('campaigns');
 
-  // Method to create or update volunteer user data
-  Future updateUserData(RegistrationData data) async {
-    return await volunteerCollection.doc(uid).set({
-    'email': data.email,
-    'firstName': data.firstName,
-    'lastName': data.lastName,
-    'interests': data.interests, 
-    'experiencePoints': 0,
-    'userLevel': 1,
-    'createdAt': DateTime.now(),
-    'updatedAt': DateTime.now(),
-    'bio': data.bio,
-    'avatarUrl': data.avatarUrl,
-    'phoneNumber': data.phoneNumber,
-    'dateOfBirth': data.dateOfBirth,
-    }, SetOptions(merge: true));
+  Future<void> updateUserData(RegistrationData data, {bool isOAuthLogin = false}) async {
+    final docRef = volunteerCollection.doc(uid);
+    final documentSnapshot = await docRef.get();
+
+    // If the doc exists and it's a Google/Facebook login, we only update the updatedAt field
+    // Because the user data is already in the database
+    if (documentSnapshot.exists && isOAuthLogin) {
+      return await docRef.update({
+        'updatedAt': DateTime.now(),
+      });
+    }
+    
+    // We create a dictionary to hold the user data
+    Map<String, dynamic> userData = {
+      'email': data.email,
+      'firstName': data.firstName,
+      'lastName': data.lastName,
+      'updatedAt': DateTime.now(),
+      'avatarUrl': data.avatarUrl,
+    };
+
+    // Optional fields
+    if (data.bio != null && data.bio!.isNotEmpty) userData['bio'] = data.bio;
+    if (data.phoneNumber != null && data.phoneNumber!.isNotEmpty) userData['phoneNumber'] = data.phoneNumber;
+    if (data.dateOfBirth != null) userData['dateOfBirth'] = data.dateOfBirth;
+
+    // If the document does not exist, we set the createdAt and other initial fields
+    if (!documentSnapshot.exists) {
+      userData['createdAt'] = DateTime.now();
+      userData['experiencePoints'] = 0;
+      userData['userLevel'] = 1;
+      userData['interests'] = data.interests;
+      // If the user hasn't put values to these optional fields
+      // Then we set them to default values (empty string or null)
+      if (!userData.containsKey('bio')) {
+        userData['bio'] = "";
+      }
+      if (!userData.containsKey('phoneNumber')) {
+        userData['phoneNumber'] = null;
+      }
+      if (!userData.containsKey('dateOfBirth')) {
+        userData['dateOfBirth'] = null;
+      }
+    }
+    
+    return await docRef.set(userData, SetOptions(merge: true));
   }
 
   // Method to create or update campaign data
@@ -55,6 +85,12 @@ class DatabaseService {
     'updatedAt': DateTime.now(),
     'registeredVolunteersUids': const[],
     'status': 'active',
+    });
+  }
+
+  Future<void> updateLastSeen() async {
+    return await volunteerCollection.doc(uid).update({
+      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
@@ -123,8 +159,23 @@ class DatabaseService {
     
   // Method to check if a volunteer user exists
   Future<bool> checkUserExists() async {
-    final querySnapshot = await volunteerCollection.where('uid', isEqualTo: uid).get();
-    return querySnapshot.docs.isNotEmpty;
+    final docSnapshot = await volunteerCollection.doc(uid).get();
+    return docSnapshot.exists;
+  }
+
+  Future<void> editUserProfileData({
+    required String firstName,
+    required String lastName,
+    required String bio,
+    required List<String> interests,
+  }) async {
+    return await volunteerCollection.doc(uid).update({
+      'firstName': firstName,
+      'lastName': lastName,
+      'bio': bio,
+      'interests': interests,
+      'updatedAt': DateTime.now(),
+    });
   }
 
   Future<String?> uploadImage(String path, XFile image) async {

@@ -28,12 +28,14 @@ class VolunteerApp extends StatefulWidget {
 
 class _VolunteerAppState extends State<VolunteerApp> {
   int currentPageIndex = 0;
+  final AuthService _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
     return StreamProvider<VolunteerUser?>.value (
       initialData: null,
-      value: AuthService().user,
+      value: _authService.user,
+      catchError: (_, __) => null,
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Volunteer App',
