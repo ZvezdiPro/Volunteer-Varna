@@ -36,7 +36,7 @@ class _CreateCampaignStepThreeState extends State<CreateCampaignStepThree> {
     super.dispose();
   }
 
-  // Function to handle Picking and Uploading
+  // Function to handle Picking and Uploading images
   Future<void> _handleImageUpload() async {
     try {
       // Pick Image
@@ -54,6 +54,8 @@ class _CreateCampaignStepThreeState extends State<CreateCampaignStepThree> {
       
       String? downloadUrl = await DatabaseService().uploadImage(uniquePath, pickedFile);
 
+      if (!mounted) return;
+      
       // Update Campaign Data
       if (downloadUrl != null) {
         setState(() {

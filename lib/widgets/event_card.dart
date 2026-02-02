@@ -8,7 +8,7 @@ class CampaignCard extends StatefulWidget {
   
   final Campaign campaign;
   final bool showRegisterButton;
-  CampaignCard({super.key, required this.campaign, this.showRegisterButton = true});
+  const CampaignCard({super.key, required this.campaign, this.showRegisterButton = true});
 
   @override
   State<CampaignCard> createState() => _CampaignCardState();

@@ -327,6 +327,8 @@ class _CreateCampaignStepTwoState extends State<CreateCampaignStepTwo> {
   Future<void> _selectDateTime(BuildContext context, bool isStart) async {
     // Choose date
     final DateTime? pickedDate = await _selectDate(context, isStart);
+    
+    if (!context.mounted) return;
 
     if (pickedDate != null) {
       // Pick time
@@ -336,7 +338,7 @@ class _CreateCampaignStepTwoState extends State<CreateCampaignStepTwo> {
         pickedDate.year, pickedDate.month, pickedDate.day, 
         baseTime.hour, baseTime.minute
       );
-
+      
       final TimeOfDay? pickedTime = await _selectTime(context, initialTimeForPicker);
 
       if (pickedTime != null) {

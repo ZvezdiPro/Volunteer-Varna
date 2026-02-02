@@ -185,7 +185,7 @@ class DatabaseService {
       final url = await ref.getDownloadURL();
       return url;
     } catch (e) {
-      print(e.toString());
+      // print(e.toString());
       return null;
     }
   }

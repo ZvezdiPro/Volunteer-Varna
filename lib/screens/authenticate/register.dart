@@ -4,7 +4,6 @@ import 'package:volunteer_app/services/authenticate.dart';
 import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/shared/loading.dart';
 import 'package:volunteer_app/models/registration_data.dart';
-
 import 'package:volunteer_app/screens/authenticate/register_step_one.dart';
 import 'package:volunteer_app/screens/authenticate/register_step_two.dart';
 import 'package:volunteer_app/screens/authenticate/register_step_three.dart';
@@ -12,7 +11,7 @@ import 'package:volunteer_app/screens/authenticate/register_step_three.dart';
 class Register extends StatefulWidget {
 
   final Function toggleView;
-  Register({required this.toggleView});
+  const Register({super.key, required this.toggleView});
 
   @override
   State<Register> createState() => _RegisterState();

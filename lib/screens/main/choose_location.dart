@@ -23,6 +23,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   late LatLng _currentCenter;
   bool _isLoadingAddress = false;
 
+  // ignore: unused_field
   GoogleMapController? _mapController;
 
   @override

@@ -20,7 +20,7 @@ class _EventsPageState extends State<EventsPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   
   String _searchQuery = '';
-  List<String> _selectedCategories = [];
+  final List<String> _selectedCategories = [];
   DateTime? _selectedDate;
   bool _showSavedOnly = false;
 
@@ -234,7 +234,7 @@ class _EventsPageState extends State<EventsPage> {
                                     selected: _selectedCategories.isNotEmpty,
                                     onSelected: (_) => _openCategoryFilter(),
                                     backgroundColor: Colors.white,
-                                    selectedColor: greenPrimary.withOpacity(0.2),
+                                    selectedColor: greenPrimary.withAlpha(50),
                                     labelStyle: TextStyle(
                                       color: _selectedCategories.isNotEmpty ? greenPrimary : Colors.black,
                                       fontWeight: _selectedCategories.isNotEmpty ? FontWeight.bold : FontWeight.normal

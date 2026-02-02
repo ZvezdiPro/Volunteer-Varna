@@ -20,98 +20,101 @@ class _ChatsScreenState extends State<ChatsScreen> {
   @override
   Widget build(BuildContext context) {
     // Fetch current user details
-    return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('volunteers') 
-          .doc(currentUid)
-          .snapshots(),
-      builder: (context, userSnapshot) {
-        if (userSnapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (userSnapshot.hasError) {
-          return Center(child: Text("Error: ${userSnapshot.error}"));
-        }
-
-        if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
-          return const Center(
-            child: Text("User profile not found in 'volunteers' collection."),
-          );
-        }
-
-        VolunteerUser currentUser = VolunteerUser.fromFirestore(userSnapshot.data!);
-
-        // Fetch campaigns using the DatabaseService logic
-        return StreamBuilder<List<Campaign>>(
-          stream: DatabaseService(uid: currentUid).userChats,
-          builder: (context, campaignSnapshot) {
-            
-            if (campaignSnapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            final List<Campaign> allCampaigns = campaignSnapshot.data ?? [];
-            final activeCampaigns = allCampaigns.where((c) => c.isActive).toList();
-
-            if (activeCampaigns.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey[400]),
-                    const SizedBox(height: 16),
-                    const Text("Нямате активни чатове", style: TextStyle(color: Colors.grey)),
-                    const Text("Запишете се за кампания!", style: TextStyle(color: Colors.grey)),
-                  ],
-                ),
-              );
-            }
-
-            return ListView.builder(
-              itemCount: activeCampaigns.length,
-              itemBuilder: (context, index) {
-                final campaign = activeCampaigns[index];
-                return Card(
-                  elevation: 2,
-                  margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: greenPrimary.withAlpha(50),
-                      backgroundImage: campaign.imageUrl.isNotEmpty 
-                          ? NetworkImage(campaign.imageUrl) 
-                          : null,
-                      child: campaign.imageUrl.isEmpty 
-                          ? Icon(Icons.group, color: greenPrimary) 
-                          : null,
-                    ),
-                    title: Text(
-                      campaign.title,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(
-                      "Натисни за чат",
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                    ),
-                    trailing: Icon(Icons.arrow_forward_ios, size: 16, color: blueSecondary),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CampaignChatScreen(
-                            campaign: campaign,
-                            currentUser: currentUser,
-                          ),
-                        ),
-                      );
-                    },
+    return Scaffold(
+      backgroundColor: backgroundGrey,
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('volunteers') 
+            .doc(currentUid)
+            .snapshots(),
+        builder: (context, userSnapshot) {
+          if (userSnapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+      
+          if (userSnapshot.hasError) {
+            return Center(child: Text("Error: ${userSnapshot.error}"));
+          }
+      
+          if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
+            return const Center(
+              child: Text("Не можете да водите чатове в режим на гост!"),
+            );
+          }
+      
+          VolunteerUser currentUser = VolunteerUser.fromFirestore(userSnapshot.data!);
+      
+          // Fetch campaigns using the DatabaseService logic
+          return StreamBuilder<List<Campaign>>(
+            stream: DatabaseService(uid: currentUid).userChats,
+            builder: (context, campaignSnapshot) {
+              
+              if (campaignSnapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+      
+              final List<Campaign> allCampaigns = campaignSnapshot.data ?? [];
+              final activeCampaigns = allCampaigns.where((c) => c.isActive).toList();
+      
+              if (activeCampaigns.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey[400]),
+                      const SizedBox(height: 16),
+                      const Text("Нямате активни чатове", style: TextStyle(color: Colors.grey)),
+                      const Text("Запишете се за кампания!", style: TextStyle(color: Colors.grey)),
+                    ],
                   ),
                 );
-              },
-            );
-          },
-        );
-      },
+              }
+      
+              return ListView.builder(
+                itemCount: activeCampaigns.length,
+                itemBuilder: (context, index) {
+                  final campaign = activeCampaigns[index];
+                  return Card(
+                    elevation: 2,
+                    margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: greenPrimary.withAlpha(50),
+                        backgroundImage: campaign.imageUrl.isNotEmpty 
+                            ? NetworkImage(campaign.imageUrl) 
+                            : null,
+                        child: campaign.imageUrl.isEmpty 
+                            ? Icon(Icons.group, color: greenPrimary) 
+                            : null,
+                      ),
+                      title: Text(
+                        campaign.title,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        "Натисни за чат",
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      ),
+                      trailing: Icon(Icons.arrow_forward_ios, size: 16, color: blueSecondary),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CampaignChatScreen(
+                              campaign: campaign,
+                              currentUser: currentUser,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }

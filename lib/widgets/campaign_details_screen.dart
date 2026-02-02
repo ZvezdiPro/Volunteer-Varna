@@ -68,8 +68,8 @@ class _CampaignDetailsScreenState extends State<CampaignDetailsScreen> {
     try {
       await DatabaseService(uid: user.uid).toggleCampaignBookmark(widget.campaign.id, currentStatus);
     } catch (e) {
-      print("Error bookmarking: $e");
-      if (mounted) {
+      // print("Error bookmarking: $e");
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Center(child: Text('Грешка при свързване с базата данни.', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold))))
         );
@@ -227,7 +227,7 @@ class _CampaignDetailsScreenState extends State<CampaignDetailsScreen> {
                 
                 // The campaign details
                 Transform.translate(
-                  offset: (!showRegisterButton && campaign.imageUrl.isEmpty) ? Offset(0, -50) : Offset(0, 0),
+                  offset: (!widget.showRegisterButton && widget.campaign.imageUrl.isEmpty) ? Offset(0, -50) : Offset(0, 0),
                   child: Padding(
                     padding: EdgeInsets.all(16.0),
                     child: Column(
@@ -235,26 +235,26 @@ class _CampaignDetailsScreenState extends State<CampaignDetailsScreen> {
                       children: [
                         // Campaign title
                         Text(
-                          campaign.title,
+                          widget.campaign.title,
                           style: mainHeadingStyle,
                         ),
                   
                         SizedBox(height: 16.0),
                   
                         // Campaign start DateTime
-                        _buildIconAndText(Icons.calendar_today, 'Начало: ${_formatDate(campaign.startDate)}', blueSecondary),
+                        _buildIconAndText(Icons.calendar_today, 'Начало: ${_formatDate(widget.campaign.startDate)}', blueSecondary),
                         SizedBox(height: 8.0),
                   
                         // Campaign end DateTime
-                        _buildIconAndText(Icons.calendar_today, 'Край: ${_formatDate(campaign.endDate)}', blueSecondary),
+                        _buildIconAndText(Icons.calendar_today, 'Край: ${_formatDate(widget.campaign.endDate)}', blueSecondary),
                         SizedBox(height: 8.0),
                   
                         // Campaign location
-                        _buildIconAndText(Icons.location_on, campaign.location, blueSecondary),
+                        _buildIconAndText(Icons.location_on, widget.campaign.location, blueSecondary),
                         SizedBox(height: 8.0),
                   
                         // Campaign required volunteers
-                        _buildIconAndText(Icons.group, 'Записани са ${campaign.registeredVolunteersUids.length} от необходими ${campaign.requiredVolunteers}', blueSecondary),
+                        _buildIconAndText(Icons.group, 'Записани са ${widget.campaign.registeredVolunteersUids.length} от необходими ${widget.campaign.requiredVolunteers}', blueSecondary),
                         SizedBox(height: 24.0),
                   
                         // Campaign description
@@ -264,21 +264,21 @@ class _CampaignDetailsScreenState extends State<CampaignDetailsScreen> {
                         ),
                         const SizedBox(height: 4.0),
                         Text(
-                          widget.campaign.instructions,
+                          widget.campaign.description,
                           style: const TextStyle(fontSize: 16.0, color: Colors.black),
                         ),
                   
                         SizedBox(height: 24.0),
                   
                         // Additional instructions
-                        if (campaign.instructions.isNotEmpty) ...[
+                        if (widget.campaign.instructions.isNotEmpty) ...[
                           Text(
                             'Допълнителни инструкции:',
                             style: TextStyle(fontSize: 18.0, color: Colors.grey[800], fontWeight: FontWeight.bold),
                           ),
                           SizedBox(height: 4.0),
                           Text(
-                            campaign.instructions,
+                            widget.campaign.instructions,
                             style: TextStyle(fontSize: 16.0, color: Colors.black),
                           ),
                         ]
