@@ -42,16 +42,32 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   void _saveChanges() async {
-  if (_formKey.currentState!.validate()) {
-    await DatabaseService(uid: widget.volunteer.uid).editUserProfileData(
-      firstName: _firstNameController.text,
-      lastName: _lastNameController.text,
-      bio: _bioController.text,
-      interests: _interests,
-    );
-    Navigator.pop(context);
+    if (_formKey.currentState!.validate()) {
+      await DatabaseService(uid: widget.volunteer.uid).editUserProfileData(
+        firstName: _firstNameController.text,
+        lastName: _lastNameController.text,
+        bio: _bioController.text,
+        interests: _interests,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Center(
+            child: Text(
+              'Промените са запазени успешно!',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+          backgroundColor: greenPrimary,
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      Navigator.pop(context);
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -223,19 +239,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
 
                 // Save Changes button
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: greenPrimary,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        elevation: 0,
+                SafeArea(
+                  top: false,
+                  bottom: true,
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 55,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: greenPrimary,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 0,
+                        ),
+                        onPressed: _saveChanges,
+                        child: const Text('Запази промените', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                       ),
-                      onPressed: _saveChanges,
-                      child: const Text('Запази промените', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ),
