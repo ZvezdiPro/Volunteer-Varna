@@ -163,6 +163,7 @@ class DatabaseService {
     return docSnapshot.exists;
   }
 
+  // Edit user profile data (profile screen)
   Future<void> editUserProfileData({
     required String firstName,
     required String lastName,
@@ -178,15 +179,34 @@ class DatabaseService {
     });
   }
 
-  Future<String?> uploadImage(String path, XFile image) async {
+  // Update user avatar URL
+  Future<void> updateUserAvatar(String avatarUrl) async {
+    return await volunteerCollection.doc(uid).update({
+      'avatarUrl': avatarUrl,
+    });
+  }
+
+  // Upload image to Firebase Storage and return the download URL
+  Future<String?> uploadImage(String path, XFile image, String? customFileName) async {
     try {
-      final ref = FirebaseStorage.instance.ref(path).child(image.name);
+      final ref = FirebaseStorage.instance.ref(path).child(customFileName ?? image.name);
       await ref.putFile(File(image.path));
       final url = await ref.getDownloadURL();
       return url;
     } catch (e) {
       // print(e.toString());
       return null;
+    }
+  }
+
+  // Delete image from Firebase Storage
+  Future<void> deleteImage(String imageUrl) async {
+    try {
+      if (!imageUrl.contains('firebasestorage')) return;
+      await FirebaseStorage.instance.refFromURL(imageUrl).delete();
+      // print("Old photo deleted successfully.");
+    } catch (e) {
+      // print("Error while deleting the photo: $e");
     }
   }
 

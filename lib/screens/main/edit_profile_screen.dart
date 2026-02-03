@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:volunteer_app/models/volunteer.dart';
 import 'package:volunteer_app/services/database.dart';
 import 'package:volunteer_app/shared/colors.dart';
@@ -21,6 +22,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _bioController;
   late List<String> _interests;
   bool _isInitialized = false;
+
+  // Image picker state
+  final ImagePicker _picker = ImagePicker();
+  bool _isUploadingImage = false;
+  String? _newAvatarUrl;
 
   @override
   void initState() {
@@ -69,12 +75,69 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  Future<void> _handlePhotoChange() async {
+    try {
+      // If the user decides to upload a new photo, we delete the old one
+      String? urlToDelete = _newAvatarUrl ?? widget.volunteer.avatarUrl;
+
+      final XFile? pickedFile = await _picker.pickImage(
+        source: ImageSource.gallery, 
+        imageQuality: 50
+      );
+      
+      if (pickedFile == null) return;
+      
+      if (!mounted) return;
+
+      setState(() {
+        _isUploadingImage = true;
+      });
+
+      String path = 'avatars/${widget.volunteer.uid}';
+      String fileName = 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      String? downloadUrl = await DatabaseService(uid: widget.volunteer.uid).uploadImage(path, pickedFile, fileName);
+
+      if (!mounted) return;
+
+      if (downloadUrl != null) {
+        await DatabaseService(uid: widget.volunteer.uid).updateUserAvatar(downloadUrl);
+        
+        if (mounted) {
+          setState(() {
+            _newAvatarUrl = downloadUrl;
+            _isUploadingImage = false;
+          });
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Снимката е обновена!', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)), backgroundColor: Colors.green),
+          );
+        }
+        
+        if (urlToDelete != null && urlToDelete.isNotEmpty) {
+          await DatabaseService(uid: widget.volunteer.uid).deleteImage(urlToDelete);
+        }
+      } else {
+        throw Exception('Неуспешно качване');
+      }
+
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isUploadingImage = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Грешка: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<String> availableInterests = [
       'Образование', 'Екология', 'Животни', 'Грижа за деца', 'Спорт', 'Здраве',
       'Грижа за възрастни', 'Изкуство и култура', 'Помощ в извънредни ситуации'
-    ];
+    ];    
 
     return FutureBuilder<VolunteerUser?>(
       future: DatabaseService(uid: widget.volunteer.uid).getVolunteerUser(),
@@ -121,22 +184,32 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                     CircleAvatar(
                                       radius: 50,
                                       backgroundColor: Colors.grey[200],
-                                      backgroundImage: (widget.volunteer.avatarUrl != null && widget.volunteer.avatarUrl!.isNotEmpty)
-                                          ? NetworkImage(widget.volunteer.avatarUrl!) as ImageProvider
-                                          : const AssetImage('assets/images/profile_placeholder.png'),
+                                      backgroundImage: _newAvatarUrl != null
+                                        ? NetworkImage(_newAvatarUrl!)
+                                        : (widget.volunteer.avatarUrl != null && widget.volunteer.avatarUrl!.isNotEmpty)
+                                            ? NetworkImage(widget.volunteer.avatarUrl!)
+                                            : const AssetImage('assets/images/profile_placeholder.png') as ImageProvider,
+                                      child: _isUploadingImage
+                                        ? const CircularProgressIndicator(color: greenPrimary)
+                                        : null,
                                     ),
-                                    const CircleAvatar(
-                                      radius: 16,
-                                      backgroundColor: greenPrimary,
-                                      child: Icon(Icons.camera_alt, color: Colors.white, size: 16),
-                                    ),
+                                    if (!_isUploadingImage)
+                                      GestureDetector(
+                                        onTap: _handlePhotoChange,
+                                        child: const CircleAvatar(
+                                          radius: 16,
+                                          backgroundColor: greenPrimary,
+                                          child: Icon(Icons.camera_alt, color: Colors.white, size: 16),
+                                        ),
+                                      ),
                                   ],
                                 ),
                                 TextButton(
-                                  onPressed: () {
-                                    // TODO: Implement change photo functionality
-                                  },
-                                  child: const Text('Смени снимката', style: TextStyle(color: greenPrimary, fontWeight: FontWeight.bold)),
+                                  onPressed: _isUploadingImage ? null : _handlePhotoChange,
+                                  child: Text(
+                                    _isUploadingImage ? 'Качване...' : 'Смени снимката',
+                                    style: const TextStyle(color: greenPrimary, fontWeight: FontWeight.bold),
+                                  ),
                                 ),
                               ],
                             ),

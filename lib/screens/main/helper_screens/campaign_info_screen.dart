@@ -21,7 +21,6 @@ class CampaignInfoScreen extends StatelessWidget {
 
   // Open in Google Maps
   // Currently opens Google Maps with the given location
-  // TODO: Use latitude and longitude for higher accuracy (fetched from FirestoreDB) - post-merge task
   Future<void> _openMap(double lat, double lng) async {
     final Uri googleMapsUrl = Uri.parse(
         'https://www.google.com/maps/search/?api=1&query=$lat,$lng');
