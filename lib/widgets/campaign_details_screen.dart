@@ -226,64 +226,61 @@ class _CampaignDetailsScreenState extends State<CampaignDetailsScreen> {
                 ),
                 
                 // The campaign details
-                Transform.translate(
-                  offset: (!widget.showRegisterButton && widget.campaign.imageUrl.isEmpty) ? Offset(0, -50) : Offset(0, 0),
-                  child: Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Campaign title
+                Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Campaign title
+                      Text(
+                        widget.campaign.title,
+                        style: mainHeadingStyle,
+                      ),
+                
+                      SizedBox(height: 16.0),
+                
+                      // Campaign start DateTime
+                      _buildIconAndText(Icons.calendar_today, 'Начало: ${_formatDate(widget.campaign.startDate)}', blueSecondary),
+                      SizedBox(height: 8.0),
+                
+                      // Campaign end DateTime
+                      _buildIconAndText(Icons.calendar_today, 'Край: ${_formatDate(widget.campaign.endDate)}', blueSecondary),
+                      SizedBox(height: 8.0),
+                
+                      // Campaign location
+                      _buildIconAndText(Icons.location_on, widget.campaign.location, blueSecondary),
+                      SizedBox(height: 8.0),
+                
+                      // Campaign required volunteers
+                      _buildIconAndText(Icons.group, 'Записани са ${widget.campaign.registeredVolunteersUids.length} от необходими ${widget.campaign.requiredVolunteers}', blueSecondary),
+                      SizedBox(height: 24.0),
+                
+                      // Campaign description
+                      Text(
+                        'Описание:',
+                        style: TextStyle(fontSize: 18.0, color: Colors.grey[800], fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4.0),
+                      Text(
+                        widget.campaign.description,
+                        style: const TextStyle(fontSize: 16.0, color: Colors.black),
+                      ),
+                
+                      SizedBox(height: 24.0),
+                
+                      // Additional instructions
+                      if (widget.campaign.instructions.isNotEmpty) ...[
                         Text(
-                          widget.campaign.title,
-                          style: mainHeadingStyle,
-                        ),
-                  
-                        SizedBox(height: 16.0),
-                  
-                        // Campaign start DateTime
-                        _buildIconAndText(Icons.calendar_today, 'Начало: ${_formatDate(widget.campaign.startDate)}', blueSecondary),
-                        SizedBox(height: 8.0),
-                  
-                        // Campaign end DateTime
-                        _buildIconAndText(Icons.calendar_today, 'Край: ${_formatDate(widget.campaign.endDate)}', blueSecondary),
-                        SizedBox(height: 8.0),
-                  
-                        // Campaign location
-                        _buildIconAndText(Icons.location_on, widget.campaign.location, blueSecondary),
-                        SizedBox(height: 8.0),
-                  
-                        // Campaign required volunteers
-                        _buildIconAndText(Icons.group, 'Записани са ${widget.campaign.registeredVolunteersUids.length} от необходими ${widget.campaign.requiredVolunteers}', blueSecondary),
-                        SizedBox(height: 24.0),
-                  
-                        // Campaign description
-                        Text(
-                          'Описание:',
+                          'Допълнителни инструкции:',
                           style: TextStyle(fontSize: 18.0, color: Colors.grey[800], fontWeight: FontWeight.bold),
                         ),
-                        const SizedBox(height: 4.0),
+                        SizedBox(height: 4.0),
                         Text(
-                          widget.campaign.description,
-                          style: const TextStyle(fontSize: 16.0, color: Colors.black),
+                          widget.campaign.instructions,
+                          style: TextStyle(fontSize: 16.0, color: Colors.black),
                         ),
-                  
-                        SizedBox(height: 24.0),
-                  
-                        // Additional instructions
-                        if (widget.campaign.instructions.isNotEmpty) ...[
-                          Text(
-                            'Допълнителни инструкции:',
-                            style: TextStyle(fontSize: 18.0, color: Colors.grey[800], fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(height: 4.0),
-                          Text(
-                            widget.campaign.instructions,
-                            style: TextStyle(fontSize: 16.0, color: Colors.black),
-                          ),
-                        ]
-                      ],
-                    ),
+                      ]
+                    ],
                   ),
                 ),
               ]

@@ -22,9 +22,9 @@ class CampaignInfoScreen extends StatelessWidget {
   // Open in Google Maps
   // Currently opens Google Maps with the given location
   // TODO: Use latitude and longitude for higher accuracy (fetched from FirestoreDB) - post-merge task
-  Future<void> _openMap(String location) async {
+  Future<void> _openMap(double lat, double lng) async {
     final Uri googleMapsUrl = Uri.parse(
-        'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(location)}');
+        'https://www.google.com/maps/search/?api=1&query=$lat,$lng');
 
     try {
       if (await canLaunchUrl(googleMapsUrl)) {
@@ -107,7 +107,7 @@ class CampaignInfoScreen extends StatelessWidget {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
-                        onPressed: () => _openMap(campaign.location),
+                        onPressed: () => _openMap(campaign.latitude, campaign.longitude),
                         icon: const Icon(Icons.map_outlined),
                         label: const Text("Виж на картата"),
                       ),
