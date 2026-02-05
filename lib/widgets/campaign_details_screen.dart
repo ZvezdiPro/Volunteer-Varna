@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:volunteer_app/models/campaign.dart';
@@ -27,6 +28,18 @@ class _CampaignDetailsScreenState extends State<CampaignDetailsScreen> {
   String _formatDate(DateTime date) {
     final formatter = DateFormat('EEE, d MMM y, HH:mm', 'bg_BG');
     return formatter.format(date);
+  }
+
+  void _showGuestActionMessage(BuildContext context) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        backgroundColor: Colors.orange,
+        content: Center(child: Text('Тази функция е достъпна само за регистрирани потребители!', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
+        duration: Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   Widget _buildIconAndText(IconData icon, String text, Color color) {
@@ -85,12 +98,21 @@ class _CampaignDetailsScreenState extends State<CampaignDetailsScreen> {
       return const Scaffold(body: Center(child: Loading()));
     }
 
-    return StreamBuilder<VolunteerUser?>(
+    final bool isGuest = FirebaseAuth.instance.currentUser?.isAnonymous ?? false;
+
+    return isGuest ? _buildPage(context, authUser, isBookmarked: false, isGuest: true)
+    : StreamBuilder<VolunteerUser?>(
       stream: DatabaseService(uid: authUser.uid).volunteerUserData,
       builder: (context, snapshot) {
         VolunteerUser? user = snapshot.data ?? authUser;
         bool isBookmarked = user.bookmarkedCampaignsIds.contains(widget.campaign.id);
-        return Scaffold(
+        return _buildPage(context, user, isBookmarked: isBookmarked, isGuest: isGuest);
+  });
+    
+  }
+
+  Scaffold _buildPage(BuildContext context, VolunteerUser user, {required bool isBookmarked, required bool isGuest}) {
+    return Scaffold(
       backgroundColor: backgroundGrey,
 
       // Button for registering
@@ -196,6 +218,7 @@ class _CampaignDetailsScreenState extends State<CampaignDetailsScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: <Widget>[
+                          // Back button
                           IconButton(
                             icon: const Icon(Icons.arrow_back, color: Colors.black, size: 24.0),
                             onPressed: () => Navigator.pop(context),
@@ -210,14 +233,21 @@ class _CampaignDetailsScreenState extends State<CampaignDetailsScreen> {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                      
+
+                          // Bookmark button
                           IconButton(
                             icon: Icon(
                               isBookmarked ? Icons.bookmark : Icons.bookmark_border, 
                               color: Colors.black,
                               size: 24.0
                             ),
-                            onPressed: () => _onBookmarkTap(context, user, isBookmarked),
+                            onPressed: () {
+                              if (isGuest) {
+                                _showGuestActionMessage(context);
+                              } else {
+                                _onBookmarkTap(context, user, isBookmarked);
+                              }
+                            },
                           ),
                         ]
                       ),
@@ -331,7 +361,13 @@ class _CampaignDetailsScreenState extends State<CampaignDetailsScreen> {
                         color: Colors.white, 
                         size: 24.0
                       ),
-                      onPressed: () => _onBookmarkTap(context, user, isBookmarked),
+                      onPressed: () {
+                        if (isGuest) {
+                           _showGuestActionMessage(context);
+                        } else {
+                           _onBookmarkTap(context, user, isBookmarked);
+                        }
+                      },
                     )
                   )
                 )
@@ -340,7 +376,5 @@ class _CampaignDetailsScreenState extends State<CampaignDetailsScreen> {
         ]
       )
     );
-  });
-    
   }
 }

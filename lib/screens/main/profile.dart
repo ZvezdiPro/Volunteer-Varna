@@ -7,6 +7,7 @@ import 'package:volunteer_app/models/volunteer.dart';
 import 'package:volunteer_app/screens/main/edit_profile_screen.dart';
 import 'package:volunteer_app/screens/main/settings.dart';
 import 'package:volunteer_app/screens/main/achievements.dart';
+import 'package:volunteer_app/screens/main/saved_campaigns.dart';
 import 'package:volunteer_app/services/database.dart';
 import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/shared/loading.dart';
@@ -191,6 +192,22 @@ class _ProfilePageState extends State<ProfilePage> {
                     MaterialPageRoute(builder: (context) => const AchievementsPage()),
                   );
                 },),
+
+              SizedBox(height: 10.0),
+
+              // Bookmarked campaigns
+              _buildMenuTile(
+                Icons.bookmark,
+                'Запазени кампании',
+                Colors.green.shade100,
+                greenPrimary,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SavedCampaignsScreen()),
+                  );
+                },
+              ),
 
               SizedBox(height: 10.0),
 
