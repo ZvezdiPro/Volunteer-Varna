@@ -123,6 +123,8 @@ class _CampaignDetailsScreenState extends State<CampaignDetailsScreen> {
           child: Builder(
             builder: (context) {
               bool isAlreadyRegistered = widget.campaign.registeredVolunteersUids.contains(user.uid);
+              bool isEnded = widget.campaign.status == 'ended' || widget.campaign.endDate.isBefore(DateTime.now());
+              bool isOrganizer = widget.campaign.organizerId == user.uid;
 
               if (!widget.showRegisterButton) return const SizedBox.shrink();
 
@@ -130,14 +132,16 @@ class _CampaignDetailsScreenState extends State<CampaignDetailsScreen> {
                 height: 50.0,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isAlreadyRegistered ? Colors.grey[400] : greenPrimary, 
+                    backgroundColor: (isEnded || isOrganizer)
+                        ? Colors.grey 
+                        : (isAlreadyRegistered ? Colors.grey[400] : greenPrimary),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20.0),
                     ),
                     elevation: 0,
                   ),
 
-                  onPressed: isAlreadyRegistered ? null : () async {
+                  onPressed: (isEnded || isAlreadyRegistered || isOrganizer) ? null : () async {
                     try {
                       await DatabaseService(uid: user.uid).registerUserForCampaign(widget.campaign.id);
                       
@@ -160,10 +164,16 @@ class _CampaignDetailsScreenState extends State<CampaignDetailsScreen> {
                   },
                   
                   child: Text(
-                    isAlreadyRegistered ? 'Вече сте записан за кампанията' : 'Запиши се за кампанията',
+                    isOrganizer
+                      ? 'Вие сте организаторът на кампанията!' // For organizers
+                      : (isEnded 
+                          ? 'Тази кампания е приключила' // If the campaign has ended
+                          : (isAlreadyRegistered 
+                              ? 'Вече сте записан за кампанията' // If you are already registered
+                              : 'Запиши се за кампанията')),
                     style: TextStyle(
                       fontSize: 16.0, 
-                      color: isAlreadyRegistered ? Colors.black : Colors.white, 
+                      color: (isAlreadyRegistered || isEnded || isOrganizer) ? Colors.black : Colors.white, 
                       fontWeight: FontWeight.bold
                     ),
                   ),
