@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:volunteer_app/models/campaign.dart';
 import 'package:volunteer_app/widgets/campaign_details_screen.dart'; 
@@ -16,7 +17,10 @@ class CampaignsMapScreen extends StatefulWidget {
 class _CampaignsMapScreenState extends State<CampaignsMapScreen> {
   GoogleMapController? mapController;
   Set<Marker> _markers = {};
-  final LatLng _center = const LatLng(43.217152, 27.939351); 
+
+  // The fallback center is used when we can't get the user's location (e.g., permission denied)
+  // and while the method for fetching the user's location is still in progress.
+  final LatLng _fallbackCenter = const LatLng(43.217152, 27.939351); 
 
   @override
   void initState() {
@@ -24,6 +28,44 @@ class _CampaignsMapScreenState extends State<CampaignsMapScreen> {
     _generateMarkers();
   }
 
+  // Get the user's current location and move the map camera there
+  Future<void> _getUserLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return;
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return;
+      }
+    }
+    
+    if (permission == LocationPermission.deniedForever) {
+      return;
+    }
+
+    Position position = await Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+      ),
+    );
+
+    if (mapController != null) {
+      mapController!.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: LatLng(position.latitude, position.longitude),
+            zoom: 14.0,
+          ),
+        ),
+      );
+    }
+  }
+  
   void _generateMarkers() {
     Set<Marker> tempMarkers = {};
 
@@ -62,8 +104,9 @@ class _CampaignsMapScreenState extends State<CampaignsMapScreen> {
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
+    _getUserLocation();
   }
-
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -78,7 +121,7 @@ class _CampaignsMapScreenState extends State<CampaignsMapScreen> {
         child: GoogleMap(
           onMapCreated: _onMapCreated,
           initialCameraPosition: CameraPosition(
-            target: _center,
+            target: _fallbackCenter,
             zoom: 14.0,
           ),
           markers: _markers,
