@@ -129,6 +129,7 @@ class DatabaseService {
         .map(_campaignListFromSnapshot);
   }
 
+  // Stream campaigns the current user has created (For "My Campaigns" Screen)
   Stream<List<Campaign>> get createdCampaigns {
     if (uid == null) return Stream.value([]);
 

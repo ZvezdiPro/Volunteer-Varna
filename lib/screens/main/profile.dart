@@ -22,6 +22,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   int _campaignsCount = 0;
   int _volunteerHours = 0;
+  VolunteerUser? _updatedVolunteer;
 
   @override
   void initState() {
@@ -35,11 +36,8 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadProfileData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || user.isAnonymous) return;
-
-    final volunteer = Provider.of<VolunteerUser?>(context, listen: false);
-    if (volunteer == null) return;
     
-    final DatabaseService dbService = DatabaseService(uid: volunteer.uid);
+    final DatabaseService dbService = DatabaseService(uid: user.uid);
 
     try {
       // Fetch both registered and created campaigns in parallel
@@ -48,20 +46,26 @@ class _ProfilePageState extends State<ProfilePage> {
         dbService.createdCampaigns.first,
       ]);
 
+      final fetchedUser = await dbService.getVolunteerUser();
       final allCampaigns = [...results[0], ...results[1]];
 
       setState(() {
         _campaignsCount = allCampaigns.length;
         _volunteerHours = allCampaigns.fold(0, (sum, campaign) => sum + campaign.durationInHours);
+
+        if (fetchedUser != null) {
+          _updatedVolunteer = fetchedUser;
+        }
       });
     } catch (e) {
-      // print('Грешка при зареждане на броя кампании: $e');
+      // print('Error loading the campaigns data: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final VolunteerUser? volunteer = Provider.of<VolunteerUser?>(context);
+    final VolunteerUser? providerVolunteer = Provider.of<VolunteerUser?>(context);
+    final VolunteerUser? volunteer = _updatedVolunteer ?? providerVolunteer;
 
     // If volunteer is null, show a screen indicating the error
     if (volunteer == null) {
@@ -229,63 +233,91 @@ class _ProfilePageState extends State<ProfilePage> {
 
               SizedBox(height: 10.0),
 
-              // StreamBuilder for recent campaigns
+              // Recent campaigns list (registered + created, sorted by date)
               StreamBuilder<List<Campaign>>(
                 stream: DatabaseService(uid: volunteer.uid).registeredCampaigns,
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Container(
-                      padding: EdgeInsets.all(20),
-                      width: double.infinity,
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
-                      child: Text('Няма скорошна активност.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
-                    );
-                  }
+                builder: (context, registeredSnapshot) {
+                                    
+                  // Nested StreamBuilder for created campaigns
+                  return StreamBuilder<List<Campaign>>(
+                    stream: DatabaseService(uid: volunteer.uid).createdCampaigns,
+                    builder: (context, createdSnapshot) {
+                      
+                      if (registeredSnapshot.connectionState == ConnectionState.waiting && 
+                          createdSnapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: Padding(
+                          padding: EdgeInsets.all(20.0),
+                          child: CircularProgressIndicator(color: greenPrimary),
+                        ));
+                      }
 
-                  final recentCampaigns = snapshot.data!.take(3).toList();
+                      final registered = registeredSnapshot.data ?? [];
+                      final created = createdSnapshot.data ?? [];
 
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12.0),
-                      boxShadow: [
-                        BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 5, offset: Offset(0, 2)),
-                      ],
-                    ),
-                    child: ListView.separated(
-                      shrinkWrap: true, 
-                      physics: NeverScrollableScrollPhysics(), 
-                      itemCount: recentCampaigns.length,
-                      separatorBuilder: (context, index) => Divider(height: 1, indent: 30, endIndent: 30),
-                      itemBuilder: (context, index) {
-                        final campaign = recentCampaigns[index];
-                        
-                        return ListTile(
-                          leading: Icon(Icons.event_note, color: greenPrimary),
-                          title: Text(
-                            campaign.title, 
-                            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-                          ),
-                          subtitle: Text(
-                            'На: ${DateFormat('dd.MM.yyyy').format(campaign.startDate)}', 
-                            style: TextStyle(color: Colors.grey[600], fontSize: 13),
-                          ),
-                          trailing: Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
-                          onTap: () {
-                            // Go to more detailed screen
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => CampaignDetailsScreen(
-                                  campaign: campaign,
-                                  showRegisterButton: false,
-                                ),
+                      List<Campaign> allCampaigns = [...registered, ...created];
+
+                      allCampaigns.sort((a, b) => b.startDate.compareTo(a.startDate));
+
+                      if (allCampaigns.isEmpty) {
+                        return Container(
+                          padding: EdgeInsets.all(20),
+                          width: double.infinity,
+                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                          child: Text('Няма скорошна активност.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
+                        );
+                      }
+
+                      final recentCampaigns = allCampaigns.take(3).toList();
+
+                      // Build the list of recent campaigns
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12.0),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 5, offset: Offset(0, 2)),
+                          ],
+                        ),
+                        child: ListView.separated(
+                          shrinkWrap: true, 
+                          physics: NeverScrollableScrollPhysics(), 
+                          itemCount: recentCampaigns.length,
+                          separatorBuilder: (context, index) => Divider(height: 1, indent: 30, endIndent: 30),
+                          itemBuilder: (context, index) {
+                            final campaign = recentCampaigns[index];
+                            
+                            final isCreated = created.contains(campaign);
+                            
+                            return ListTile(
+                              leading: Icon(
+                                isCreated ? Icons.campaign : Icons.event_note, 
+                                color: greenPrimary
                               ),
+                              title: Text(
+                                campaign.title, 
+                                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                              ),
+                              subtitle: Text(
+                                'На: ${DateFormat('dd.MM.yyyy').format(campaign.startDate)}', 
+                                style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                              ),
+                              trailing: Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CampaignDetailsScreen(
+                                      campaign: campaign,
+                                      showRegisterButton: false,
+                                    ),
+                                  ),
+                                );
+                              },
                             );
                           },
-                        );
-                      },
-                    ),
+                        ),
+                      );
+                    },
                   );
                 },
               ),

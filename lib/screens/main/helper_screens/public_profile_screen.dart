@@ -28,7 +28,6 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
   }
 
   Future<void> _loadVolunteerData() async {
-    // Важно: Подаваме UID на разглеждания потребител, а не на логнатия!
     final DatabaseService dbService = DatabaseService(uid: widget.volunteer.uid);
 
     try {
@@ -39,7 +38,6 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
 
       final allCampaigns = [...results[0], ...results[1]];
       
-      // Сортираме, за да покажем най-новите първи
       allCampaigns.sort((a, b) => b.startDate.compareTo(a.startDate));
 
       if (mounted) {
