@@ -72,15 +72,17 @@ class SavedCampaignsScreen extends StatelessWidget {
               }
 
               // Use the CampaignCard widget to display each campaign in a ListView
-              return ListView.builder(
-                padding: const EdgeInsets.only(bottom: 16.0),
-                itemCount: campaigns.length,
-                itemBuilder: (context, index) {
-                  return CampaignCard(
-                    campaign: campaigns[index],
-                    showRegisterButton: true, 
-                  );
-                },
+              return SafeArea(
+                child: ListView.builder(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  itemCount: campaigns.length,
+                  itemBuilder: (context, index) {
+                    return CampaignCard(
+                      campaign: campaigns[index],
+                      showRegisterButton: true, 
+                    );
+                  },
+                ),
               );
             },
           );

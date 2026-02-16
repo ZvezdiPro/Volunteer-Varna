@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart'; // Не забравяй да добавиш пакета
+import 'package:url_launcher/url_launcher.dart';
 import 'package:volunteer_app/models/campaign.dart';
 import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/shared/constants.dart';
@@ -10,7 +10,6 @@ class CampaignInfoScreen extends StatelessWidget {
 
   const CampaignInfoScreen({super.key, required this.campaign});
 
-  // Форматиране на датите
   String _formatDate(DateTime date) {
     return DateFormat('dd MMM yyyy', 'bg_BG').format(date);
   }
@@ -20,7 +19,6 @@ class CampaignInfoScreen extends StatelessWidget {
   }
 
   // Open in Google Maps
-  // Currently opens Google Maps with the given location
   Future<void> _openMap(double lat, double lng) async {
     final Uri googleMapsUrl = Uri.parse(
         'https://www.google.com/maps/search/?api=1&query=$lat,$lng');
@@ -39,7 +37,7 @@ class CampaignInfoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: backgroundGrey,
       appBar: AppBar(
         title: const Text("Информация за кампанията", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
         backgroundColor: backgroundGrey,
