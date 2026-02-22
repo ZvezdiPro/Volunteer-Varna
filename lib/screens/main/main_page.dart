@@ -41,7 +41,15 @@ class _MainPageState extends State<MainPage> {
       // The four pages to navigate between
       body: <Widget>
       [
-        HomeScreen(),
+        // The HomeScreen receives a function to navigate to the EventsPage when the button is pressed
+        HomeScreen(
+          onGoToEvents: () {
+            setState(() {
+              // EventsPage index is 1
+              currentPageIndex = 1;
+            });
+          },
+        ),
         EventsPage(),
         ChatsScreen(),
         ProfilePage(),
