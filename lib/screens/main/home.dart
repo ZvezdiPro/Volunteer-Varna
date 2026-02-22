@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:volunteer_app/models/campaign.dart';
 import 'package:volunteer_app/models/volunteer.dart';
+import 'package:volunteer_app/screens/main/helper_screens/chat_screen.dart';
 import 'package:volunteer_app/services/database.dart';
 import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/widgets/event_card.dart';
@@ -147,7 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // User's activity (placeholder for now)
                 _buildSectionTitle('Твоята активност'),
                 const SizedBox(height: 15),
-                _buildActivitySection(),
+                _buildActivitySection(userSnapshot.data),
                 const SizedBox(height: 30),
 
                 // Button to go to the Events page
@@ -189,35 +190,195 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildActivitySection() {
-    // TODO: Implement actual activity data and UI (for now it's just a placeholder)
+  Widget _buildActivitySection(VolunteerUser? currentUser) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 40.0, horizontal: 20.0),
-        decoration: BoxDecoration(
-          color: Colors.grey[200],
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(10),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: const Center(
-          child: Text(
-            'Тук ще бъде информацията за дейността на потребителя',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.grey,
-              fontSize: 14,
-              fontStyle: FontStyle.italic,
-            ),
+      // StreamBuilders for registered campaigns and created campaigns
+      child: StreamBuilder<List<Campaign>>(
+        stream: _dbService.registeredCampaigns,
+        builder: (context, registeredSnapshot) {
+          
+          return StreamBuilder<List<Campaign>>(
+            stream: _dbService.createdCampaigns,
+            builder: (context, createdSnapshot) {
+              
+              if (registeredSnapshot.connectionState == ConnectionState.waiting ||
+                  createdSnapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(20.0),
+                    child: CircularProgressIndicator(color: greenPrimary),
+                  ),
+                );
+              }
+
+              if (registeredSnapshot.hasError || createdSnapshot.hasError) {
+                return const Center(
+                  child: Text(
+                    'Възникна грешка при зареждането на активността.',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                );
+              }
+
+              // Combine registered and created campaigns, ensuring no duplicates, then filter for active/upcoming ones
+              List<Campaign> registered = registeredSnapshot.data ?? [];
+              List<Campaign> created = createdSnapshot.data ?? [];
+
+              List<Campaign> myCampaigns = [...created];
+              for (var campaign in registered) {
+                if (!myCampaigns.any((c) => c.title == campaign.title)) {
+                  myCampaigns.add(campaign);
+                }
+              }
+
+              List<Campaign> upcomingCampaigns = myCampaigns
+                  .where((c) => c.status == 'active' && c.endDate.isAfter(DateTime.now()))
+                  .toList();
+
+              upcomingCampaigns.sort((a, b) => a.startDate.compareTo(b.startDate));
+
+              // Placeholder if the user has no upcoming campaigns
+              if (upcomingCampaigns.isEmpty) {
+                return Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20.0),
+                  decoration: BoxDecoration(
+                    color: backgroundGrey,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black.withAlpha(30), blurRadius: 10, offset: const Offset(0, 4)),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(color: Colors.grey.withAlpha(30), shape: BoxShape.circle),
+                        child: const Icon(Icons.event_busy, color: Colors.grey),
+                      ),
+                      const SizedBox(width: 15),
+                      Expanded(
+                        child: Text(
+                          'Нямаш предстоящи задачи. Време е да се запишеш!',
+                          style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              // List of upcoming campaigns the user is involved in
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: backgroundGrey,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withAlpha(30), blurRadius: 10, offset: const Offset(0, 4)),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: List.generate(upcomingCampaigns.length, (index) {
+                    Campaign campaign = upcomingCampaigns[index];
+                    
+                    bool isAdmin = campaign.organizerId == _currentUid; 
+                    bool isLast = index == upcomingCampaigns.length - 1;
+
+                    return _buildActivityItem(campaign, isAdmin, isLast, currentUser);
+                  }),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildActivityItem(Campaign campaign, bool isAdmin, bool isLast, VolunteerUser? currentUser) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CampaignChatScreen(campaign: campaign, currentUser: currentUser!), 
           ),
-        ),
+        );
+      },
+      child: Column(
+        children: [
+          Row(
+            children: [
+              // Different icon for organizer and participant
+              Container(
+                height: 50,
+                width: 50,
+                decoration: BoxDecoration(
+                  color: greenPrimary.withAlpha(30),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  isAdmin ? Icons.campaign : Icons.event,
+                  color: greenPrimary,
+                ),
+              ),
+              const SizedBox(width: 15),
+              
+              // Campaign title, date and location
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            campaign.title,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        // Admin badge, if the user is the organizer of the campaign
+                        if (isAdmin)
+                          Container(
+                            margin: const EdgeInsets.only(left: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.blue,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text(
+                              'Организатор',
+                              style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                            ),
+                          )
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    // Date and location
+                    Text(
+                      '${campaign.startDate.day}.${campaign.startDate.month}.${campaign.startDate.year} • ${campaign.location}',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          // Разделителна линия между събитията
+          if (!isLast)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Divider(height: 1, thickness: 1, color: Colors.black12),
+            ),
+        ],
       ),
     );
   }
