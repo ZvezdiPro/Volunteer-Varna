@@ -44,6 +44,7 @@ class CampaignChatScreen extends StatefulWidget {
 class _CampaignChatScreenState extends State<CampaignChatScreen> {
   // State variables
   Map<String, String>? _replyMessage;
+  Map<String, String>? _editingMessage;
   bool _isUploading = false;
   bool _isSharing = false;
 
@@ -184,7 +185,32 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
 
   // Sand message handlers
   void _handleSendText(String text) {
-    _sendMessage(text: text);
+    if (_editingMessage != null) {
+      _handleUpdateMessage(text);
+    } else {
+      _sendMessage(text: text);
+    }
+  }
+
+  void _handleUpdateMessage(String newText) async {
+    final originalMessageId = _editingMessage!['id']!;
+    setState(() {
+      _editingMessage = null;
+    });
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('campaigns')
+          .doc(widget.campaign.id)
+          .collection('messages')
+          .doc(originalMessageId)
+          .update({
+        'text': newText,
+        'isEdited': true,
+      });
+    } catch (e) {
+      debugPrint("Error updating message: $e");
+    }
   }
 
   void _handleSendAudio(String path) async {
@@ -480,6 +506,17 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Копирано!")));
                   },
                 ),
+              if (isMe && type == 'text' && messageText.isNotEmpty)
+                ListTile(
+                  leading: const Icon(Icons.edit, color: Colors.purple),
+                  title: const Text('Редактирай'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      _editingMessage = {'id': docId, 'text': messageText};
+                    });
+                  },
+                ),
               if (isMe || _isOrganizer)
                 ListTile(
                   leading: const Icon(Icons.delete, color: Colors.red),
@@ -740,6 +777,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
                               contactPhone: data['contactPhone'],
                               duration: data['duration'],
                               isMe: isMe,
+                              isEdited: data['isEdited'] ?? false,
                               senderName: data['senderName'] ?? 'Потребител',
                               timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
                               reactions: reactions,
@@ -765,31 +803,33 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
               ),
               
               if (_isUploading) const LinearProgressIndicator(minHeight: 2, color: greenPrimary),
+ 
+               if (_editingMessage != null)
+                  Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: Container(
+                       padding: const EdgeInsets.all(8),
+                       decoration: BoxDecoration(color: Colors.blue[50], borderRadius: BorderRadius.circular(12), border: Border(left: BorderSide(color: Colors.blue, width: 4))),
+                       child: Row(children: [
+                         const Icon(Icons.edit, color: Colors.blue, size: 20),
+                         const SizedBox(width: 8),
+                         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                           const Text("Редактиране", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.blue)),
+                           Text(_editingMessage!['text']!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: Colors.black54))
+                         ])),
+                         IconButton(icon: const Icon(Icons.close, size: 20, color: Colors.grey), onPressed: () => setState(() => _editingMessage = null))
+                       ]),
+                    ),
+                  ),
 
-              if (_replyMessage != null)
-                 Container(
-                   color: Colors.white,
-                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                   child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12), border: Border(left: BorderSide(color: greenPrimary, width: 4))),
-                      child: Row(children: [
-                        const Icon(Icons.reply, color: greenPrimary, size: 20),
-                        const SizedBox(width: 8),
-                        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text("Отговор на ${_replyMessage!['name']}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: greenPrimary)),
-                          Text(_replyMessage!['text']!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: Colors.black54))
-                        ])),
-                        IconButton(icon: const Icon(Icons.close, size: 20, color: Colors.grey), onPressed: () => setState(() => _replyMessage = null))
-                      ]),
-                   ),
-                 ),
-
-              ChatInputArea(
-                onSendText: _handleSendText,
-                onSendAudio: _handleSendAudio,
-                onAttachmentTap: _handleAttachment,
-              ),
+               ChatInputArea(
+                 onSendText: _handleSendText,
+                 onSendAudio: _handleSendAudio,
+                 onAttachmentTap: _handleAttachment,
+                 editingMessage: _editingMessage?['text'],
+                 onCancelEdit: () => setState(() => _editingMessage = null),
+               ),
             ],
           ),
 
@@ -818,12 +858,16 @@ class ChatInputArea extends StatefulWidget {
   final Function(String) onSendText;
   final Function(String) onSendAudio;
   final Function(String) onAttachmentTap;
+  final String? editingMessage;
+  final VoidCallback? onCancelEdit;
 
   const ChatInputArea({
     super.key,
     required this.onSendText,
     required this.onSendAudio,
     required this.onAttachmentTap,
+    this.editingMessage,
+    this.onCancelEdit,
   });
 
   @override
@@ -836,6 +880,18 @@ class _ChatInputAreaState extends State<ChatInputArea> {
   
   bool _showSendButton = false;
   bool _isRecording = false;
+
+  @override
+  void didUpdateWidget(ChatInputArea oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.editingMessage != oldWidget.editingMessage && widget.editingMessage != null) {
+      _controller.text = widget.editingMessage!;
+      _showSendButton = true;
+    } else if (widget.editingMessage == null && oldWidget.editingMessage != null) {
+      _controller.clear();
+      _showSendButton = false;
+    }
+  }
 
   @override
   void dispose() {
@@ -1007,7 +1063,7 @@ class _ChatInputAreaState extends State<ChatInputArea> {
                         duration: const Duration(milliseconds: 200),
                         transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
                         child: Icon(
-                          _showSendButton ? Icons.send_rounded : Icons.mic,
+                          _showSendButton ? (widget.editingMessage != null ? Icons.check_circle_outline : Icons.send_rounded) : Icons.mic,
                           key: ValueKey(_showSendButton),
                           color: Colors.white,
                           size: 24,

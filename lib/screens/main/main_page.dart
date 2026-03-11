@@ -21,6 +21,7 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     
     return Scaffold(
+      backgroundColor: backgroundGrey,
       // Appbar at the top
       appBar: AppBar(
         title: Text('Volunteer Varna', style: TextStyle(color: greenPrimary, fontSize: 24.0, fontWeight: FontWeight.bold)),

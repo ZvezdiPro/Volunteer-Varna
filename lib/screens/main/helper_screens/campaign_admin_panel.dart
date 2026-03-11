@@ -335,31 +335,31 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
   // Confirmation dialog for unsaved changes
   Future<bool> _showExitConfirmationDialog() async {
     return await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Незапазени промени'),
-            content: const Text(
-              'Имате незапазени промени. Сигурни ли сте, че искате да напуснете?',
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Незапазени промени'),
+        content: const Text(
+          'Имате незапазени промени. Сигурни ли сте, че искате да напуснете?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text(
+              'Отказ',
+              style: TextStyle(color: Colors.black87),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text(
-                  'Отказ',
-                  style: TextStyle(color: Colors.black87),
-                ),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text(
-                  'Напусни',
-                  style: TextStyle(color: Colors.red),
-                ),
-              ),
-            ],
           ),
-        ) ??
-        false;
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text(
+              'Напусни',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    ) ??
+    false;
   }
 
   // Method to check if registered volunteers are present for ownership transfer
@@ -430,32 +430,32 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
 
   Future<void> _confirmTransferOwnership(VolunteerUser newOwner) async {
     final bool confirm =
-        await showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text("Потвърждение"),
-            content: Text(
-              "Сигурни ли сте, че искате да прехвърлите собствеността на тази кампания на ${newOwner.firstName} ${newOwner.lastName}? Това действие не може да бъде отменено.",
+      await showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text("Потвърждение"),
+          content: Text(
+            "Сигурни ли сте, че искате да прехвърлите собствеността на тази кампания на ${newOwner.firstName} ${newOwner.lastName}? Това действие не може да бъде отменено.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text("Отказ"),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text("Отказ"),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text(
-                  "Прехвърли",
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text(
+                "Прехвърли",
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ],
-          ),
-        ) ??
-        false;
+            ),
+          ],
+        ),
+      ) ??
+      false;
 
     if (confirm) {
       try {
@@ -485,32 +485,32 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
 
   Future<void> _confirmEndCampaign() async {
     final bool confirm =
-        await showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text("Прекратяване на кампания", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-            content: const Text(
-              "Това действие ще прекрати кампанията и е НЕОБРАТИМО! Сигурни ли сте?", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      await showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text("Прекратяване на кампания", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          content: const Text(
+            "Това действие ще прекрати кампанията и е НЕОБРАТИМО! Сигурни ли сте?", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text("Отказ"),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text("Отказ"),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text(
-                  "Да, прекрати",
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text(
+                "Да, прекрати",
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ],
-          ),
-        ) ??
-        false;
+            ),
+          ],
+        ),
+      ) ??
+      false;
 
     if (confirm) {
       await _db.endCampaign(widget.campaign.id);
@@ -535,29 +535,29 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
   // Method to confirm removing a volunteer
   Future<void> _confirmRemoveVolunteer(VolunteerUser user) async {
     final bool confirm =
-        await showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text("Премахване на доброволец"),
-            content: Text(
-              "Сигурни ли сте, че искате да премахнете ${user.firstName} от кампанията?",
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text("Отказ"),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text(
-                  "Премахни",
-                  style: TextStyle(color: Colors.red),
-                ),
-              ),
-            ],
+      await showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text("Премахване на доброволец"),
+          content: Text(
+            "Сигурни ли сте, че искате да премахнете ${user.firstName} от кампанията?",
           ),
-        ) ??
-        false;
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text("Отказ"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text(
+                "Премахни",
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        ),
+      ) ??
+      false;
 
     if (confirm) {
       await _db.removeVolunteerFromCampaign(widget.campaign.id, user.uid);
