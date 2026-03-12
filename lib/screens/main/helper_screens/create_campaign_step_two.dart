@@ -245,6 +245,7 @@ class _CreateCampaignStepTwoState extends State<CreateCampaignStepTwo> {
       initialDate: initialDate,
       firstDate: firstDate,
       lastDate: now.add(const Duration(days: 365 * 2)),
+      initialEntryMode: DatePickerEntryMode.calendarOnly,
       builder: (context, child) => _buildPickerTheme(child!),
     );
 
@@ -258,6 +259,7 @@ class _CreateCampaignStepTwoState extends State<CreateCampaignStepTwo> {
     final TimeOfDay? pickedTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(initialTimeDate),
+      initialEntryMode: TimePickerEntryMode.dial,
       builder: (context, child) => _buildPickerTheme(child!, isTimePicker: true),
     );
 
@@ -280,6 +282,7 @@ class _CreateCampaignStepTwoState extends State<CreateCampaignStepTwo> {
     final TimeOfDay? pickedTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(baseDate), 
+      initialEntryMode: TimePickerEntryMode.dial,
       builder: (context, child) => _buildPickerTheme(child!, isTimePicker: true),
     ); 
 

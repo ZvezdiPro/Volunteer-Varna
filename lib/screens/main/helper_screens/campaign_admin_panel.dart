@@ -208,6 +208,7 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
           : initialPickerDate,
       firstDate: firstDate,
       lastDate: now.add(const Duration(days: 365 * 2)),
+      initialEntryMode: DatePickerEntryMode.calendarOnly,
       builder: (context, child) {
         return Theme(
           data: ThemeData.light().copyWith(
@@ -258,6 +259,7 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: initialTime,
+      initialEntryMode: TimePickerEntryMode.dial,
       builder: (context, child) => MediaQuery(
         data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
         child: Theme(
@@ -680,28 +682,40 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
             const SizedBox(height: 8),
             TextFormField(
               controller: _titleController,
+              maxLength: 50,
               decoration: textInputDecoration.copyWith(
                 hintText: "Например: Почистване на парк",
                 fillColor: Colors.white,
               ),
               onChanged: (_) => _onFieldChanged(),
-              validator: (val) => val!.isEmpty ? 'Въведете име' : null,
+              validator: (val) {
+                if (val == null || val.isEmpty) return 'Въведете име';
+                if (val.length > 50) return 'Името е твърде дълго (макс. 50 символа)';
+                return null;
+              },
             ),
-            const SizedBox(height: 15),
+
+            const SizedBox(height: 10),
 
             // Description
             Text('Описание', style: textFormFieldHeading),
             const SizedBox(height: 8),
             TextFormField(
               controller: _descriptionController,
+              maxLength: 300,
               decoration: textInputDecoration.copyWith(
                 hintText: "Опишете целта на тази кампания...",
               ),
               maxLines: 4,
               onChanged: (_) => _onFieldChanged(),
-              validator: (val) => val!.isEmpty ? 'Въведете описание' : null,
+              validator: (val) {
+                if (val == null || val.isEmpty) return 'Въведете описание';
+                if (val.length > 300) return 'Описанието е твърде дълго (макс. 300 символа)';
+                return null;
+              },
             ),
-            const SizedBox(height: 15),
+
+            const SizedBox(height: 10),
 
             // Start & End Dates
             _buildDateRow(
@@ -740,11 +754,16 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
             const SizedBox(height: 8),
             TextFormField(
               controller: _instructionsController,
+              maxLength: 300,
               decoration: textInputDecoration.copyWith(
                 hintText: "Добавете инструкции...",
               ),
               maxLines: 3,
               onChanged: (_) => _onFieldChanged(),
+              validator: (val) {
+                if (val != null && val.length > 300) return 'Инструкциите са твърде дълги (макс. 300 символа)';
+                return null;
+              },
             ),
             const SizedBox(height: 15),
 

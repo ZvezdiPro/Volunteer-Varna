@@ -172,7 +172,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             appBar: AppBar(
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back, color: Colors.black, size: 20),
-                onPressed: () => Navigator.pop(context),
+                onPressed: _isUploadingImage ? () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Моля, изчакайте качването на снимката да приключи!', style: TextStyle(fontWeight: FontWeight.bold)),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                } : () => Navigator.pop(context),
               ),
               title: const Text('Редакция на профила', style: appBarHeadingStyle),
               centerTitle: true,
@@ -232,9 +239,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     // First and Last Name inputs
                     Row(
                       children: [
-                        Expanded(child: _buildTextField('Първо име', _firstNameController)),
+                        Expanded(child: _buildTextField('Първо име', _firstNameController, validationLimit: 30)),
                         const SizedBox(width: 15),
-                        Expanded(child: _buildTextField('Фамилия', _lastNameController)),
+                        Expanded(child: _buildTextField('Фамилия', _lastNameController, validationLimit: 30)),
                       ],
                     ),
                     const SizedBox(height: 25),
@@ -245,18 +252,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     TextFormField(
                       controller: _bioController,
                       maxLines: 4,
-                      maxLength: 300,
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.grey[50],
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade200),
-                        ),
+                      maxLength: 200,
+                      decoration: textInputDecoration.copyWith(
+                        hintText: 'Разкажи за себе си...',
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -338,8 +336,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       elevation: 0,
                     ),
-                    onPressed: _saveChanges,
-                    child: const Text('Запази промените', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                    onPressed: _isUploadingImage ? () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Моля, изчакайте качването на снимката да приключи!', style: TextStyle(fontWeight: FontWeight.bold)),
+                          backgroundColor: Colors.orange,
+                        ),
+                      );
+                    } : _saveChanges,
+                    child: AnimatedOpacity(
+                      opacity: _isUploadingImage ? 0.5 : 1.0,
+                      duration: const Duration(milliseconds: 300),
+                      child: const Text('Запази промените', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                    ),
                   ),
                 ),
               ),
@@ -353,7 +362,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   // Text field builder
-  Widget _buildTextField(String label, TextEditingController controller) {
+  Widget _buildTextField(String label, TextEditingController controller, {int? validationLimit}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -361,13 +370,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
-          validator: (val) => val!.isEmpty ? 'Задължително' : null,
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.grey[50],
+          validator: (val) {
+            if (val == null || val.isEmpty) return 'Задължително';
+            if (validationLimit != null && val.length > validationLimit) return 'Макс. $validationLimit символа';
+            return null;
+          },
+          decoration: textInputDecoration.copyWith(
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200)),
           ),
         ),
       ],

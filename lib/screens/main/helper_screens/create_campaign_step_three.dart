@@ -10,11 +10,13 @@ import 'package:volunteer_app/shared/constants.dart';
 class CreateCampaignStepThree extends StatefulWidget {
   final CampaignData data;
   final GlobalKey<FormState> formKey;
+  final Function(bool) onUploadingChanged;
 
   const CreateCampaignStepThree({
     super.key,
     required this.data,
     required this.formKey,
+    required this.onUploadingChanged,
   });
 
   @override
@@ -61,6 +63,7 @@ class _CreateCampaignStepThreeState extends State<CreateCampaignStepThree> {
         _isUploading = true;
         _displayImage = File(pickedFile.path);
       });
+      widget.onUploadingChanged(true);
 
       // Upload to Firebase Storage
       String uniquePath = 'campaign_uploads/${DateTime.now().millisecondsSinceEpoch}';
@@ -75,6 +78,7 @@ class _CreateCampaignStepThreeState extends State<CreateCampaignStepThree> {
           widget.data.imageUrl = downloadUrl;
           _isUploading = false;
         });
+        widget.onUploadingChanged(false);
         
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Снимката е качена успешно!', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)), backgroundColor: Colors.green),
@@ -88,6 +92,7 @@ class _CreateCampaignStepThreeState extends State<CreateCampaignStepThree> {
         _isUploading = false;
         _displayImage = null;
       });
+      widget.onUploadingChanged(false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Грешка при качване: $e'), backgroundColor: Colors.red),
       );
@@ -221,8 +226,12 @@ class _CreateCampaignStepThreeState extends State<CreateCampaignStepThree> {
             SizedBox(height: 10.0),
             TextFormField(
               scrollPadding: EdgeInsets.only(bottom: 130),
+              maxLength: 300,
+              initialValue: widget.data.instructions,
               decoration: textInputDecoration.copyWith(labelText: 'Допълнителни инструкции', hintText: 'Например: носете ръкавици и чували'),
-              onChanged: (val) => widget.data.instructions = val,
+              onChanged: (val) {
+                widget.data.instructions = val;
+              },
               maxLines: 5,
               keyboardType: TextInputType.multiline,
             ),
@@ -242,7 +251,7 @@ class _CreateCampaignStepThreeState extends State<CreateCampaignStepThree> {
                 backgroundColor: greenPrimary,
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
-              onPressed: _isUploading ? null : _handleImageUpload, 
+              onPressed: _isUploading ? null : _handleImageUpload,
             ),
           ]
         ),

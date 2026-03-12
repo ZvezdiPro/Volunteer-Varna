@@ -54,6 +54,28 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks.first;
 
+        // Restrict to Bulgaria
+        if (place.isoCountryCode != 'BG') {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const SizedBox(
+                  height: 60,
+                  child: Center(
+                    child: Text(
+                      'Кампаниите могат да се провеждат само в България!',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ),
+                ),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+          return;
+        }
+
+        addressString = 'Неизвестна локация';
         final street = place.thoroughfare ?? '';
         final number = place.subThoroughfare ?? '';
         final city = place.locality ?? '';
