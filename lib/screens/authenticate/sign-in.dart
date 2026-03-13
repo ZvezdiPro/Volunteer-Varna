@@ -4,6 +4,7 @@ import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/shared/constants.dart';
 import 'package:volunteer_app/shared/loading.dart';
 import 'package:volunteer_app/widgets/social_button.dart';
+import 'package:volunteer_app/screens/authenticate/forgot_password.dart' as volunteer_app;
 
 class SignIn extends StatefulWidget {
 
@@ -81,6 +82,30 @@ class _SignInState extends State<SignIn> {
                       password = val;
                     });
                   },
+                ),
+
+                SizedBox(height: 10.0),
+
+                // Forgot password link
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const volunteer_app.ForgotPasswordScreen(),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      'Забравена парола?',
+                      style: TextStyle(
+                        color: greenPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ),
 
                 SizedBox(height: 20.0),

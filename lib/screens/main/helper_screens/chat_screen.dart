@@ -166,7 +166,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
           'timestamp': DateTime.now().toIso8601String(),
         }
       });
-      if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Съобщението е закачено!")));
+      if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Съобщението е закачено!", style: TextStyle(fontWeight: FontWeight.bold)), backgroundColor: greenPrimary));
     } catch (e) {
       debugPrint("Pin Error: $e");
     }
@@ -521,8 +521,27 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
                 ListTile(
                   leading: const Icon(Icons.delete, color: Colors.red),
                   title: const Text('Изтрий', style: TextStyle(color: Colors.red)),
-                  onTap: () {
+                  onTap: () async {
                     Navigator.pop(context);
+
+                    // Check if the message is pinned and unpin it if so
+                    try {
+                      final campaignDoc = await FirebaseFirestore.instance.collection('campaigns').doc(widget.campaign.id).get();
+                      if (campaignDoc.exists) {
+                        final data = campaignDoc.data() as Map<String, dynamic>;
+                        if (data.containsKey('pinnedMessage')) {
+                          final pinned = data['pinnedMessage'] as Map<String, dynamic>;
+                          if (pinned['id'] == docId) {
+                            await FirebaseFirestore.instance.collection('campaigns').doc(widget.campaign.id).update({
+                              'pinnedMessage': FieldValue.delete(),
+                            });
+                          }
+                        }
+                      }
+                    } catch (e) {
+                      debugPrint("Error checking/unpinning message: $e");
+                    }
+
                     FirebaseFirestore.instance.collection('campaigns').doc(widget.campaign.id).collection('messages').doc(docId).delete();
                   },
                 ),
