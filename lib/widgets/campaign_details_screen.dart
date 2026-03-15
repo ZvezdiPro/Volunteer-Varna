@@ -9,6 +9,7 @@ import 'package:volunteer_app/shared/colors.dart';
 import 'package:intl/intl.dart';
 import 'package:volunteer_app/shared/constants.dart';
 import 'package:volunteer_app/shared/loading.dart';
+import 'package:volunteer_app/screens/main/helper_screens/public_profile_screen.dart';
 
 class CampaignDetailsScreen extends StatefulWidget {
   final Campaign campaign;
@@ -213,6 +214,55 @@ class _CampaignDetailsScreenState extends State<CampaignDetailsScreen> {
                         ),
                       ),
         
+                      const SizedBox(height: 8),
+
+                      // Organizer info
+                      FutureBuilder<VolunteerUser?>(
+                        future: DatabaseService(uid: widget.campaign.organizerId).getVolunteerUser(),
+                        builder: (context, organizerSnapshot) {
+                          if (organizerSnapshot.hasData && organizerSnapshot.data != null) {
+                            final organizer = organizerSnapshot.data!;
+                            return Center(
+                              child: InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => PublicProfileScreen(volunteer: organizer),
+                                    ),
+                                  );
+                                },
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.withAlpha(25),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: Colors.blue.withAlpha(50)),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.account_circle_outlined, size: 18, color: Colors.blue),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        "Организатор: ${organizer.firstName} ${organizer.lastName}",
+                                        style: TextStyle(
+                                          color: Colors.blue.shade700,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+
                       const SizedBox(height: 15),
         
                       // Location section

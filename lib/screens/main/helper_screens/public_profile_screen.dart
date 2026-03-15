@@ -60,8 +60,8 @@ class _PublicProfileScreenState extends State<PublicProfileScreen> {
     return Scaffold(
       backgroundColor: backgroundGrey, 
       appBar: AppBar(
-        title: const Text('Профил на доброволец', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 18)),
-        backgroundColor: Colors.white,
+        title: const Text('Профил на доброволец', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 20)),
+        backgroundColor: backgroundGrey,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
       ),
