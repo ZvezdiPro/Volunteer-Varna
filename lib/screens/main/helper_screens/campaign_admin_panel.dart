@@ -485,6 +485,64 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
     }
   }
 
+  Future<void> _confirmToggleDelist() async {
+    final bool isCurrentlyDelisted = widget.campaign.isDelisted;
+    final String actionText = isCurrentlyDelisted ? "Списване" : "Сваляне";
+    final String actionDescription = isCurrentlyDelisted 
+        ? "Кампанията отново ще бъде видима за всички в общия списък."
+        : "Кампанията ще бъде скрита от общия списък, но участниците все още ще имат достъп до нея.";
+
+    final bool confirm = await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text("$actionText на кампанията"),
+        content: Text("Сигурни ли сте? $actionDescription"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text("Отказ"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              isCurrentlyDelisted ? "Спиши кампанията" : "Свали кампанията",
+              style: TextStyle(
+                color: Colors.orange,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    ) ?? false;
+
+    if (confirm) {
+      try {
+        await _db.toggleCampaignDelistStatus(widget.campaign.id, isCurrentlyDelisted);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                isCurrentlyDelisted 
+                    ? "Кампанията е успешно добавена в списъка!" 
+                    : "Кампанията е успешно свалена от списъка!",
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              backgroundColor: greenPrimary,
+            ),
+          );
+          Navigator.pop(context, true);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Грешка: $e"), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
   Future<void> _confirmEndCampaign() async {
     final bool confirm =
       await showDialog(
@@ -1028,6 +1086,59 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
                       "Прехвърляне на собственост",
                       style: TextStyle(
                         color: Colors.black87,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 15),
+
+          // Delist Campaign
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.orange.shade50,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.orange.shade200),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.campaign.isDelisted ? "Покажи кампанията отново" : "Скрий кампанията",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    color: Colors.orange,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  widget.campaign.isDelisted 
+                      ? "Кампанията отново ще се показва в общия списък с кампании."
+                      : "Кампанията няма да се показва в общия списък, но участниците все още ще имат достъп до нея.",
+                  style: TextStyle(fontSize: 12, color: Colors.orange.shade800),
+                ),
+                const SizedBox(height: 15),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    onPressed: _confirmToggleDelist,
+                    child: Text(
+                      widget.campaign.isDelisted ? "Покажи" : "Скрий",
+                      style: const TextStyle(
+                        color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

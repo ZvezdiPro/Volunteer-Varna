@@ -124,9 +124,14 @@ class DatabaseService {
     });
   }
 
-  // Stream to get all campaigns from Firestore and map them to Campaign objects
+  // Stream to get all campaigns from Firestore and filter out delisted ones
   Stream<List<Campaign>> get campaigns {
-    return campaignCollection.snapshots().map(_campaignListFromSnapshot);
+    return campaignCollection.snapshots().map((snapshot) {
+      return snapshot.docs
+          .map((doc) => Campaign.fromFirestore(doc))
+          .where((c) => !c.isDelisted)
+          .toList();
+    });
   }
 
   // Stream campaigns the current user has registered for (For "My Campaigns" Screen)
@@ -361,6 +366,14 @@ class DatabaseService {
   Future<void> endCampaign(String campaignId) async {
     return await campaignCollection.doc(campaignId).update({
       'status': 'ended',
+      'updatedAt': DateTime.now(),
+    });
+  }
+
+  // Toggle delist status
+  Future<void> toggleCampaignDelistStatus(String campaignId, bool currentStatus) async {
+    return await campaignCollection.doc(campaignId).update({
+      'isDelisted': !currentStatus,
       'updatedAt': DateTime.now(),
     });
   }

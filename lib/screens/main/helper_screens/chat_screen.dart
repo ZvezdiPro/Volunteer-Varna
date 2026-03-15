@@ -636,7 +636,19 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF2F4F7),
       appBar: AppBar(
-        title: Text(widget.campaign.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        title: StreamBuilder<DocumentSnapshot>(
+          stream: FirebaseFirestore.instance.collection('campaigns').doc(widget.campaign.id).snapshots(),
+          builder: (context, snapshot) {
+            String title = widget.campaign.title;
+            if (snapshot.hasData && snapshot.data!.exists) {
+              final data = snapshot.data!.data() as Map<String, dynamic>?;
+              if (data != null && data.containsKey('title')) {
+                title = data['title'];
+              }
+            }
+            return Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold));
+          },
+        ),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 1,
