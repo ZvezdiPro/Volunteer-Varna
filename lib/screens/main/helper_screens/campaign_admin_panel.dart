@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:volunteer_app/models/campaign.dart';
 import 'package:volunteer_app/models/volunteer.dart';
-import 'package:volunteer_app/screens/main/choose_location.dart';
+import 'package:volunteer_app/screens/main/helper_screens/choose_location.dart';
 import 'package:volunteer_app/screens/main/helper_screens/public_profile_screen.dart';
 import 'package:volunteer_app/services/database.dart';
 import 'package:volunteer_app/shared/colors.dart';

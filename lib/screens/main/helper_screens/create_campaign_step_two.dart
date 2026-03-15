@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/models/campaign_data.dart';
 import 'package:volunteer_app/shared/constants.dart';
-import 'package:volunteer_app/screens/main/choose_location.dart';
+import 'package:volunteer_app/screens/main/helper_screens/choose_location.dart';
 
 class CreateCampaignStepTwo extends StatefulWidget {
   final CampaignData data;
