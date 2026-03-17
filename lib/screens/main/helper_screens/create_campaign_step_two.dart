@@ -298,6 +298,20 @@ class _CreateCampaignStepTwoState extends State<CreateCampaignStepTwo> {
 
   // Universal method to apply date and time changes with validation
   void _applyDateTimeChange(DateTime finalDateTime, bool isStart) {
+    // Check if the new date and time are in the past
+    if (finalDateTime.isBefore(DateTime.now())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Не може да избирате минало време!",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       if (isStart) {
         widget.data.startDate = finalDateTime;

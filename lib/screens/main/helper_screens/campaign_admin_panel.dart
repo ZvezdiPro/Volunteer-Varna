@@ -220,29 +220,39 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
     );
 
     if (picked != null) {
+      final TimeOfDay time = TimeOfDay.fromDateTime(isStart ? _startDate : _endDate);
+      final DateTime newDateTime = DateTime(
+        picked.year,
+        picked.month,
+        picked.day,
+        time.hour,
+        time.minute,
+      );
+
+      // Check if the new date and time are in the past
+      if (newDateTime.isBefore(DateTime.now())) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                "Не може да избирате минало време!",
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+        return;
+      }
+
       setState(() {
         if (isStart) {
-          final TimeOfDay time = TimeOfDay.fromDateTime(_startDate);
-          _startDate = DateTime(
-            picked.year,
-            picked.month,
-            picked.day,
-            time.hour,
-            time.minute,
-          );
-
+          _startDate = newDateTime;
           if (_endDate.isBefore(_startDate)) {
             _endDate = _startDate.add(const Duration(hours: 2));
           }
         } else {
-          final TimeOfDay time = TimeOfDay.fromDateTime(_endDate);
-          _endDate = DateTime(
-            picked.year,
-            picked.month,
-            picked.day,
-            time.hour,
-            time.minute,
-          );
+          _endDate = newDateTime;
         }
 
         _updateControllers();
@@ -279,6 +289,24 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
         picked.hour,
         picked.minute,
       );
+
+      if (newDateTime.isBefore(DateTime.now())) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                "Не може да избирате минало време!",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+        return;
+      }
 
       // Validation
       if (!isStart && newDateTime.isBefore(_startDate)) {

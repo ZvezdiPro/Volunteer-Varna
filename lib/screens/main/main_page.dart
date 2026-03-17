@@ -70,7 +70,7 @@ class _MainPageState extends State<MainPage> {
       backgroundColor: backgroundGrey,
       // Appbar at the top
       appBar: AppBar(
-        title: Text('Volunteer Varna', style: TextStyle(color: greenPrimary, fontSize: 24.0, fontWeight: FontWeight.bold)),
+        title: Text('Volunterra', style: TextStyle(color: greenPrimary, fontSize: 24.0, fontWeight: FontWeight.bold)),
         centerTitle: true,
         backgroundColor: backgroundGrey,
         elevation: 1.0,
@@ -127,6 +127,7 @@ class _MainPageState extends State<MainPage> {
         indicatorColor: greenPrimary.withAlpha(40),
         selectedIndex: currentPageIndex,
         onDestinationSelected: (int index) {
+          if (currentPageIndex == index) return;
           setState(() {
             currentPageIndex = index;
           });
