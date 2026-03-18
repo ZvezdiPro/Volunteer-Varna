@@ -8,6 +8,8 @@ import 'package:volunteer_app/models/volunteer.dart';
 import 'package:volunteer_app/screens/wrapper.dart';
 import 'package:volunteer_app/services/authenticate.dart';
 
+final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
@@ -46,6 +48,7 @@ class _VolunteerAppState extends State<VolunteerApp> {
       value: _authService.user,
       catchError: (_, __) => null,
       child: MaterialApp(
+        scaffoldMessengerKey: scaffoldMessengerKey,
         debugShowCheckedModeBanner: false,
         title: 'Volunteer App',
         theme: ThemeData(

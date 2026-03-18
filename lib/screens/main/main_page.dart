@@ -55,7 +55,7 @@ class _MainPageState extends State<MainPage> {
       );
       
       final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
+      if (user != null && !user.isAnonymous) {
         await DatabaseService(uid: user.uid).updateUserLocation(position.latitude, position.longitude);
       }
     } catch (e) {

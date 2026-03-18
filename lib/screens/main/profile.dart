@@ -20,8 +20,6 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  int _campaignsCount = 0;
-  int _volunteerHours = 0;
   VolunteerUser? _updatedVolunteer;
 
   @override
@@ -40,19 +38,9 @@ class _ProfilePageState extends State<ProfilePage> {
     final DatabaseService dbService = DatabaseService(uid: user.uid);
 
     try {
-      // Fetch both registered and created campaigns in parallel
-      final results = await Future.wait([
-        dbService.registeredCampaigns.first,
-        dbService.createdCampaigns.first,
-      ]);
-
       final fetchedUser = await dbService.getVolunteerUser();
-      final allCampaigns = [...results[0], ...results[1]];
 
       setState(() {
-        _campaignsCount = allCampaigns.length;
-        _volunteerHours = allCampaigns.fold(0, (sum, campaign) => sum + campaign.durationInHours);
-
         if (fetchedUser != null) {
           _updatedVolunteer = fetchedUser;
         }
@@ -111,14 +99,16 @@ class _ProfilePageState extends State<ProfilePage> {
 
               // Full name
               Text(
-                volunteer.firstName.isNotEmpty && volunteer.lastName.isNotEmpty ? '${volunteer.firstName} ${volunteer.lastName}' : 'Временен гост',
+                (volunteer.firstName.isNotEmpty || volunteer.lastName.isNotEmpty) 
+                    ? '${volunteer.firstName} ${volunteer.lastName}'.trim() 
+                    : 'Временен гост',
                 style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
               ),
 
               SizedBox(height: 10.0),
 
               // Edit Profile Button
-              if (volunteer.firstName.isNotEmpty && volunteer.lastName.isNotEmpty)
+              if (volunteer.firstName.isNotEmpty || volunteer.lastName.isNotEmpty)
               SizedBox(
                 width: double.infinity,
                 height: 45.0,
@@ -152,25 +142,42 @@ class _ProfilePageState extends State<ProfilePage> {
               SizedBox(height: 15.0),
 
               // Quick stats
-              Container(
-                padding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(15.0),
-                  boxShadow: [
-                    BoxShadow(color: Colors.grey.shade300, blurRadius: 10, offset: Offset(0, 5)),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildStatItem('$_campaignsCount', 'Кампании'),
-                    _buildVerticalDivider(),
-                    _buildStatItem('$_volunteerHours', 'Часа'),
-                    _buildVerticalDivider(),
-                    _buildStatItem(memberSince, 'Член от'),
-                  ],
-                ),
+              StreamBuilder<List<Campaign>>(
+                stream: DatabaseService(uid: volunteer.uid).registeredCampaigns,
+                builder: (context, registeredSnapshot) {
+                  return StreamBuilder<List<Campaign>>(
+                    stream: DatabaseService(uid: volunteer.uid).createdCampaigns,
+                    builder: (context, createdSnapshot) {
+                      final registered = registeredSnapshot.data ?? [];
+                      final created = createdSnapshot.data ?? [];
+                      final allCampaigns = [...registered, ...created];
+                      
+                      final currentCampaignsCount = allCampaigns.length;
+                      final currentVolunteerHours = allCampaigns.fold(0, (sum, campaign) => sum + campaign.durationInHours);
+
+                      return Container(
+                        padding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15.0),
+                          boxShadow: [
+                            BoxShadow(color: Colors.grey.shade300, blurRadius: 10, offset: Offset(0, 5)),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildStatItem('$currentCampaignsCount', 'Кампании'),
+                            _buildVerticalDivider(),
+                            _buildStatItem('$currentVolunteerHours', 'Часа'),
+                            _buildVerticalDivider(),
+                            _buildStatItem(memberSince, 'Член от'),
+                          ],
+                        ),
+                      );
+                    }
+                  );
+                }
               ),
 
               SizedBox(height: 10.0),

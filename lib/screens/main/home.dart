@@ -38,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context, userSnapshot) {
           
           String firstName = 'доброволец';
-          if (userSnapshot.hasData && userSnapshot.data != null) {
+          if (userSnapshot.hasData && userSnapshot.data != null && userSnapshot.data!.firstName.trim().isNotEmpty) {
             firstName = userSnapshot.data!.firstName;
           }
           

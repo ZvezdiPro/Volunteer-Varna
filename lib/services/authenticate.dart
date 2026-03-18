@@ -93,70 +93,131 @@ class AuthService {
   }
 
   // Sign in with Google
-  Future<VolunteerUser?> googleLogin() async {
-    // Trigger the authentication flow
-    final user = await _googleSignIn.signIn();
- 
-    // If the user cancels the sign-in, user will be null
-    if (user == null) {
-      return null; 
-    }
+  // Returns a VolunteerUser object if successful, String if failed indicating the type of error
+  Future<dynamic> googleLogin() async {
+    try {
+      // Trigger the authentication flow
+      final user = await _googleSignIn.signIn();
 
-    // Obtain the auth details from the request
-    GoogleSignInAuthentication userAuth = await user.authentication;
+      // If the user cancels the sign-in, user will be null
+      if (user == null) {
+        return null; 
+      }
 
-    // Create a new credential
-    var credential = GoogleAuthProvider.credential(
-      idToken: userAuth.idToken, 
-      accessToken: userAuth.accessToken
-    );
+      // Obtain the auth details from the request
+      GoogleSignInAuthentication userAuth = await user.authentication;
 
-    // Sign in to Firebase with the Google credential
-    await FirebaseAuth.instance.signInWithCredential(credential);
+      // Create a new credential
+      var credential = GoogleAuthProvider.credential(
+        idToken: userAuth.idToken, 
+        accessToken: userAuth.accessToken
+      );
 
-    if (_auth.currentUser != null) {
-      RegistrationData data = RegistrationData();
-      data.email = _auth.currentUser!.email ?? '';
-      data.firstName = _auth.currentUser!.displayName?.split(' ').first ?? '';
-      data.lastName = _auth.currentUser!.displayName?.split(' ').last ?? '';
-      data.avatarUrl = _auth.currentUser!.photoURL ?? '';
-
-      // Update the user data in the database (as the user could be new or they could've changed their info)
-      await DatabaseService(uid: _auth.currentUser!.uid).updateUserData(data, isOAuthLogin: true);
-      // Return the VolunteerUser object from the firebase document
-      return await DatabaseService(uid: _auth.currentUser!.uid).getVolunteerUser();
-    }
-    return null;
-  }
-
-  // Sign in with facebook
-  Future<VolunteerUser?> facebookLogin() async {
-    // Trigger the sign-in flow
-    final LoginResult result = await _facebookAuth.login();
-
-    // Check the result status
-    if (result.status == LoginStatus.success) {
-      // Get the access token
-      final AccessToken accessToken = result.accessToken!;
-      // Create a credential from the access token
-      final OAuthCredential credential = FacebookAuthProvider.credential(accessToken.tokenString);
-      // Sign in to Firebase with the Facebook credential
-      await _auth.signInWithCredential(credential);
+      try {
+        // Sign in to Firebase with the Google credential
+        await FirebaseAuth.instance.signInWithCredential(credential);
+      } on FirebaseAuthException catch (e) {
+        return e.message ?? e.toString();
+      }
 
       if (_auth.currentUser != null) {
         RegistrationData data = RegistrationData();
         data.email = _auth.currentUser!.email ?? '';
-        data.firstName = _auth.currentUser!.displayName?.split(' ').first ?? '';
-        data.lastName = _auth.currentUser!.displayName?.split(' ').last ?? '';
+        
+        List<String> nameParts = (_auth.currentUser!.displayName ?? '').trim().split(' ');
+        data.firstName = nameParts.isNotEmpty ? nameParts.first : '';
+        data.lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+        
         data.avatarUrl = _auth.currentUser!.photoURL ?? '';
 
-        // Update the user data in the database
+        // Update the user data in the database (as the user could be new or they could've changed their info)
         await DatabaseService(uid: _auth.currentUser!.uid).updateUserData(data, isOAuthLogin: true);
-        // Return the VolunteerUser object
+        // Return the VolunteerUser object from the firebase document
         return await DatabaseService(uid: _auth.currentUser!.uid).getVolunteerUser();
       }
+      return null;
+    } catch (e) {
+      return e.toString();
     }
-    return null;
+  }
+
+  // Sign in with facebook
+  // Returns a VolunteerUser object if successful, String if failed indicating the type of error
+  Future<dynamic> facebookLogin({
+    Function()? onAccountLinkNeeded,
+    Function()? onAccountLinked,
+  }) async {
+    try {
+      // Trigger the sign-in flow
+      final LoginResult result = await _facebookAuth.login();
+
+      // Check the result status
+      if (result.status == LoginStatus.success) {
+        // Get the access token
+        final AccessToken accessToken = result.accessToken!;
+        // Create a credential from the access token
+        final OAuthCredential credential = FacebookAuthProvider.credential(accessToken.tokenString);
+        bool requiresLinking = false;
+
+        try {
+          // Sign in to Firebase with the Facebook credential
+          await _auth.signInWithCredential(credential);
+        } on FirebaseAuthException catch (e) {
+          if (e.code == 'account-exists-with-different-credential') {
+            final email = e.email;
+            if (email != null) {
+              requiresLinking = true;
+            } else {
+              return 'Имейлът вече се използва.';
+            }
+          } else {
+            return e.message ?? e.toString();
+          }
+        }
+
+        if (requiresLinking) {
+          if (onAccountLinkNeeded != null) onAccountLinkNeeded();
+          
+          // Wait for the user to read the message before presenting the login popup
+          await Future.delayed(const Duration(seconds: 3));
+
+          final googleUser = await _googleSignIn.signIn();
+          if (googleUser != null) {
+            final googleAuth = await googleUser.authentication;
+            final googleCredential = GoogleAuthProvider.credential(
+              idToken: googleAuth.idToken,
+              accessToken: googleAuth.accessToken,
+            );
+            // Sign in with Google
+            final userCredential = await _auth.signInWithCredential(googleCredential);
+            // Link Facebook credential to the existing Google account
+            await userCredential.user!.linkWithCredential(credential);
+            if (onAccountLinked != null) onAccountLinked();
+          } else {
+            return 'Отказахте влизането с Google. Акаунтите не са свързани.';
+          }
+        }
+
+        if (_auth.currentUser != null) {
+          RegistrationData data = RegistrationData();
+          data.email = _auth.currentUser!.email ?? '';
+
+          List<String> nameParts = (_auth.currentUser!.displayName ?? '').trim().split(' ');
+          data.firstName = nameParts.isNotEmpty ? nameParts.first : '';
+          data.lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+
+          data.avatarUrl = _auth.currentUser!.photoURL ?? '';
+
+          // Update the user data in the database
+          await DatabaseService(uid: _auth.currentUser!.uid).updateUserData(data, isOAuthLogin: true);
+          // Return the VolunteerUser object
+          return await DatabaseService(uid: _auth.currentUser!.uid).getVolunteerUser();
+        }
+      }
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
   }
 
   // Sign in anonymously
