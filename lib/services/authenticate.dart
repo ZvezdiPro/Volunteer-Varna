@@ -15,7 +15,7 @@ class AuthService {
   // Maps the Firebase User to a VolunteerUser using asyncMap
   // and the helper method which uses the id to fetch the full data
   Stream<VolunteerUser?> get user {
-    return _auth.authStateChanges().asyncMap(_fullUserFromFirebaseUser);
+    return _auth.userChanges().asyncMap(_fullUserFromFirebaseUser);
   }
 
   // Create user object based on Firebase User
@@ -54,6 +54,10 @@ class AuthService {
       UserCredential result = await _auth.createUserWithEmailAndPassword(email: email, password: password);
       // Get the newly created firebase (authenticated) user (could be null)
       User? user = result.user;
+      
+      // Send email verification
+      await user?.sendEmailVerification();
+      
       // Create a new document for the user with the uid using the registration data
       await DatabaseService(uid: user!.uid).updateUserData(data);
       // Return the VolunteerUser object using both Firebase User (for the uid) and registration data

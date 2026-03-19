@@ -22,10 +22,19 @@ class DatabaseService {
     final docRef = volunteerCollection.doc(uid);
     final documentSnapshot = await docRef.get();
 
-    // If the doc exists and it's a Google/Facebook login, we only update the updatedAt field
-    // Because the user data is already in the database
+    // If the doc exists and it's a Google/Facebook login, we check if the email is verified
     if (documentSnapshot.exists && isOAuthLogin) {
-      return await docRef.update({'updatedAt': DateTime.now()});
+      bool isEmailVerified = true;
+      final docData = documentSnapshot.data() as Map<String, dynamic>?;
+      if (docData != null && docData.containsKey('isEmailVerified')) {
+        isEmailVerified = docData['isEmailVerified'];
+      }
+
+      // If already verified, we skip overwriting the profile and just update timestamp
+      if (isEmailVerified) {
+        return await docRef.update({'updatedAt': DateTime.now()});
+      }
+      // If NOT verified, we will proceed below to overwrite their unverified profile with OAuth data!
     }
 
     // We create a dictionary to hold the user data
@@ -36,6 +45,11 @@ class DatabaseService {
       'updatedAt': DateTime.now(),
       'avatarUrl': data.avatarUrl,
     };
+
+    // If it's an OAuth login, we are verifying the email implicitly
+    if (isOAuthLogin) {
+      userData['isEmailVerified'] = true;
+    }
 
     // Optional fields
     if (data.bio != null && data.bio!.isNotEmpty) userData['bio'] = data.bio;
@@ -48,6 +62,10 @@ class DatabaseService {
       userData['experiencePoints'] = 0;
       userData['userLevel'] = 1;
       userData['interests'] = data.interests;
+      if (!isOAuthLogin) {
+        userData['isEmailVerified'] = false; // Fresh email registration is unverified
+      }
+      
       // If the user hasn't put values to these optional fields
       // Then we set them to default values (empty string or null)
       if (!userData.containsKey('bio')) {
@@ -62,6 +80,15 @@ class DatabaseService {
     }
 
     return await docRef.set(userData, SetOptions(merge: true));
+  }
+
+  // Mark email as verified
+  Future<void> markEmailAsVerified() async {
+    if (uid == null) return;
+    return await volunteerCollection.doc(uid).update({
+      'isEmailVerified': true,
+      'updatedAt': DateTime.now(),
+    });
   }
 
   // Method to create or update campaign data
