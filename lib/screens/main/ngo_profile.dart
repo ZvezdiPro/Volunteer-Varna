@@ -165,32 +165,7 @@ class _NGOProfilePageState extends State<NGOProfilePage> {
                       elevation: 0,
                     ),
                   ),
-                )
-                else if (userObj is VolunteerUser)
-                  SizedBox(
-                    width: double.infinity,
-                    height: 45,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Функцията за последване ще бъде налична скоро.',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            backgroundColor: greenPrimary,
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.person_add, color: Colors.white, size: 18),
-                      label: const Text('Последвай НПО', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: greenPrimary,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        elevation: 0,
-                      ),
-                    ),
-                  ),
+                ),
                 
                 const SizedBox(height: 20),
 

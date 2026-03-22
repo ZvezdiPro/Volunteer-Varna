@@ -156,6 +156,14 @@ class AuthService {
       }
 
       if (_auth.currentUser != null) {
+        final String uid = _auth.currentUser!.uid;
+
+        // Check if the user is an NGO first
+        final ngo = await DatabaseService(uid: uid).getNgo();
+        if (ngo != null) {
+          return ngo;
+        }
+
         RegistrationData data = RegistrationData();
         data.email = _auth.currentUser!.email ?? '';
         
@@ -166,9 +174,9 @@ class AuthService {
         data.avatarUrl = _auth.currentUser!.photoURL ?? '';
 
         // Update the user data in the database (as the user could be new or they could've changed their info)
-        await DatabaseService(uid: _auth.currentUser!.uid).updateUserData(data, isOAuthLogin: true);
+        await DatabaseService(uid: uid).updateUserData(data, isOAuthLogin: true);
         // Return the VolunteerUser object from the firebase document
-        return await DatabaseService(uid: _auth.currentUser!.uid).getVolunteerUser();
+        return await DatabaseService(uid: uid).getVolunteerUser();
       }
       return null;
     } catch (e) {
@@ -234,6 +242,14 @@ class AuthService {
         }
 
         if (_auth.currentUser != null) {
+          final String uid = _auth.currentUser!.uid;
+
+          // Check if the user is an NGO first
+          final ngo = await DatabaseService(uid: uid).getNgo();
+          if (ngo != null) {
+            return ngo;
+          }
+
           RegistrationData data = RegistrationData();
           data.email = _auth.currentUser!.email ?? '';
 
@@ -244,9 +260,9 @@ class AuthService {
           data.avatarUrl = _auth.currentUser!.photoURL ?? '';
 
           // Update the user data in the database
-          await DatabaseService(uid: _auth.currentUser!.uid).updateUserData(data, isOAuthLogin: true);
+          await DatabaseService(uid: uid).updateUserData(data, isOAuthLogin: true);
           // Return the VolunteerUser object
-          return await DatabaseService(uid: _auth.currentUser!.uid).getVolunteerUser();
+          return await DatabaseService(uid: uid).getVolunteerUser();
         }
       }
       return null;

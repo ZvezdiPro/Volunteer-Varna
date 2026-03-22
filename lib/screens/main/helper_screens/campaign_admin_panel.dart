@@ -974,8 +974,14 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
                   itemBuilder: (context, index) {
                     final user = _volunteers![index];
                     return Container(
-                      margin: const EdgeInsets.only(bottom: 1),
-                      color: Colors.white,
+                      decoration: BoxDecoration(
+                        color: backgroundGrey,
+                        border: index == _volunteers!.length - 1
+                            ? null
+                            : Border(
+                                bottom: BorderSide(color: Colors.grey.shade300, width: 1.5),
+                              ),
+                      ),
                       child: ListTile(
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 20,

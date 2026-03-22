@@ -102,33 +102,82 @@ class _PublicNgoScreenState extends State<PublicNgoScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                if (!isSameNgo && userObj is VolunteerUser)
+                if (!isSameNgo && (userObj == null || userObj is VolunteerUser))
                   SizedBox(
                     width: double.infinity,
                     height: 45,
                     child: ElevatedButton.icon(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Функцията за последване ще бъде налична скоро.',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                      onPressed: () async {
+                        final volunteerUser = userObj as VolunteerUser;
+
+                        if (volunteerUser.email.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Тази функция е достъпна само за регистрирани потребители.',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              backgroundColor: Colors.orange,
+                              behavior: SnackBarBehavior.floating,
                             ),
-                            backgroundColor: greenPrimary,
-                          ),
-                        );
+                          );
+                          return;
+                        }
+
+                        final isFollowing = ngo.followers.contains(volunteerUser.uid);
+                        
+                        try {
+                          await DatabaseService(uid: volunteerUser.uid).toggleFollowNgo(ngo.id, isFollowing);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  isFollowing 
+                                    ? 'Успешно отпоследвахте ${ngo.name}.' 
+                                    : 'Успешно последвахте ${ngo.name}!',
+                                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                                ),
+                                backgroundColor: isFollowing ? Colors.red : greenPrimary,
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                               SnackBar(
+                                 content: Text('Възникна грешка: $e', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                 backgroundColor: Colors.red,
+                                 behavior: SnackBarBehavior.floating,
+                               ),
+                            );
+                          }
+                        }
                       },
-                      icon: const Icon(Icons.person_add, color: Colors.white, size: 18),
-                      label: const Text('Последвай НПО', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      icon: Icon(
+                        (userObj != null && ngo.followers.contains((userObj as VolunteerUser).uid)) 
+                           ? Icons.person_remove 
+                           : Icons.person_add, 
+                        color: Colors.white, 
+                        size: 18
+                      ),
+                      label: Text(
+                        (userObj != null && ngo.followers.contains((userObj as VolunteerUser).uid)) 
+                           ? 'Отпоследвай' 
+                           : 'Последвай НПО', 
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)
+                      ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: greenPrimary,
+                        backgroundColor: (userObj != null && ngo.followers.contains((userObj as VolunteerUser).uid))
+                           ? Colors.red
+                           : greenPrimary,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         elevation: 0,
                       ),
                     ),
                   ),
                 
-                if (!isSameNgo && userObj is VolunteerUser)
+                if (!isSameNgo && (userObj == null || userObj is VolunteerUser))
                   const SizedBox(height: 20),
 
                 // Impact Stats (Members, Campaigns, Followers)

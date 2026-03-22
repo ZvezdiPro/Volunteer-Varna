@@ -34,6 +34,10 @@ class _NgoAdminPanelState extends State<NgoAdminPanel> {
   
   List<VolunteerUser>? _members;
   bool _isLoadingMembers = true;
+  
+  List<VolunteerUser>? _followers;
+  bool _isLoadingFollowers = true;
+
   late NGO _currentNgo;
 
   @override
@@ -52,6 +56,7 @@ class _NgoAdminPanelState extends State<NgoAdminPanel> {
     _igController = TextEditingController(text: _currentNgo.socialLinks['instagram'] ?? '');
 
     _loadMembers();
+    _loadFollowers();
   }
 
   @override
@@ -89,6 +94,25 @@ class _NgoAdminPanelState extends State<NgoAdminPanel> {
       }
     } catch (e) {
       if (mounted) setState(() => _isLoadingMembers = false);
+    }
+  }
+
+  Future<void> _loadFollowers() async {
+    setState(() => _isLoadingFollowers = true);
+    try {
+      if (_currentNgo.followers.isEmpty) {
+        if (mounted) setState(() { _followers = []; _isLoadingFollowers = false; });
+        return;
+      }
+      List<VolunteerUser> users = await _db.getVolunteersFromList(_currentNgo.followers);
+      if (mounted) {
+        setState(() {
+          _followers = users;
+          _isLoadingFollowers = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoadingFollowers = false);
     }
   }
 
@@ -213,7 +237,7 @@ class _NgoAdminPanelState extends State<NgoAdminPanel> {
         }
       },
       child: DefaultTabController(
-        length: 2,
+        length: 3,
         child: Scaffold(
           backgroundColor: backgroundGrey,
           appBar: AppBar(
@@ -228,6 +252,7 @@ class _NgoAdminPanelState extends State<NgoAdminPanel> {
               tabs: [
                 Tab(text: "Детайли"),
                 Tab(text: "Членове"),
+                Tab(text: "Последователи"),
               ],
             ),
           ),
@@ -236,6 +261,7 @@ class _NgoAdminPanelState extends State<NgoAdminPanel> {
               children: [
                 _buildGeneralTab(),
                 _buildMembersTab(),
+                _buildFollowersTab(),
               ],
             ),
           ),
@@ -387,6 +413,54 @@ class _NgoAdminPanelState extends State<NgoAdminPanel> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+  Widget _buildFollowersTab() {
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("Списък с последователи", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          
+          Expanded(
+            child: _isLoadingFollowers
+              ? const Center(child: CircularProgressIndicator())
+              : (_followers == null || _followers!.isEmpty)
+                  ? Center(child: Text("Все още няма последователи.", style: TextStyle(color: Colors.grey[600])))
+                  : ListView.builder(
+                      itemCount: _followers!.length,
+                      itemBuilder: (context, index) {
+                        final vol = _followers![index];
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 15),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                          elevation: 1,
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.only(left: 16.0, right: 12.0, top: 4.0, bottom: 4.0),
+                            leading: CircleAvatar(
+                              backgroundColor: blueSecondary,
+                              backgroundImage: vol.avatarUrl != null ? NetworkImage(vol.avatarUrl!) : null,
+                              child: vol.avatarUrl == null ? Text(vol.firstName[0], style: const TextStyle(color: Colors.white)) : null,
+                            ),
+                            title: Text("${vol.firstName} ${vol.lastName}", style: const TextStyle(fontWeight: FontWeight.bold)),
+                            subtitle: Text(vol.email),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => PublicProfileScreen(volunteer: vol),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
           ),
         ],
       ),

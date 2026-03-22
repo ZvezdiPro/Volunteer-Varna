@@ -527,6 +527,25 @@ class DatabaseService {
     });
   }
 
+  // Stream to get NGOs the user follows or is a member of
+  Stream<List<NGO>> get userNgos {
+    if (uid == null) return Stream.value([]);
+
+    return ngoCollection
+        .where(
+          Filter.or(
+            Filter('followers', arrayContains: uid),
+            Filter('members', arrayContains: uid),
+          ),
+        )
+        .snapshots()
+        .map(_ngoListFromSnapshot);
+  }
+
+  List<NGO> _ngoListFromSnapshot(QuerySnapshot snapshot) {
+    return snapshot.docs.map((doc) => NGO.fromFirestore(doc)).toList();
+  }
+
   // Update NGO general information
   Future<void> updateNgoInfo(Map<String, dynamic> data) async {
     if (uid == null) return;
@@ -564,5 +583,17 @@ class DatabaseService {
           return fullName.contains(lowerQuery) || user.email.toLowerCase().contains(lowerQuery);
         })
         .toList();
+  }
+
+  // Toggle following an NGO
+  Future<void> toggleFollowNgo(String targetNgoId, bool isFollowing) async {
+    if (uid == null) return;
+    
+    // Update target NGO's followers list
+    await ngoCollection.doc(targetNgoId).update({
+      'followers': isFollowing 
+          ? FieldValue.arrayRemove([uid]) 
+          : FieldValue.arrayUnion([uid])
+    });
   }
 }
