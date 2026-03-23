@@ -19,8 +19,25 @@ class NGOProfilePage extends StatefulWidget {
   State<NGOProfilePage> createState() => _NGOProfilePageState();
 }
 
-class _NGOProfilePageState extends State<NGOProfilePage> {
-  
+class _NGOProfilePageState extends State<NGOProfilePage> with AutomaticKeepAliveClientMixin {
+  Stream<NGO?>? _ngoDataStream;
+  Stream<List<Campaign>>? _createdCampaignsStream;
+  bool _isInit = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isInit) {
+      final userObj = Provider.of<Object?>(context);
+      final String? currentUid = widget.requestedUid ?? (userObj is NGO ? userObj.id : (userObj is VolunteerUser ? userObj.uid : null));
+      if (currentUid != null) {
+        _ngoDataStream = DatabaseService(uid: currentUid).ngoData;
+        _createdCampaignsStream = DatabaseService(uid: currentUid).createdCampaigns;
+      }
+      _isInit = true;
+    }
+  }
+
   Future<void> _launchURL(String? urlString) async {
     if (urlString == null || urlString.isEmpty) return;
     String formattedUrl = urlString;
@@ -38,7 +55,11 @@ class _NGOProfilePageState extends State<NGOProfilePage> {
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     final userObj = Provider.of<Object?>(context);
     final String? currentUid = widget.requestedUid ?? (userObj is NGO ? userObj.id : (userObj is VolunteerUser ? userObj.uid : null));
 
@@ -55,7 +76,7 @@ class _NGOProfilePageState extends State<NGOProfilePage> {
     }
 
     return StreamBuilder<NGO?>(
-      stream: DatabaseService(uid: currentUid).ngoData,
+      stream: _ngoDataStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
@@ -297,7 +318,7 @@ class _NGOProfilePageState extends State<NGOProfilePage> {
 
   Widget _buildImpactStats(NGO ngo) {
     return StreamBuilder<List<Campaign>>(
-      stream: DatabaseService(uid: ngo.id).createdCampaigns,
+      stream: _createdCampaignsStream,
       builder: (context, snapshot) {
         final campaignsCount = snapshot.hasData ? snapshot.data!.length : 0;
         
@@ -438,7 +459,7 @@ class _NGOProfilePageState extends State<NGOProfilePage> {
 
   Widget _buildHostedCampaigns(String ngoId) {
     return StreamBuilder<List<Campaign>>(
-      stream: DatabaseService(uid: ngoId).createdCampaigns,
+      stream: _createdCampaignsStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator(color: greenPrimary));

@@ -5,8 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:volunteer_app/models/campaign.dart';
 import 'package:volunteer_app/models/volunteer.dart';
 import 'package:volunteer_app/screens/main/helper_screens/edit_profile_screen.dart';
-import 'package:volunteer_app/screens/main/helper_screens/settings.dart';
-import 'package:volunteer_app/screens/main/helper_screens/achievements.dart';
 import 'package:volunteer_app/screens/main/helper_screens/saved_campaigns.dart';
 import 'package:volunteer_app/services/database.dart';
 import 'package:volunteer_app/shared/colors.dart';
@@ -21,12 +19,19 @@ class ProfilePage extends StatefulWidget {
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClientMixin {
   VolunteerUser? _updatedVolunteer;
+
+  late Stream<List<Campaign>> _registeredCampaignsStream;
+  late Stream<List<Campaign>> _createdCampaignsStream;
 
   @override
   void initState() {
     super.initState();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    _registeredCampaignsStream = DatabaseService(uid: uid).registeredCampaigns;
+    _createdCampaignsStream = DatabaseService(uid: uid).createdCampaigns;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadProfileData(); 
     });
@@ -53,7 +58,11 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
 
     final Object? userObj = Provider.of<Object?>(context);
     final VolunteerUser? providerVolunteer = userObj is VolunteerUser ? userObj : null;
@@ -149,10 +158,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
               // Quick stats
               StreamBuilder<List<Campaign>>(
-                stream: DatabaseService(uid: volunteer.uid).registeredCampaigns,
+                stream: _registeredCampaignsStream,
                 builder: (context, registeredSnapshot) {
                   return StreamBuilder<List<Campaign>>(
-                    stream: DatabaseService(uid: volunteer.uid).createdCampaigns,
+                    stream: _createdCampaignsStream,
                     builder: (context, createdSnapshot) {
                       final registered = registeredSnapshot.data ?? [];
                       final created = createdSnapshot.data ?? [];
@@ -195,9 +204,14 @@ class _ProfilePageState extends State<ProfilePage> {
                 Colors.orange.shade100,
                 accentAmber,
                 () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const AchievementsPage()),
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        "Постиженията ще бъдат налични скоро!",
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+                      backgroundColor: blueSecondary,
+                    ),
                   );
                 },),
 
@@ -226,9 +240,14 @@ class _ProfilePageState extends State<ProfilePage> {
                 Colors.blue.shade100,
                 Colors.blue,
                 () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const SettingsPage()),
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        "Настройките ще бъдат налични скоро!",
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+                      backgroundColor: blueSecondary,
+                    ),
                   );
                 },
               ),
@@ -249,12 +268,12 @@ class _ProfilePageState extends State<ProfilePage> {
 
               // Recent campaigns list (registered + created, sorted by date)
               StreamBuilder<List<Campaign>>(
-                stream: DatabaseService(uid: volunteer.uid).registeredCampaigns,
+                stream: _registeredCampaignsStream,
                 builder: (context, registeredSnapshot) {
                                     
                   // Nested StreamBuilder for created campaigns
                   return StreamBuilder<List<Campaign>>(
-                    stream: DatabaseService(uid: volunteer.uid).createdCampaigns,
+                    stream: _createdCampaignsStream,
                     builder: (context, createdSnapshot) {
                       
                       if (registeredSnapshot.connectionState == ConnectionState.waiting && 

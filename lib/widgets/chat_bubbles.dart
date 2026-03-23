@@ -1,9 +1,11 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:volunteer_app/screens/main/helper_screens/video_player_screen.dart';
+import 'package:volunteer_app/screens/main/helper_screens/image_viewer_screen.dart';
 import 'package:volunteer_app/shared/colors.dart';
 
 // Main widget for displaying individual chat messages
@@ -16,6 +18,7 @@ class ChatBubble extends StatelessWidget {
   final String? contactName;
   final String? contactPhone;
   final String? duration; // Duration for audio
+  final double? aspectRatio;
   final bool isMe;
   final String senderName;
   final DateTime timestamp;
@@ -39,6 +42,7 @@ class ChatBubble extends StatelessWidget {
     this.contactName,
     this.contactPhone,
     this.duration,
+    this.aspectRatio,
     required this.isMe,
     required this.senderName,
     required this.timestamp,
@@ -130,6 +134,20 @@ class ChatBubble extends StatelessWidget {
                       ),
                     ),
 
+                  // Sender name (show for all messages except when it's me)
+                  if (!isMe)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
+                      child: Text(
+                        senderName,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.orange[800],
+                        ),
+                      ),
+                    ),
+
                   // Content based on message type
                   if (type == 'audio' && fileUrl != null)
                     AudioBubble(
@@ -143,14 +161,70 @@ class ChatBubble extends StatelessWidget {
                       child: VideoThumbnailPlaceholder(videoUrl: fileUrl!),
                     )
                   else if (type == 'image' && fileUrl != null)
-                    ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                      child: Image.network(
-                        fileUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => const SizedBox(
-                          height: 150,
-                          child: Center(child: Icon(Icons.broken_image)),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(
+                          builder: (_) => ImageViewerScreen(
+                            imageUrl: fileUrl!,
+                            title: senderName,
+                          )
+                        ));
+                      },
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            maxHeight: 400,
+                            minHeight: 150,
+                            minWidth: 150,
+                          ),
+                          child: aspectRatio != null
+                              ? AspectRatio(
+                                  aspectRatio: aspectRatio!,
+                                  child: CachedNetworkImage(
+                                    imageUrl: fileUrl!,
+                                    fadeInDuration: Duration.zero,
+                                    fadeOutDuration: Duration.zero,
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, url) => Container(
+                                      color: Colors.grey[200],
+                                      child: const Center(
+                                        child: SizedBox(
+                                          width: 30,
+                                          height: 30,
+                                          child: CircularProgressIndicator(strokeWidth: 2, color: greenPrimary)
+                                        )
+                                      ),
+                                    ),
+                                    errorWidget: (context, url, error) => Container(
+                                      color: Colors.grey[200],
+                                      child: const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+                                    ),
+                                  ),
+                                )
+                              : CachedNetworkImage(
+                                  imageUrl: fileUrl!,
+                                  fadeInDuration: Duration.zero,
+                                  fadeOutDuration: Duration.zero,
+                                  placeholder: (context, url) => Container(
+                                    height: 150,
+                                    width: 220,
+                                    color: Colors.grey[200],
+                                    child: const Center(
+                                      child: SizedBox(
+                                        width: 30,
+                                        height: 30,
+                                        child: CircularProgressIndicator(strokeWidth: 2, color: greenPrimary)
+                                      )
+                                    ),
+                                  ),
+                                  errorWidget: (context, url, error) => Container(
+                                    height: 150,
+                                    width: 220,
+                                    color: Colors.grey[200],
+                                    child: const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+                                  ),
+                                ),
                         ),
                       ),
                     )
@@ -175,19 +249,6 @@ class ChatBubble extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (!isMe)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 4),
-                              child: Text(
-                                senderName,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.orange[800],
-                                ),
-                              ),
-                            ),
-                          
                           if (message.isNotEmpty)
                             Linkify(
                               onOpen: _onOpenLink,

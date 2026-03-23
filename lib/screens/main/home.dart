@@ -19,19 +19,33 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMixin {
   late String _currentUid;
   late DatabaseService _dbService;
+
+  late Stream<VolunteerUser?> _userDataStream;
+  late Stream<List<Campaign>> _campaignsStream;
+  late Stream<List<Campaign>> _registeredCampaignsStream;
+  late Stream<List<Campaign>> _createdCampaignsStream;
 
   @override
   void initState() {
     super.initState();
     _currentUid = FirebaseAuth.instance.currentUser?.uid ?? ''; 
     _dbService = DatabaseService(uid: _currentUid);
+
+    _userDataStream = _dbService.volunteerUserData;
+    _campaignsStream = _dbService.campaigns;
+    _registeredCampaignsStream = _dbService.registeredCampaigns;
+    _createdCampaignsStream = _dbService.createdCampaigns;
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     final userObj = Provider.of<Object?>(context);
     final bool isNgo = userObj is NGO;
     final NGO? ngoUser = isNgo ? userObj : null;
@@ -40,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
       color: backgroundGrey,
       // StreamBuilder for user's data
       child: StreamBuilder<VolunteerUser?>(
-        stream: _dbService.volunteerUserData,
+        stream: _userDataStream,
         builder: (context, userSnapshot) {
           
           String greetingName = 'доброволец';
@@ -75,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 // Campaign listener
                 StreamBuilder<List<Campaign>>(
-                  stream: _dbService.campaigns,
+                  stream: _campaignsStream,
                   builder: (context, campaignSnapshot) {
                     if (campaignSnapshot.connectionState == ConnectionState.waiting && !campaignSnapshot.hasData) {
                       return const Padding(
@@ -213,11 +227,11 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       // StreamBuilders for registered campaigns and created campaigns
       child: StreamBuilder<List<Campaign>>(
-        stream: _dbService.registeredCampaigns,
+        stream: _registeredCampaignsStream,
         builder: (context, registeredSnapshot) {
           
           return StreamBuilder<List<Campaign>>(
-            stream: _dbService.createdCampaigns,
+            stream: _createdCampaignsStream,
             builder: (context, createdSnapshot) {
               
               if (registeredSnapshot.connectionState == ConnectionState.waiting ||

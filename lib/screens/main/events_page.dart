@@ -19,7 +19,7 @@ class EventsPage extends StatefulWidget {
   State<EventsPage> createState() => _EventsPageState();
 }
 
-class _EventsPageState extends State<EventsPage> {
+class _EventsPageState extends State<EventsPage> with AutomaticKeepAliveClientMixin {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   
   String _searchQuery = '';
@@ -27,6 +27,28 @@ class _EventsPageState extends State<EventsPage> {
   DateTime? _selectedDate;
   bool _showSavedOnly = false;
   bool _showAll = false;
+
+  late Stream<List<Campaign>?> _campaignsStream;
+  Stream<dynamic>? _userDataStream;
+  bool _isInit = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isInit) {
+      _campaignsStream = DatabaseService().campaigns;
+      
+      final userUid = _auth.currentUser?.uid;
+      final Object? authUserObj = Provider.of<Object?>(context);
+      final bool isNgo = authUserObj is NGO;
+      
+      _userDataStream = isNgo 
+          ? DatabaseService(uid: userUid).ngoData 
+          : DatabaseService(uid: userUid).volunteerUserData;
+          
+      _isInit = true;
+    }
+  }
 
   final List<String> _categories = [
     'Образование', 'Екология', 'Животни', 'Грижа за деца', 'Спорт', 'Здраве',
@@ -151,16 +173,19 @@ class _EventsPageState extends State<EventsPage> {
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
-    final userUid = _auth.currentUser?.uid;
+    super.build(context);
     final Object? authUserObj = Provider.of<Object?>(context);
     final bool isNgo = authUserObj is NGO;
     
     return StreamProvider<List<Campaign>?>.value(
-      value: DatabaseService().campaigns,
+      value: _campaignsStream,
       initialData: null,
       child: StreamBuilder<dynamic>(
-        stream: isNgo ? DatabaseService(uid: userUid).ngoData : DatabaseService(uid: userUid).volunteerUserData,
+        stream: _userDataStream,
         builder: (context, userSnapshot) {
           final dynamic user = userSnapshot.data;
           return Scaffold(

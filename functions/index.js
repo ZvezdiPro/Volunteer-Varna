@@ -259,7 +259,23 @@ exports.notifyOnChatMessage = functions.firestore
         
         const senderId = messageData.senderId;
         const senderName = messageData.senderName || "Доброволец";
-        let messageText = messageData.text;
+        const type = messageData.type || "text";
+        let messageText = messageData.text || "";
+
+        if (messageText.trim() === "") {
+            if (type === "image") messageText = "📷 Снимка";
+            else if (type === "audio") messageText = "🎤 Гласово съобщение";
+            else if (type === "video") messageText = "🎥 Видео";
+            else if (type === "file") {
+                messageText = messageData.fileName ? `📄 Файл: ${messageData.fileName}` : "📄 Файл";
+            }
+            else if (type === "contact") {
+                messageText = messageData.contactName ? `👤 Контакт: ${messageData.contactName}` : "👤 Контакт";
+            }
+            else messageText = "Медия";
+        } else if (type === "contact") {
+            messageText = messageData.contactName ? `👤 Контакт: ${messageData.contactName}` : "👤 Контакт";
+        }
 
         // Fetch campaign details
         const campaignDoc = await admin.firestore().collection("campaigns").doc(campaignId).get();
@@ -642,5 +658,125 @@ exports.notifyNgoOnNewFollower = functions.firestore
                 console.error("Error sending new follower notification:", error);
             }
         }
+        return null;
+    });
+
+exports.notifyOnNgoChatMessage = functions.firestore
+    .document("ngos/{ngoId}/messages/{messageId}")
+    .onCreate(async (snap, context) => {
+        const messageData = snap.data();
+        const ngoId = context.params.ngoId;
+        
+        const senderId = messageData.senderId;
+        const senderName = messageData.senderName || "Организация";
+        const type = messageData.type || "text";
+        let messageText = messageData.text || "";
+
+        if (messageText.trim() === "") {
+            if (type === "image") messageText = "📷 Снимка";
+            else if (type === "audio") messageText = "🎤 Гласово съобщение";
+            else if (type === "video") messageText = "🎥 Видео";
+            else if (type === "file") {
+                messageText = messageData.fileName ? `📄 Файл: ${messageData.fileName}` : "📄 Файл";
+            }
+            else if (type === "contact") {
+                messageText = messageData.contactName ? `👤 Контакт: ${messageData.contactName}` : "👤 Контакт";
+            }
+            else messageText = "Медия";
+        } else if (type === "contact") {
+            messageText = messageData.contactName ? `👤 Контакт: ${messageData.contactName}` : "👤 Контакт";
+        }
+
+        // Fetch NGO details
+        const ngoDoc = await admin.firestore().collection("ngos").doc(ngoId).get();
+        if (!ngoDoc.exists) return null;
+
+        const ngoData = ngoDoc.data();
+        const ngoTitle = ngoData.name || "Организация";
+        const members = ngoData.members || [];
+        const admins = ngoData.admins || [];
+
+        // Combine all participants
+        let participants = new Set([...members, ...admins]);
+
+        // Remove the sender from the receivers list
+        if (senderId) {
+            participants.delete(senderId);
+        }
+
+        if (participants.size === 0) return null;
+
+        const receiversArray = Array.from(participants);
+        const tokens = [];
+
+        try {
+            // Fetch tokens in chunks of 30
+            const chunks = [];
+            for (let i = 0; i < receiversArray.length; i += 30) {
+                chunks.push(receiversArray.slice(i, i + 30));
+            }
+
+            for (const chunk of chunks) {
+                const snapshot = await admin.firestore()
+                    .collection("volunteers")
+                    .where(admin.firestore.FieldPath.documentId(), "in", chunk)
+                    .get();
+
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (data.fcmToken) {
+                        tokens.push(data.fcmToken);
+                    }
+                });
+            }
+        } catch (error) {
+            console.error("Error fetching tokens for NGO chat message:", error);
+            return null;
+        }
+
+        if (tokens.length === 0) return null;
+
+        // Truncate message text if too long
+        if (messageText && messageText.length > 100) {
+            messageText = messageText.substring(0, 97) + "...";
+        }
+
+        const baseMessage = {
+            notification: {
+                title: `${ngoTitle} - инфо канал`,
+                body: `${senderName}: ${messageText}`,
+            },
+            data: {
+                ngoId: ngoId,
+                type: "ngo_chat_message",
+            }
+        };
+
+        const promises = tokens.map(token => {
+            const pushMessage = {
+                ...baseMessage,
+                token: token
+            };
+            return admin.messaging().send(pushMessage);
+        });
+
+        try {
+            const responses = await Promise.allSettled(promises);
+            let successCount = 0;
+            let failureCount = 0;
+
+            responses.forEach((resp) => {
+                if (resp.status === 'fulfilled') {
+                    successCount++;
+                } else {
+                    failureCount++;
+                }
+            });
+
+            console.log(`NGO chat message: ${successCount} notifications sent successfully, ${failureCount} failed.`);
+        } catch (error) {
+            console.error("Fatal error sending NGO chat notifications:", error);
+        }
+
         return null;
     });

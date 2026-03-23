@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
+import 'dart:ui' as ui;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
@@ -48,6 +49,21 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
   bool _isUploading = false;
   bool _isSharing = false;
 
+  late final Stream<DocumentSnapshot> _campaignStream;
+  late final Stream<QuerySnapshot> _messagesStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _campaignStream = FirebaseFirestore.instance.collection('campaigns').doc(widget.campaign.id).snapshots();
+    _messagesStream = FirebaseFirestore.instance
+        .collection('campaigns')
+        .doc(widget.campaign.id)
+        .collection('messages')
+        .orderBy('timestamp', descending: true)
+        .snapshots();
+  }
+
   String get _currentUid => widget.currentUser is NGO ? widget.currentUser.id : widget.currentUser.uid;
   String get _currentName => widget.currentUser is NGO ? widget.currentUser.name : widget.currentUser.firstName;
 
@@ -90,9 +106,9 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
       await Dio().download(fileUrl, filePath);
 
       if (type == 'image') {
-        await Gal.putImage(filePath, album: 'VolunteerApp');
+        await Gal.putImage(filePath, album: 'Volunterra');
       } else if (type == 'video') {
-        await Gal.putVideo(filePath, album: 'VolunteerApp');
+        await Gal.putVideo(filePath, album: 'Volunterra');
       }
 
       try {
@@ -102,7 +118,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Center(child: Text("Запазено в Галерията! (Албум VolunteerApp)")),
+            content: Text("Запазено в галерията! (Албум Volunterra)", style: TextStyle(fontWeight: FontWeight.bold)),
             backgroundColor: greenPrimary,
           ),
         );
@@ -220,7 +236,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
     await _uploadAndSend(File(path), 'chat_audio', 'audio', 'm4a');
   }
 
-  Future<void> _uploadAndSend(File file, String folder, String type, String ext) async {
+  Future<void> _uploadAndSend(File file, String folder, String type, String ext, {double? aspectRatio}) async {
     setState(() => _isUploading = true);
     try {
       String fileName = "${DateTime.now().millisecondsSinceEpoch}.$ext";
@@ -232,6 +248,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
       _sendMessage(
         fileUrl: downloadUrl,
         type: type,
+        aspectRatio: aspectRatio,
         fileName: type == 'file' ? file.path.split('/').last : null,
       );
     } catch (e) {
@@ -249,6 +266,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
     String? fileSize,
     String? contactName,
     String? contactPhone,
+    double? aspectRatio,
   }) async {
     final replyData = _replyMessage;
     if (_replyMessage != null) {
@@ -270,6 +288,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
         'fileSize': fileSize ?? '',
         'contactName': contactName ?? '',
         'contactPhone': contactPhone ?? '',
+        'aspectRatio': aspectRatio,
         'senderId': _currentUid,
         'senderName': _currentName,
         'timestamp': FieldValue.serverTimestamp(),
@@ -310,7 +329,16 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
              _showSizeExceededError("Изображението не трябва да надвишава 10 MB!");
              return;
            }
-           _uploadAndSend(file, 'chat_images', 'image', 'jpg');
+           double? imageAspectRatio;
+           try {
+             final data = await file.readAsBytes();
+             final codec = await ui.instantiateImageCodec(data);
+             final frameInfo = await codec.getNextFrame();
+             imageAspectRatio = frameInfo.image.width / frameInfo.image.height;
+           } catch (e) {
+             debugPrint("Image decode error: $e");
+           }
+           _uploadAndSend(file, 'chat_images', 'image', 'jpg', aspectRatio: imageAspectRatio);
          }
       } else if (type == 'video') {
          final XFile? video = await picker.pickVideo(source: ImageSource.gallery);
@@ -640,7 +668,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
       backgroundColor: const Color(0xFFF2F4F7),
       appBar: AppBar(
         title: StreamBuilder<DocumentSnapshot>(
-          stream: FirebaseFirestore.instance.collection('campaigns').doc(widget.campaign.id).snapshots(),
+          stream: _campaignStream,
           builder: (context, snapshot) {
             String title = widget.campaign.title;
             if (snapshot.hasData && snapshot.data!.exists) {
@@ -726,7 +754,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
           Column(
             children: [
               StreamBuilder<DocumentSnapshot>(
-                stream: FirebaseFirestore.instance.collection('campaigns').doc(widget.campaign.id).snapshots(),
+                stream: _campaignStream,
                 builder: (context, snapshot) {
                   if (!snapshot.hasData || !snapshot.data!.exists) return const SizedBox.shrink();
                   
@@ -768,12 +796,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
 
               Expanded(
                 child: StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection('campaigns')
-                      .doc(widget.campaign.id)
-                      .collection('messages')
-                      .orderBy('timestamp', descending: true)
-                      .snapshots(),
+                  stream: _messagesStream,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
                     if (!snapshot.hasData || snapshot.data!.docs.isEmpty) return Center(child: Text("Започнете разговора!", style: TextStyle(color: Colors.grey[400])));
@@ -810,6 +833,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
                               contactName: data['contactName'],
                               contactPhone: data['contactPhone'],
                               duration: data['duration'],
+                              aspectRatio: data['aspectRatio']?.toDouble(),
                               isMe: isMe,
                               isEdited: data['isEdited'] ?? false,
                               senderName: data['senderName'] ?? 'Потребител',

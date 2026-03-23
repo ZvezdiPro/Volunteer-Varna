@@ -23,12 +23,20 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   final AuthService _auth = AuthService();
   int currentPageIndex = 0;
+  late PageController _pageController;
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: currentPageIndex);
     FCMService().init();
     _updateLocationOnStartup();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   Future<void> _updateLocationOnStartup() async {
@@ -106,15 +114,21 @@ class _MainPageState extends State<MainPage> {
               ),
             ),
           Expanded(
-            child: IndexedStack(
-              index: currentPageIndex,
+            child: PageView(
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() {
+                  currentPageIndex = index;
+                });
+              },
               children: [
                 HomeScreen(
                   onGoToEvents: () {
-                    setState(() {
-                      // EventsPage index is 1
-                      currentPageIndex = 1;
-                    });
+                    _pageController.animateToPage(
+                      1,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    );
                   },
                 ),
                 const EventsPage(), 
@@ -153,9 +167,11 @@ class _MainPageState extends State<MainPage> {
         selectedIndex: currentPageIndex,
         onDestinationSelected: (int index) {
           if (currentPageIndex == index) return;
-          setState(() {
-            currentPageIndex = index;
-          });
+          _pageController.animateToPage(
+            index,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
         },
       ),
     );

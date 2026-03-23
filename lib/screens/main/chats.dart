@@ -17,11 +17,34 @@ class ChatsScreen extends StatefulWidget {
   State<ChatsScreen> createState() => _ChatsScreenState();
 }
 
-class _ChatsScreenState extends State<ChatsScreen> {
+class _ChatsScreenState extends State<ChatsScreen> with AutomaticKeepAliveClientMixin {
   final String currentUid = FirebaseAuth.instance.currentUser!.uid;
+
+  Stream<DocumentSnapshot>? _userStream;
+  bool _isInit = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isInit) {
+      final userObj = Provider.of<Object?>(context);
+      final bool isNgo = userObj is NGO;
+      
+      _userStream = FirebaseFirestore.instance
+          .collection(isNgo ? 'ngos' : 'volunteers') 
+          .doc(currentUid)
+          .snapshots();
+          
+      _isInit = true;
+    }
+  }
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final userObj = Provider.of<Object?>(context);
     final bool isNgo = userObj is NGO;
     final NGO? ngoUser = isNgo ? userObj : null;
@@ -30,10 +53,7 @@ class _ChatsScreenState extends State<ChatsScreen> {
     return Scaffold(
       backgroundColor: backgroundGrey,
       body: StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection(isNgo ? 'ngos' : 'volunteers') 
-            .doc(currentUid)
-            .snapshots(),
+        stream: _userStream,
         builder: (context, userSnapshot) {
           if (userSnapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
