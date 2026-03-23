@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:volunteer_app/models/campaign.dart';
 import 'package:volunteer_app/models/volunteer.dart';
 import 'package:volunteer_app/screens/main/helper_screens/choose_location.dart';
@@ -620,6 +621,62 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
     }
   }
 
+  // Method to confirm toggling coorganizer
+  Future<void> _toggleCoorganizerStatus(VolunteerUser user) async {
+    if (user.uid == widget.campaign.organizerId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Не можете да промените правата на създателя на кампанията.")),
+      );
+      return;
+    }
+
+    final bool isCo = widget.campaign.coorganizersIds.contains(user.uid);
+    final String actionText = isCo ? "премахнете съорганизаторските права на" : "направите съорганизатор";
+    
+    final bool confirm = await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Промяна на права"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Сигурни ли сте, че искате да $actionText ${user.firstName}?"),
+            if (!isCo) ...[
+              const SizedBox(height: 10),
+              const Text("Съорганизаторът ще може да:", style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 5),
+              const Text("• Има достъп до админ панела"),
+              const SizedBox(height: 2),
+              const Text("• Закача съобщения в чата"),
+              const SizedBox(height: 2),
+              const Text("• Изтрива съобщения на другите участници"),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Отказ", style: TextStyle(color: Colors.black87))),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("Потвърди", style: TextStyle(fontWeight: FontWeight.bold, color: greenPrimary))),
+        ],
+      ),
+    ) ?? false;
+
+    if (confirm && mounted) {
+      try {
+        await _db.toggleCoorganizer(widget.campaign.id, user.uid, !isCo);
+        setState(() {
+          if (isCo) {
+            widget.campaign.coorganizersIds.remove(user.uid);
+          } else {
+            widget.campaign.coorganizersIds.add(user.uid);
+          }
+        });
+      } catch (e) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Грешка: $e")));
+      }
+    }
+  }
+
   // Method to confirm removing a volunteer
   Future<void> _confirmRemoveVolunteer(VolunteerUser user) async {
     final bool confirm =
@@ -649,15 +706,24 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
 
     if (confirm) {
       await _db.removeVolunteerFromCampaign(widget.campaign.id, user.uid);
+      
+      if (widget.campaign.coorganizersIds.contains(user.uid)) {
+        await _db.toggleCoorganizer(widget.campaign.id, user.uid, false);
+      }
+
       setState(() {
         _volunteers!.remove(user);
         widget.campaign.registeredVolunteersUids.remove(user.uid);
+        widget.campaign.coorganizersIds.remove(user.uid);
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final String currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final bool isMainOrganizer = currentUid == widget.campaign.organizerId;
+
     return FutureBuilder<Campaign?>(
       future: _db.getCampaign(widget.campaign.id),
       builder: (context, snapshot) {
@@ -686,7 +752,7 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
               }
             },
             child: DefaultTabController(
-              length: 3,
+              length: isMainOrganizer ? 3 : 2,
               child: Scaffold(
                 backgroundColor: backgroundGrey,
                 appBar: AppBar(
@@ -700,14 +766,14 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
                   backgroundColor: Colors.white,
                   elevation: 1,
                   iconTheme: const IconThemeData(color: Colors.black87),
-                  bottom: const TabBar(
+                  bottom: TabBar(
                     labelColor: greenPrimary,
                     unselectedLabelColor: Colors.grey,
                     indicatorColor: greenPrimary,
                     tabs: [
-                      Tab(text: "Детайли"),
-                      Tab(text: "Участници"),
-                      Tab(text: "Опасна зона"),
+                      const Tab(text: "Детайли"),
+                      const Tab(text: "Участници"),
+                      if (isMainOrganizer) const Tab(text: "Опасна зона"),
                     ],
                   ),
                 ),
@@ -716,7 +782,7 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
                     children: [
                       _buildGeneralTab(),
                       _buildParticipantsTab(),
-                      _buildDangerZoneTab(),
+                      if (isMainOrganizer) _buildDangerZoneTab(),
                     ],
                   ),
                 ),
@@ -930,6 +996,19 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
   }
 
   Widget _buildParticipantsTab() {
+    final String currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final bool isMainOrganizer = currentUid == widget.campaign.organizerId;
+
+    if (_volunteers != null && _volunteers!.isNotEmpty) {
+      _volunteers!.sort((a, b) {
+        final aIsCoorg = widget.campaign.coorganizersIds.contains(a.uid);
+        final bIsCoorg = widget.campaign.coorganizersIds.contains(b.uid);
+        if (aIsCoorg && !bIsCoorg) return -1;
+        if (!aIsCoorg && bIsCoorg) return 1;
+        return a.firstName.compareTo(b.firstName);
+      });
+    }
+
     return Column(
       children: [
         Container(
@@ -1003,9 +1082,29 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
                                 )
                               : null,
                         ),
-                        title: Text(
-                          "${user.firstName} ${user.lastName}",
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        title: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                "${user.firstName} ${user.lastName}",
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (widget.campaign.coorganizersIds.contains(user.uid))
+                              Container(
+                                margin: const EdgeInsets.only(left: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: blueSecondary.withAlpha(30),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Text(
+                                  "Съорганизатор",
+                                  style: TextStyle(color: blueSecondary, fontSize: 10, fontWeight: FontWeight.bold),
+                                ),
+                              )
+                          ],
                         ),
                         subtitle: Text(
                           user.email,
@@ -1014,12 +1113,33 @@ class _CampaignAdminPanelState extends State<CampaignAdminPanel> {
                             color: Colors.grey,
                           ),
                         ),
-                        trailing: IconButton(
-                          icon: const Icon(
-                            Icons.person_remove_outlined,
-                            color: Colors.redAccent,
-                          ),
-                          onPressed: () => _confirmRemoveVolunteer(user),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (isMainOrganizer)
+                              IconButton(
+                                tooltip: widget.campaign.coorganizersIds.contains(user.uid)
+                                    ? "Премахни съорганизатор"
+                                    : "Направи съорганизатор",
+                                icon: Icon(
+                                  widget.campaign.coorganizersIds.contains(user.uid) 
+                                      ? Icons.admin_panel_settings 
+                                      : Icons.admin_panel_settings_outlined,
+                                  color: widget.campaign.coorganizersIds.contains(user.uid) 
+                                      ? blueSecondary 
+                                      : Colors.grey,
+                                ),
+                                onPressed: () => _toggleCoorganizerStatus(user),
+                              ),
+                            if (user.uid != currentUid && user.uid != widget.campaign.organizerId)
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.person_remove_outlined,
+                                  color: Colors.redAccent,
+                                ),
+                                onPressed: () => _confirmRemoveVolunteer(user),
+                              ),
+                          ],
                         ),
                         onTap: () {
                           Navigator.push(

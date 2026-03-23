@@ -747,6 +747,14 @@ class _NgoChatScreenState extends State<NgoChatScreen> {
 
                         Map<String, dynamic> reactions = data['reactions'] != null ? Map<String, dynamic>.from(data['reactions']) : {};
 
+                        String? roleTag;
+                        final String senderId = data['senderId'] ?? '';
+                        if (widget.ngo.id == senderId) {
+                          roleTag = "Официален акаунт";
+                        } else if (widget.ngo.admins.contains(senderId)) {
+                          roleTag = "Администратор";
+                        }
+
                         return Column(
                           children: [
                             if (_shouldShowDate(docs, index))
@@ -764,6 +772,7 @@ class _NgoChatScreenState extends State<NgoChatScreen> {
                               isMe: isMe,
                               isEdited: data['isEdited'] ?? false,
                               senderName: data['senderName'] ?? 'Потребител',
+                              roleTag: roleTag,
                               timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
                               reactions: reactions,
                               replyToName: data['replyToName'],

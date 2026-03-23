@@ -21,6 +21,7 @@ class ChatBubble extends StatelessWidget {
   final double? aspectRatio;
   final bool isMe;
   final String senderName;
+  final String? roleTag;
   final DateTime timestamp;
   
   // Fields for Reply and Reactions
@@ -45,6 +46,7 @@ class ChatBubble extends StatelessWidget {
     this.aspectRatio,
     required this.isMe,
     required this.senderName,
+    this.roleTag,
     required this.timestamp,
     this.reactions = const {},
     this.replyToName,
@@ -138,13 +140,48 @@ class ChatBubble extends StatelessWidget {
                   if (!isMe)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
-                      child: Text(
-                        senderName,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.orange[800],
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              senderName,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.orange[800],
+                              ),
+                            ),
+                          ),
+                          if (roleTag != null) ...[
+                            Builder(
+                              builder: (context) {
+                                final tagColor = (roleTag == 'Организатор' || roleTag == 'Официален акаунт') 
+                                    ? accentAmber 
+                                    : (roleTag == 'Съорганизатор' ? blueSecondary : greenPrimary);
+                                return Padding(
+                                  padding: const EdgeInsets.only(left: 6),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: tagColor.withAlpha(30),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      roleTag!,
+                                      style: TextStyle(
+                                        color: tagColor,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }
+                            ),
+                          ],
+                        ],
                       ),
                     ),
 

@@ -25,6 +25,7 @@ import 'package:volunteer_app/screens/main/helper_screens/campaign_admin_panel.d
 import 'package:volunteer_app/screens/main/helper_screens/campaign_info_screen.dart';
 import 'package:volunteer_app/services/database.dart';
 import 'package:volunteer_app/shared/colors.dart';
+import 'package:volunteer_app/screens/main/helper_screens/campaign_participants_screen.dart';
 import 'package:volunteer_app/widgets/chat_bubbles.dart';
 
 // Main screen for campaign chat widget
@@ -51,11 +52,22 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
 
   late final Stream<DocumentSnapshot> _campaignStream;
   late final Stream<QuerySnapshot> _messagesStream;
+  late Campaign _currentCampaign;
+  StreamSubscription<DocumentSnapshot>? _campaignSubscription;
 
   @override
   void initState() {
     super.initState();
+    _currentCampaign = widget.campaign;
     _campaignStream = FirebaseFirestore.instance.collection('campaigns').doc(widget.campaign.id).snapshots();
+    _campaignSubscription = _campaignStream.listen((snapshot) {
+      if (snapshot.exists && mounted) {
+        setState(() {
+          _currentCampaign = Campaign.fromFirestore(snapshot);
+        });
+      }
+    });
+
     _messagesStream = FirebaseFirestore.instance
         .collection('campaigns')
         .doc(widget.campaign.id)
@@ -64,10 +76,16 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
         .snapshots();
   }
 
+  @override
+  void dispose() {
+    _campaignSubscription?.cancel();
+    super.dispose();
+  }
+
   String get _currentUid => widget.currentUser is NGO ? widget.currentUser.id : widget.currentUser.uid;
   String get _currentName => widget.currentUser is NGO ? widget.currentUser.name : widget.currentUser.firstName;
 
-  bool get _isOrganizer => widget.campaign.organizerId == _currentUid;
+  bool get _isOrganizer => _currentCampaign.organizerId == _currentUid || _currentCampaign.coorganizersIds.contains(_currentUid);
 
   // Helper method to format bytes to human-readable string
   String _formatBytes(int bytes, int decimals) {
@@ -697,13 +715,18 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
             icon: const Icon(Icons.more_vert),
             // What screen to open based on selection
             onSelected: (String value) {
-              if (value == 'admin_panel') {
+              if (value == 'participants') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => CampaignParticipantsScreen(campaign: _currentCampaign)),
+                );
+              } else if (value == 'admin_panel') {
                 _openAdminPanel();
               } else if (value == 'info') {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => CampaignInfoScreen(campaign: widget.campaign),
+                    builder: (context) => CampaignInfoScreen(campaign: _currentCampaign),
                   ),
                 );
               } else if (value == 'leave') {
@@ -725,7 +748,19 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
                       ],
                     ),
                   ),
-                
+
+                // Participants option
+                const PopupMenuItem<String>(
+                  value: 'participants',
+                  child: Row(
+                    children: [
+                      Icon(Icons.group, color: Colors.black54, size: 20),
+                      SizedBox(width: 12),
+                      Text('Участници'),
+                    ],
+                  ),
+                ),
+
                 // Info option
                 const PopupMenuItem<String>(
                   value: 'info',
@@ -828,6 +863,14 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
 
                         Map<String, dynamic> reactions = data['reactions'] != null ? Map<String, dynamic>.from(data['reactions']) : {};
 
+                        String? roleTag;
+                        final String senderId = data['senderId'] ?? '';
+                        if (_currentCampaign.organizerId == senderId) {
+                          roleTag = "Организатор";
+                        } else if (_currentCampaign.coorganizersIds.contains(senderId)) {
+                          roleTag = "Съорганизатор";
+                        }
+
                         return Column(
                           children: [
                             if (_shouldShowDate(docs, index))
@@ -845,6 +888,7 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
                               isMe: isMe,
                               isEdited: data['isEdited'] ?? false,
                               senderName: data['senderName'] ?? 'Потребител',
+                              roleTag: roleTag,
                               timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
                               reactions: reactions,
                               replyToName: data['replyToName'],

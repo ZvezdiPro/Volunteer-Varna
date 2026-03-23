@@ -115,8 +115,12 @@ exports.notifyOnCampaignUpdate = functions.firestore
         const locationChanged = newValue.location !== previousValue.location;
         const instructionsChanged = newValue.instructions !== previousValue.instructions;
         const organizerChanged = newValue.organizerId !== previousValue.organizerId;
+        
+        const newCoorgs = newValue.coorganizersIds || [];
+        const oldCoorgs = previousValue.coorganizersIds || [];
+        const coorgAdded = newCoorgs.length > oldCoorgs.length;
 
-        if (!startChanged && !endChanged && !locationChanged && !instructionsChanged && !organizerChanged) {
+        if (!startChanged && !endChanged && !locationChanged && !instructionsChanged && !organizerChanged && !coorgAdded) {
             return null; // Return early if none of the target fields changed 
         }
 
@@ -142,6 +146,36 @@ exports.notifyOnCampaignUpdate = functions.firestore
                         console.log("Ownership transfer notification sent successfully to UID:", newValue.organizerId);
                     } catch (error) {
                         console.error("Error sending ownership transfer notification:", error);
+                    }
+                }
+            }
+        }
+
+        // Handle co-organizer added (notify new co-organizer)
+        if (coorgAdded) {
+            const addedUid = newCoorgs.find(uid => !oldCoorgs.includes(uid));
+            if (addedUid) {
+                const newCoorgDoc = await admin.firestore().collection("volunteers").doc(addedUid).get();
+                if (newCoorgDoc.exists) {
+                    const newCoorgData = newCoorgDoc.data();
+                    if (newCoorgData.fcmToken) {
+                        const coorgMessage = {
+                            notification: {
+                                title: "Нови права в кампания!",
+                                body: `Вече сте съорганизатор на кампания "${newValue.title}"!`,
+                            },
+                            data: {
+                                campaignId: context.params.campaignId,
+                                type: "coorganizer_added",
+                            },
+                            token: newCoorgData.fcmToken
+                        };
+                        try {
+                            await admin.messaging().send(coorgMessage);
+                            console.log("Co-organizer notification sent successfully to UID:", addedUid);
+                        } catch (error) {
+                            console.error("Error sending co-organizer notification:", error);
+                        }
                     }
                 }
             }

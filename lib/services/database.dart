@@ -128,6 +128,7 @@ class DatabaseService {
       'createdAt': DateTime.now(),
       'updatedAt': DateTime.now(),
       'registeredVolunteersUids': const [],
+      'coorganizersIds': const [],
       'status': 'active',
     });
   }
@@ -348,6 +349,15 @@ class DatabaseService {
       'bookmarkedCampaignsIds': currentStatus
           ? FieldValue.arrayRemove([campaignId])
           : FieldValue.arrayUnion([campaignId]),
+    });
+  }
+
+  // Toggle coorganizer status
+  Future<void> toggleCoorganizer(String campaignId, String volunteerUid, bool isAdd) async {
+    return await campaignCollection.doc(campaignId).update({
+      'coorganizersIds': isAdd 
+          ? FieldValue.arrayUnion([volunteerUid])
+          : FieldValue.arrayRemove([volunteerUid]),
     });
   }
 
