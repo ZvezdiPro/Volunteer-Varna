@@ -13,6 +13,11 @@
 * **Hybrid Auth System:** Supports Email/Password registration and Google / Facebook Sign-In.
 * **Profile Management:** Users can edit their profiles, upload avatars, and track their progress.
 
+### 🏢 Dedicated NGO & Organization Tools
+* **Standalone Profiles:** Specialized registration and verification flow for non-governmental organizations to establish trust.
+* **NGO Admin Panel:** A centralized dashboard for organizations to easily manage their public information, team members, and followers.
+* **Role Management:** Ability to grant administrative rights to specific members to help manage the NGO's presence.
+
 ### 📢 Campaign Management
 * **Create Campaigns:** A guided, multi-step form (Wizard style) for organizers to create events:
     * *Step 1:* Basic Info (Title, Description)
@@ -20,6 +25,7 @@
     * *Step 3:* Image upload and final review.
 * **Browse & Filter:** Real-time feed of active campaigns.
 * **Bookmarks:** Users can save campaigns to their personal list.
+* **Co-organizers:** Easily collaborate by adding other NGOs or individual volunteers as co-organizers to your campaigns.
 * **Admin Panel:** Allowing campaign organizers to manage their campaigns
 
 ### 💬 Real-Time Communication
@@ -36,6 +42,7 @@
 ## 🔮 Future Improvements
 
 * [ ] Dark Mode and personalisation
+* [ ] Personal chats, groups, etc.
 * [ ] Gamification, experience levels, more social features
 * [ ] Calendar Sync: Easily add upcoming volunteer events directly to your device's native calendar.
 * [ ] iOS Release
