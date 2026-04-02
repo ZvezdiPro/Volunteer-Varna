@@ -9,6 +9,7 @@ import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/screens/main/helper_screens/campaign_details_screen.dart';
 import 'package:volunteer_app/screens/main/helper_screens/ngo_admin_panel.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:volunteer_app/shared/constants.dart';
 
 class PublicNgoScreen extends StatefulWidget {
   final NGO ngo;
@@ -150,16 +151,7 @@ class _PublicNgoScreenState extends State<PublicNgoScreen> {
                         final volunteerUser = userObj as VolunteerUser;
 
                         if (volunteerUser.email.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Тази функция е достъпна само за регистрирани потребители.',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              backgroundColor: Colors.orange,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
+                          ScaffoldMessenger.of(context).showSnackBar(guestSnackbar);
                           return;
                         }
 

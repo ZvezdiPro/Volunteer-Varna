@@ -9,6 +9,7 @@ import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/screens/main/helper_screens/campaign_details_screen.dart';
 import 'package:volunteer_app/screens/main/helper_screens/saved_campaigns.dart';
 import 'package:volunteer_app/screens/main/helper_screens/ngo_admin_panel.dart';
+import 'package:volunteer_app/screens/main/helper_screens/settings.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class NGOProfilePage extends StatefulWidget {
@@ -152,7 +153,7 @@ class _NGOProfilePageState extends State<NGOProfilePage> with AutomaticKeepAlive
                 ),
                 const SizedBox(height: 20),
 
-              // Edit Profile or Follow Button (Above Stats)
+              // Administration Panel for NGO Owner
               if (isOwner)
                 SizedBox(
                   width: double.infinity,
@@ -193,7 +194,36 @@ class _NGOProfilePageState extends State<NGOProfilePage> with AutomaticKeepAlive
                 // Impact Stats (Members, Campaigns, Followers)
                 _buildImpactStats(ngo),
                 
-                const SizedBox(height: 10),
+                const SizedBox(height: 20),
+
+                // Settings & Bookmarked Campaigns
+                if (isOwner) ...[
+                  _buildMenuTile(
+                    Icons.bookmark,
+                    'Запазени кампании',
+                    Colors.green.shade100,
+                    greenPrimary,
+                    () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SavedCampaignsScreen()),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  _buildMenuTile(
+                    Icons.settings,
+                    'Настройки',
+                    Colors.blue.shade100,
+                    Colors.blue,
+                    () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SettingsPage()),
+                      );
+                    },
+                  ),
+                ],
 
                 // Description
                 _buildSectionTitle('За нас'),
@@ -233,22 +263,7 @@ class _NGOProfilePageState extends State<NGOProfilePage> with AutomaticKeepAlive
                   _buildSocialLinks(ngo.socialLinks),
                 ],
 
-                // Bookmarked Campaigns
-                if (isOwner) ...[
-                  _buildSectionTitle('Кампании'),
-                  _buildMenuTile(
-                    Icons.bookmark,
-                    'Запазени кампании',
-                    Colors.green.shade100,
-                    greenPrimary,
-                    () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const SavedCampaignsScreen()),
-                      );
-                    },
-                  ),
-                ],
+                const SizedBox(height: 10),
 
                 // Hosted Campaigns
                 if (!isOwner) _buildSectionTitle('Нашите кампании') else _buildSectionTitle('Създадени кампании'),

@@ -311,6 +311,16 @@ class DatabaseService {
     }
   }
 
+  // Update notification settings
+  Future<void> updateNotificationSettings(Map<String, bool> settings, bool isNgo) async {
+    if (uid == null) return;
+    
+    final collection = isNgo ? ngoCollection : volunteerCollection;
+    return await collection.doc(uid).set({
+      'notificationSettings': settings,
+    }, SetOptions(merge: true));
+  }
+
   // Upload image to Firebase Storage and return the download URL
   Future<String?> uploadImage(
     String path,

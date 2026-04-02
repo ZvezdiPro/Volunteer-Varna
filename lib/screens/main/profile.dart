@@ -11,6 +11,8 @@ import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/screens/main/helper_screens/campaign_details_screen.dart';
 import 'package:volunteer_app/models/ngo.dart';
 import 'package:volunteer_app/screens/main/helper_screens/public_ngo_screen.dart';
+import 'package:volunteer_app/screens/main/helper_screens/settings.dart';
+import 'package:volunteer_app/shared/constants.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -224,6 +226,12 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
                 Colors.green.shade100,
                 greenPrimary,
                 () {
+                  final bool isGuest = FirebaseAuth.instance.currentUser?.isAnonymous ?? false;
+                  if (isGuest) {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    ScaffoldMessenger.of(context).showSnackBar(guestSnackbar);
+                    return;
+                  }
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const SavedCampaignsScreen()),
@@ -240,14 +248,15 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
                 Colors.blue.shade100,
                 Colors.blue,
                 () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        "Настройките ще бъдат налични скоро!",
-                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-                      ),
-                      backgroundColor: blueSecondary,
-                    ),
+                  final bool isGuest = FirebaseAuth.instance.currentUser?.isAnonymous ?? false;
+                  if (isGuest) {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    ScaffoldMessenger.of(context).showSnackBar(guestSnackbar);
+                    return;
+                  }
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SettingsPage()),
                   );
                 },
               ),
