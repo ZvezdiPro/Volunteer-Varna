@@ -26,7 +26,7 @@ class SettingsPage extends StatelessWidget {
         children: [
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: cardGrey,
               borderRadius: BorderRadius.circular(12.0),
               boxShadow: [
                 BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 5, offset: const Offset(0, 2)),

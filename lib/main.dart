@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:volunteer_app/screens/wrapper.dart';
 import 'package:volunteer_app/services/authenticate.dart';
+import 'package:volunteer_app/shared/colors.dart';
 
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
@@ -52,6 +53,10 @@ class _VolunteerAppState extends State<VolunteerApp> {
         title: 'Volunteer App',
         theme: ThemeData(
           primarySwatch: Colors.green,
+          cardTheme: const CardThemeData(
+            color: cardGrey,
+            surfaceTintColor: Colors.transparent,
+          ),
         ),
         
         // Supported locales (languages)

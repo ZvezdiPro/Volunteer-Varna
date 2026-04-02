@@ -285,7 +285,7 @@ class _PublicNgoScreenState extends State<PublicNgoScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardGrey,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(color: Colors.grey.shade300, blurRadius: 10, offset: const Offset(0, 5)),
@@ -304,7 +304,7 @@ class _PublicNgoScreenState extends State<PublicNgoScreen> {
         return Container(
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cardGrey,
             borderRadius: BorderRadius.circular(15),
             boxShadow: [
               BoxShadow(color: Colors.grey.shade300, blurRadius: 10, offset: const Offset(0, 5)),
@@ -469,7 +469,7 @@ class _PublicNgoScreenState extends State<PublicNgoScreen> {
             final campaign = campaigns[index];
             return Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: cardGrey,
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 5, offset: const Offset(0, 2)),

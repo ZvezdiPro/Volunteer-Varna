@@ -139,7 +139,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cardGrey,
             borderRadius: BorderRadius.circular(12.0),
             boxShadow: [
               BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 5, offset: const Offset(0, 2)),

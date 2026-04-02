@@ -281,7 +281,7 @@ class _NGOProfilePageState extends State<NGOProfilePage> with AutomaticKeepAlive
   Widget _buildMenuTile(IconData icon, String title, Color bgColor, Color iconColor, VoidCallback onTap) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardGrey,
         borderRadius: BorderRadius.circular(12.0),
         boxShadow: [
             BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 5, offset: const Offset(0, 2)),
@@ -321,7 +321,7 @@ class _NGOProfilePageState extends State<NGOProfilePage> with AutomaticKeepAlive
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardGrey,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(color: Colors.grey.shade300, blurRadius: 10, offset: const Offset(0, 5)),
@@ -340,7 +340,7 @@ class _NGOProfilePageState extends State<NGOProfilePage> with AutomaticKeepAlive
         return Container(
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cardGrey,
             borderRadius: BorderRadius.circular(15),
             boxShadow: [
               BoxShadow(color: Colors.grey.shade300, blurRadius: 10, offset: const Offset(0, 5)),
@@ -505,7 +505,7 @@ class _NGOProfilePageState extends State<NGOProfilePage> with AutomaticKeepAlive
             final campaign = campaigns[index];
             return Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: cardGrey,
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 5, offset: const Offset(0, 2)),

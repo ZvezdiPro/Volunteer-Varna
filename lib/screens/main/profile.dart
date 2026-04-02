@@ -175,7 +175,7 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
                       return Container(
                         padding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: cardGrey,
                           borderRadius: BorderRadius.circular(15.0),
                           boxShadow: [
                             BoxShadow(color: Colors.grey.shade300, blurRadius: 10, offset: Offset(0, 5)),
@@ -304,7 +304,7 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
                         return Container(
                           padding: EdgeInsets.all(20),
                           width: double.infinity,
-                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                          decoration: BoxDecoration(color: cardGrey, borderRadius: BorderRadius.circular(12)),
                           child: Text('Няма скорошна активност.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
                         );
                       }
@@ -314,7 +314,7 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
                       // Build the list of recent campaigns
                       return Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: cardGrey,
                           borderRadius: BorderRadius.circular(12.0),
                           boxShadow: [
                             BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 5, offset: Offset(0, 2)),
@@ -388,7 +388,7 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
                       SizedBox(height: 10.0),
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: cardGrey,
                           borderRadius: BorderRadius.circular(12.0),
                           boxShadow: [
                             BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 5, offset: Offset(0, 2)),
@@ -486,7 +486,7 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
   Widget _buildMenuTile(IconData icon, String title, Color bgColor, Color iconColor, VoidCallback onTap) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardGrey,
         borderRadius: BorderRadius.circular(12.0),
         boxShadow: [
             BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 5, offset: Offset(0, 2)),

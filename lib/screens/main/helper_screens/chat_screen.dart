@@ -577,6 +577,29 @@ class _CampaignChatScreenState extends State<CampaignChatScreen> {
                   onTap: () async {
                     Navigator.pop(context);
 
+                    bool? confirm = await showDialog<bool>(
+                      context: this.context,
+                      builder: (BuildContext dialogContext) {
+                        return AlertDialog(
+                          backgroundColor: Colors.white,
+                          title: const Text('Изтриване на съобщение'),
+                          content: const Text('Сигурни ли сте, че искате да изтриете това съобщение? Това действие не може да бъде отменено.'),
+                          actions: [
+                            TextButton(
+                              child: const Text('Отказ', style: TextStyle(color: Colors.grey)),
+                              onPressed: () => Navigator.of(dialogContext).pop(false),
+                            ),
+                            TextButton(
+                              child: const Text('Изтрий', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                              onPressed: () => Navigator.of(dialogContext).pop(true),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+
+                    if (confirm != true) return;
+
                     // Check if the message is pinned and unpin it if so
                     try {
                       final campaignDoc = await FirebaseFirestore.instance.collection('campaigns').doc(widget.campaign.id).get();
