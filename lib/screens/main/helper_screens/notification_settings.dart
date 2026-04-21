@@ -81,12 +81,12 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                   _buildSwitchTile('Нови кампании във вашия район', 'new_campaign'),
                   _buildSwitchTile('Напомняне за започващи кампании', 'starting_soon'),
                 ]),
-                
-                _buildSection('Кампании, в които участвате', [
-                  _buildSwitchTile('Промени в кампанията', 'campaign_update'),
-                  _buildSwitchTile('Прекратяване на кампания', 'campaign_ended'),
-                  _buildSwitchTile('Нови съобщения в чата', 'chat_message'),
-                ]),
+                if (!_isNgo)
+                  _buildSection('Кампании, в които участвате', [
+                    _buildSwitchTile('Промени в кампанията', 'campaign_update'),
+                    _buildSwitchTile('Прекратяване на кампания', 'campaign_ended'),
+                    _buildSwitchTile('Нови съобщения в чата', 'chat_message'),
+                  ]),
                 
                 _buildSection('За организатори', [
                   _buildSwitchTile('Записване / отписване на доброволец', 'registration'),

@@ -156,7 +156,6 @@ class DatabaseService {
   Future<Object?> getOrganizer() async {
     if (uid == null) return null;
     
-    // Check NGO first because ghost VolunteerUser documents exist for NGOs due to FCM token generation
     final ngoDoc = await ngoCollection.doc(uid).get();
     if (ngoDoc.exists) {
       return NGO.fromFirestore(ngoDoc);
@@ -632,5 +631,31 @@ class DatabaseService {
           ? FieldValue.arrayRemove([uid]) 
           : FieldValue.arrayUnion([uid])
     });
+  }
+
+  // Delete user profile data from Firestore
+  Future<void> deleteUserData() async {
+    if (uid == null) return;
+    
+    // Find and delete active un-started campaigns organized by this user
+    final QuerySnapshot campaignsSnapshot = await campaignCollection
+        .where('organizerId', isEqualTo: uid)
+        .where('status', isEqualTo: 'active')
+        .get();
+
+    final now = DateTime.now();
+    for (var doc in campaignsSnapshot.docs) {
+      final data = doc.data() as Map<String, dynamic>?;
+      if (data != null && data['startDate'] != null) {
+        final startTimestamp = data['startDate'] as Timestamp;
+        if (startTimestamp.toDate().isAfter(now)) {
+          await doc.reference.delete();
+        }
+      }
+    }
+
+    // Delete user profile documents
+    await volunteerCollection.doc(uid).delete();
+    await ngoCollection.doc(uid).delete();
   }
 }

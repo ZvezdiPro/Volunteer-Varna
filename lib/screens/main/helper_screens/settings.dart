@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:volunteer_app/screens/main/helper_screens/notification_settings.dart';
+import 'package:volunteer_app/screens/main/helper_screens/profile_settings.dart';
 import 'package:volunteer_app/shared/colors.dart';
 import 'package:volunteer_app/shared/constants.dart';
 
@@ -41,13 +42,10 @@ class SettingsPage extends StatelessWidget {
                   bgColor: Colors.green.shade100,
                   iconColor: greenPrimary,
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          "Тези настройки ще бъдат налични скоро!",
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-                        ),
-                        backgroundColor: blueSecondary,
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProfileSettingsPage(),
                       ),
                     );
                   },
@@ -74,35 +72,21 @@ class SettingsPage extends StatelessWidget {
                 const Divider(height: 1, indent: 30, endIndent: 30),
                 _buildSettingsTile(
                   context: context,
-                  icon: Icons.lock,
-                  title: 'Смяна на парола',
-                  bgColor: Colors.red.shade100,
-                  iconColor: Colors.red,
+                  icon: Icons.bug_report,
+                  title: 'Докладвай бъг',
+                  bgColor: Colors.amber.shade100,
+                  iconColor: Colors.amber.shade800,
                   showArrow: false,
-                  onTap: () async {
-                    final user = FirebaseAuth.instance.currentUser;
-                    if (user != null && user.email != null) {
-                      try {
-                        await FirebaseAuth.instance.sendPasswordResetEmail(email: user.email!);
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Имейл за смяна на парола е изпратен.',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              backgroundColor: greenPrimary,
-                            ),
-                          );
-                        }
-                      } catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Възникна грешка: $e')),
-                          );
-                        }
-                      }
-                    }
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          "Тази функция ще бъде налична скоро!",
+                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                        backgroundColor: blueSecondary,
+                      ),
+                    );
                   },
                 ),
               ],
